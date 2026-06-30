@@ -280,4 +280,10 @@ public interface Type {
 	 */
 	void print(String prefix, PrintStream out, boolean abbrv);
 
+	/**
+	 * 
+	 * @return the {@link Type} after ignoring qualifiers, including
+	 *         {@link AtomicType}
+	 */
+	Type ignoreQualifiersAtomic();
 }

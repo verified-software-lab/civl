@@ -24,7 +24,7 @@ import dev.civl.abc.main.ABCExecutor;
 import dev.civl.abc.main.TranslationTask;
 import dev.civl.abc.main.TranslationTask.TranslationStage;
 
-public class IntraProceduralPointsToTests {
+public class IntraProceduralPointsToTest {
 
 	private File root = new File(new File(new File("examples"), "c"),
 			"pointsToAnalysis");
@@ -1128,6 +1128,151 @@ public class IntraProceduralPointsToTests {
 		assertTrue(exactContains(qPts, "t[0].x"));
 		// System.out.println(rPts);
 		assertTrue(exactContains(rPts, "t[*].x"));
+	}
+
+	/**
+	 * <code>
+	 * int a;
+	 * struct S { int *p; int x; };
+	 *
+	 * int main() {
+	 *   struct S s = {&a, 1};
+	 *   return *s.p;
+	 * }
+	 * </code>
+	 */
+	@Test
+	public void compoundInitPtrField() throws ABCException {
+		AST ast = getAST("ptrField");
+
+		ptAnalyzer = SimplePointsToAnalysisIF.flowInsensePointsToAnalyzer(ast,
+				ast.getASTFactory().getTypeFactory());
+
+		Function mainFunc = (Function) ast.getInternalOrExternalEntity("main");
+		Map<String, Variable> variables = findVariablesInFunction(mainFunc);
+		Variable s = variables.get("s");
+		Entity[] sp = createDesignations(s, "p");
+		List<AssignExprIF> ptsSp = ptAnalyzer.mayPointsTo(mainFunc, sp);
+
+		// System.out.println(ptsSp);
+		assertTrue(exactContains(ptsSp, "a"));
+	}
+
+	/**
+	 * <code>
+	 * int a;
+	 * int b;
+	 * struct S { int *p; int *q; };
+	 *
+	 * int main() {
+	 *   struct S s = {&a, &b};
+	 *   return *s.p + *s.q;
+	 * }
+	 * </code>
+	 */
+	@Test
+	public void compoundInitTwoPtrFields() throws ABCException {
+		AST ast = getAST("twoPtrFields");
+
+		ptAnalyzer = SimplePointsToAnalysisIF.flowInsensePointsToAnalyzer(ast,
+				ast.getASTFactory().getTypeFactory());
+
+		Function mainFunc = (Function) ast.getInternalOrExternalEntity("main");
+		Map<String, Variable> variables = findVariablesInFunction(mainFunc);
+		Variable s = variables.get("s");
+		Entity[] sp = createDesignations(s, "p");
+		Entity[] sq = createDesignations(s, "q");
+		List<AssignExprIF> ptsSp = ptAnalyzer.mayPointsTo(mainFunc, sp);
+		List<AssignExprIF> ptsSq = ptAnalyzer.mayPointsTo(mainFunc, sq);
+
+		// System.out.println(ptsSp);
+		assertTrue(exactContains(ptsSp, "a"));
+		// System.out.println(ptsSq);
+		assertTrue(exactContains(ptsSq, "b"));
+	}
+
+	/**
+	 * <code>
+	 * int a;
+	 * struct Inner { int *p; };
+	 * struct Outer { struct Inner in; int x; };
+	 *
+	 * int main() {
+	 *   struct Outer o = {{&a}, 2};
+	 *   return *o.in.p;
+	 * }
+	 * </code>
+	 */
+	@Test
+	public void compoundInitNestedPtrField() throws ABCException {
+		AST ast = getAST("nestedPtrField");
+
+		ptAnalyzer = SimplePointsToAnalysisIF.flowInsensePointsToAnalyzer(ast,
+				ast.getASTFactory().getTypeFactory());
+
+		Function mainFunc = (Function) ast.getInternalOrExternalEntity("main");
+		Map<String, Variable> variables = findVariablesInFunction(mainFunc);
+		Variable o = variables.get("o");
+		Entity[] oinp = createDesignations(o, "in", "p");
+		List<AssignExprIF> ptsOinp = ptAnalyzer.mayPointsTo(mainFunc, oinp);
+
+		// System.out.println(ptsOinp);
+		assertTrue(exactContains(ptsOinp, "a"));
+	}
+
+	/**
+	 * <code>
+	 * int a;
+	 * int b;
+	 * struct S { int *arr[2]; };
+	 *
+	 * int main() {
+	 *   struct S s = {{&a, &b}};
+	 *   return *s.arr[0] + *s.arr[1];
+	 * }
+	 * </code>
+	 *
+	 * TODO: createDesignations does not support array subscripts; add element-level
+	 * assertions once the API is extended.
+	 */
+	@Test
+	public void compoundInitPtrArrayField() throws ABCException {
+		AST ast = getAST("ptrArrayField");
+
+		ptAnalyzer = SimplePointsToAnalysisIF.flowInsensePointsToAnalyzer(ast,
+				ast.getASTFactory().getTypeFactory());
+
+		Function mainFunc = (Function) ast.getInternalOrExternalEntity("main");
+		// smoke test: analysis must complete without exception
+		assertTrue(mainFunc != null);
+	}
+
+	/**
+	 * <code>
+	 * struct S { int x; int y; };
+	 *
+	 * int main() {
+	 *   struct S s = {1, 2};
+	 *   return s.x + s.y;
+	 * }
+	 * </code>
+	 * No pointer fields — compound initializer should produce no pointer assignments.
+	 */
+	@Test
+	public void compoundInitNoPtrField() throws ABCException {
+		AST ast = getAST("noPtrField");
+
+		ptAnalyzer = SimplePointsToAnalysisIF.flowInsensePointsToAnalyzer(ast,
+				ast.getASTFactory().getTypeFactory());
+
+		Function mainFunc = (Function) ast.getInternalOrExternalEntity("main");
+		Map<String, Variable> variables = findVariablesInFunction(mainFunc);
+		Variable s = variables.get("s");
+		List<AssignExprIF> ptsS = ptAnalyzer.mayPointsTo(mainFunc,
+				new Entity[]{s});
+
+		// s is a non-pointer struct — its points-to set should be empty
+		assertTrue(ptsS.isEmpty());
 	}
 
 	/**

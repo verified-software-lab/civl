@@ -171,15 +171,6 @@ public class StringOrCompoundInitializerTranslateWorker {
 				stringLitNode.getType(), strLit, stringLitNode.getSource());
 	}
 
-	static Type stripTypeQualifiers(Type type) {
-		if (type.kind() == TypeKind.QUALIFIED)
-			type = ((QualifiedObjectType) type)
-					.getBaseType();
-		if (type.kind() == TypeKind.ATOMIC)
-			type = ((AtomicType) type).getBaseType();
-		return type;
-	}
-
 	/**
 	 * Translates the initialization 'lhs = litObj' to a sequence of scalar-level
 	 * assignments,
@@ -257,7 +248,7 @@ public class StringOrCompoundInitializerTranslateWorker {
 			// compound:
 			CompoundLiteralObject cLitObj = (CompoundLiteralObject) litObj;
 			int size = cLitObj.size();
-			Type type = stripTypeQualifiers(cLitObj.getType());
+			Type type = cLitObj.getType().ignoreQualifiersAtomic();
 
 			if (type.kind() == TypeKind.ARRAY) {
 				for (int i = 0; i < size; i++) {
@@ -310,19 +301,17 @@ public class StringOrCompoundInitializerTranslateWorker {
 		if (apNode.operator() == AccessPathNode.Operator.DOT) {
 			Field field = apNode.field();
 
+			baseType = field.getType();
 			if (field.isAnonymous())
 				return new Pair<>(base, baseType);
 			base = nodeFactory.newDotNode(source, base.copy(),
 					nodeFactory.newIdentifierNode(source,
 							field.getName()));
-			baseType = stripTypeQualifiers(baseType);
-			assert baseType.kind() == TypeKind.STRUCTURE_OR_UNION;
-			baseType = field.getType();
 		} else {
 			base = nodeFactory.newOperatorNode(source,
 					Operator.SUBSCRIPT, base.copy(),
 					nodeFactory.newIntConstantNode(source, apNode.arrayIndex()));
-			baseType = stripTypeQualifiers(baseType);
+			baseType = baseType.ignoreQualifiersAtomic();
 			assert baseType.kind() == TypeKind.ARRAY;
 			baseType = ((ArrayType) baseType).getElementType();
 		}

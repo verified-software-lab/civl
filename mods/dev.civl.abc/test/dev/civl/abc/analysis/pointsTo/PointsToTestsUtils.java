@@ -104,6 +104,7 @@ public class PointsToTestsUtils {
 	 * @param fieldNames
 	 * @return
 	 */
+	// TODO: this can be re-written with AccessPathNode
 	static Entity[] createDesignations(Variable var, String... fieldNames) {
 		Type type = var.getType();
 		List<Entity> designations = new LinkedList<>();

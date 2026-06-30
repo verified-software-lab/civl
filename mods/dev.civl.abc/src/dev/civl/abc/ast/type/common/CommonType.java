@@ -3,6 +3,8 @@ package dev.civl.abc.ast.type.common;
 import java.util.HashMap;
 import java.util.Map;
 
+import dev.civl.abc.ast.type.IF.AtomicType;
+import dev.civl.abc.ast.type.IF.QualifiedObjectType;
 import dev.civl.abc.ast.type.IF.Type;
 
 public abstract class CommonType implements Type {
@@ -78,5 +80,16 @@ public abstract class CommonType implements Type {
 		if (this == other)
 			return true;
 		return similar(other, false, new HashMap<TypeKey, Type>());
+	}
+
+	@Override
+	public Type ignoreQualifiersAtomic() {
+		Type type = this;
+		if (type.kind() == TypeKind.QUALIFIED)
+			type = ((QualifiedObjectType) type)
+					.getBaseType();
+		if (type.kind() == TypeKind.ATOMIC)
+			type = ((AtomicType) type).getBaseType();
+		return type;
 	}
 }

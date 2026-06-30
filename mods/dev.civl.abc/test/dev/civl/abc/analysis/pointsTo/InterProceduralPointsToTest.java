@@ -22,7 +22,7 @@ import dev.civl.abc.main.ABCExecutor;
 import dev.civl.abc.main.TranslationTask;
 import dev.civl.abc.main.TranslationTask.TranslationStage;
 
-public class InterProceduralPointsToTests {
+public class InterProceduralPointsToTest {
 
 	private File root = new File(new File(new File("examples"), "c"),
 			"pointsToAnalysis");

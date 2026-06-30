@@ -7,6 +7,7 @@ import static dev.civl.abc.ast.node.IF.expression.OperatorNode.Operator.DEREFERE
 import static dev.civl.abc.ast.type.IF.Type.TypeKind.ARRAY;
 import static dev.civl.abc.ast.type.IF.Type.TypeKind.POINTER;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -26,6 +27,7 @@ import dev.civl.abc.ast.entity.IF.Function;
 import dev.civl.abc.ast.entity.IF.Scope;
 import dev.civl.abc.ast.entity.IF.Variable;
 import dev.civl.abc.ast.node.IF.ASTNode.NodeKind;
+import dev.civl.abc.ast.node.IF.compound.CompoundInitializerNode;
 import dev.civl.abc.ast.node.IF.IdentifierNode;
 import dev.civl.abc.ast.node.IF.SequenceNode;
 import dev.civl.abc.ast.node.IF.declaration.InitializerNode;
@@ -65,6 +67,7 @@ import dev.civl.abc.ast.node.IF.statement.StatementNode.StatementKind;
 import dev.civl.abc.ast.node.IF.statement.SwitchNode;
 import dev.civl.abc.ast.node.IF.statement.WhenNode;
 import dev.civl.abc.ast.type.IF.ArrayType;
+import dev.civl.abc.ast.type.IF.AtomicType;
 import dev.civl.abc.ast.type.IF.Field;
 import dev.civl.abc.ast.type.IF.ObjectType;
 import dev.civl.abc.ast.type.IF.PointerType;
@@ -77,6 +80,9 @@ import dev.civl.abc.ast.type.IF.Type.TypeKind;
 import dev.civl.abc.ast.type.IF.TypeFactory;
 import dev.civl.abc.ast.value.IF.ValueFactory.Answer;
 import dev.civl.abc.err.IF.ABCRuntimeException;
+import dev.civl.abc.transform.common.StringOrCompoundInitializerTranslateWorker;
+import dev.civl.abc.transform.common.StringOrCompoundInitializerTranslateWorker.AccessPathNode;
+import dev.civl.abc.util.IF.Pair;
 
 /**
  * <p>
@@ -271,9 +277,10 @@ public class CommonInsensitiveFlow implements InsensitiveFlow {
 			abs = processExpressionNode((ExpressionNode) init);
 			if (abs == null) // irrelevant to pointer
 				return;
-		} else
-			throw unimplemented(
-					"compound initializer " + init.prettyRepresentation());
+		} else {
+			processVarDecNodeWorkerForCompoundinitializer(varDecl, (CompoundInitializerNode) init);
+			return;
+		}
 
 		boolean deref = abs.op == Operator.DEREFERENCE,
 				addrof = abs.op == Operator.ADDRESSOF;
@@ -282,6 +289,51 @@ public class CommonInsensitiveFlow implements InsensitiveFlow {
 		AssignExprIF rhs = abs.assignExpr;
 
 		assigns.add(absFactory.assignment(lhs, false, rhs, deref, addrof));
+	}
+
+	/**
+	 * Worker method of {@link processVarDecNode} that decomposes a compound
+	 * initializer to scalar level assignments to sub-objects.
+	 */
+	private void processVarDecNodeWorkerForCompoundinitializer(VariableDeclarationNode varDecl,
+			CompoundInitializerNode cInit) {
+		ArrayList<Pair<ArrayList<AccessPathNode>, ExpressionNode>> pairs = StringOrCompoundInitializerTranslateWorker
+				.getAsAccessPathExpressionPairs(cInit.getLiteralObject());
+
+		for (var pair : pairs) {
+			Type subObjTy = cInit.getLiteralObject().getType();
+
+			// To ignore non-pointer type sub-objects:
+			for (var apNode : pair.left) {
+				subObjTy = subObjTy.ignoreQualifiersAtomic();
+				if (apNode.operator() == AccessPathNode.Operator.DOT) {
+					subObjTy = apNode.field().getType();
+				} else {
+					assert subObjTy.kind() == TypeKind.ARRAY;
+					subObjTy = ((ArrayType) subObjTy).getElementType();
+				}
+			}
+			if (!containingPtr(subObjTy))
+				continue;
+
+			AssignExprIF lhs = absFactory.assignStoreExpr(varDecl.getEntity());
+
+			// Compute AssignExprIF of the sub-object:
+			for (var apNode : pair.left) {
+				if (apNode.operator() == AccessPathNode.Operator.DOT)
+					lhs = absFactory.assignFieldExpr(lhs, apNode.field());
+				else
+					lhs = absFactory.assignSubscriptExpr(lhs, absFactory.assignOffset(apNode.arrayIndex()));
+			}
+
+			var rhs = processExpressionNode(pair.right);
+			if (rhs == null)
+				continue;
+			boolean deref = rhs.op == Operator.DEREFERENCE,
+					addrof = rhs.op == Operator.ADDRESSOF;
+
+			assigns.add(absFactory.assignment(lhs, false, rhs.assignExpr, deref, addrof));
+		}
 	}
 
 	/**
