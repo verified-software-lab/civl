@@ -37,6 +37,7 @@ import dev.civl.abc.ast.node.IF.declaration.VariableDeclarationNode;
 import dev.civl.abc.ast.node.IF.expression.ArrayLambdaNode;
 import dev.civl.abc.ast.node.IF.expression.ArrowNode;
 import dev.civl.abc.ast.node.IF.expression.CastNode;
+import dev.civl.abc.ast.node.IF.expression.CompoundLiteralNode;
 import dev.civl.abc.ast.node.IF.expression.ConstantNode;
 import dev.civl.abc.ast.node.IF.expression.ConstantNode.ConstantKind;
 import dev.civl.abc.ast.node.IF.expression.DotNode;
@@ -267,6 +268,7 @@ public class CommonInsensitiveFlow implements InsensitiveFlow {
 		InitializerNode init = varDecl.getInitializer();
 		TempExprAbstraction abs;
 		Type varType = varDecl.getEntity().getType();
+		AssignExprIF lhs = absFactory.assignStoreExpr(varDecl.getEntity());
 
 		if (init == null)
 			return;
@@ -277,14 +279,14 @@ public class CommonInsensitiveFlow implements InsensitiveFlow {
 			if (abs == null) // irrelevant to pointer
 				return;
 		} else {
-			processVarDecNodeWorkerForCompoundinitializer(varDecl, (CompoundInitializerNode) init);
+			processVarDecNodeWorkerForCompoundinitializer(lhs,
+					(CompoundInitializerNode) init);
 			return;
 		}
 
 		boolean deref = abs.op == Operator.DEREFERENCE,
 				addrof = abs.op == Operator.ADDRESSOF;
 
-		AssignExprIF lhs = absFactory.assignStoreExpr(varDecl.getEntity());
 		AssignExprIF rhs = abs.assignExpr;
 
 		assigns.add(absFactory.assignment(lhs, false, rhs, deref, addrof));
@@ -292,9 +294,9 @@ public class CommonInsensitiveFlow implements InsensitiveFlow {
 
 	/**
 	 * Worker method of {@link processVarDecNode} that decomposes a compound
-	 * initializer to scalar level assignments to sub-objects.
+	 * initializer to scalar level assignments to sub-objects of <code>lhs</code>.
 	 */
-	private void processVarDecNodeWorkerForCompoundinitializer(VariableDeclarationNode varDecl,
+	private void processVarDecNodeWorkerForCompoundinitializer(AssignExprIF lhs,
 			CompoundInitializerNode cInit) {
 		ArrayList<Pair<ArrayList<AccessPathNode>, ExpressionNode>> pairs = StringOrCompoundInitializerTranslateWorker
 				.getAsAccessPathExpressionPairs(cInit.getLiteralObject());
@@ -315,23 +317,24 @@ public class CommonInsensitiveFlow implements InsensitiveFlow {
 			if (!containingPtr(subObjTy))
 				continue;
 
-			AssignExprIF lhs = absFactory.assignStoreExpr(varDecl.getEntity());
-
 			// Compute AssignExprIF of the sub-object:
+			AssignExprIF subObj = lhs;
+
 			for (var apNode : pair.left) {
 				if (apNode.operator() == AccessPathNode.Operator.DOT)
-					lhs = absFactory.assignFieldExpr(lhs, apNode.field());
+					subObj = absFactory.assignFieldExpr(subObj, apNode.field());
 				else
-					lhs = absFactory.assignSubscriptExpr(lhs, absFactory.assignOffset(apNode.arrayIndex()));
+					subObj = absFactory.assignSubscriptExpr(subObj, absFactory.assignOffset(apNode.arrayIndex()));
 			}
 
 			var rhs = processExpressionNode(pair.right);
+
 			if (rhs == null)
 				continue;
 			boolean deref = rhs.op == Operator.DEREFERENCE,
 					addrof = rhs.op == Operator.ADDRESSOF;
 
-			assigns.add(absFactory.assignment(lhs, false, rhs.assignExpr, deref, addrof));
+			assigns.add(absFactory.assignment(subObj, false, rhs.assignExpr, deref, addrof));
 		}
 	}
 
@@ -515,13 +518,19 @@ public class CommonInsensitiveFlow implements InsensitiveFlow {
 				else
 					result = processFunctionCall((FunctionCallNode) expr);
 				break;
+			case COMPOUND_LITERAL: {
+				AssignExprIF aux = absFactory.assignAuxExpr(expr.getType());
+				CompoundLiteralNode clNode = (CompoundLiteralNode) expr;
+
+				processVarDecNodeWorkerForCompoundinitializer(aux, clNode.getInitializerList());
+				return new TempExprAbstraction(aux, null);
+			}
 			case REMOTE_REFERENCE :
 			case UPDATE :
 			case QUANTIFIED_EXPRESSION :
 			case LAMBDA :
 			case SPAWN :
 			case DERIVATIVE_EXPRESSION :
-			case COMPOUND_LITERAL :
 				throw unimplemented(expr.expressionKind() + " kind expression");
 			default :
 				return null;

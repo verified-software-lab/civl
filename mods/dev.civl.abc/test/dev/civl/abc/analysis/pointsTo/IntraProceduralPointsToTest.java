@@ -1277,6 +1277,105 @@ public class IntraProceduralPointsToTest {
 
 	/**
 	 * <code>
+	 * int a;
+	 * struct S { int *p; int x; };
+	 *
+	 * int main() {
+	 *   int *r = (struct S){&a, 1}.p;
+	 *   return *r;
+	 * }
+	 * </code>
+	 * A compound literal used as an expression (not a declaration
+	 * initializer): reading its pointer field should resolve r to `a`.
+	 */
+	@Test
+	public void compoundLiteralPtrField() throws ABCException {
+		AST ast = getAST("compoundLiteralPtrField");
+
+		ptAnalyzer = SimplePointsToAnalysisIF.flowInsensePointsToAnalyzer(ast,
+				ast.getASTFactory().getTypeFactory());
+
+		Function mainFunc = (Function) ast.getInternalOrExternalEntity("main");
+		Map<String, Variable> variables = findVariablesInFunction(mainFunc);
+		Variable r = variables.get("r");
+		List<AssignExprIF> rPts = ptAnalyzer.mayPointsTo(mainFunc,
+				new Entity[]{r});
+
+		// System.out.println(rPts);
+		assertTrue(exactContains(rPts, "a"));
+	}
+
+	/**
+	 * <code>
+	 * int a;
+	 * int b;
+	 * struct S { int *p; int *q; };
+	 *
+	 * int main() {
+	 *   int *x = (struct S){&a, &b}.p;
+	 *   int *y = (struct S){&a, &b}.q;
+	 *   return *x + *y;
+	 * }
+	 * </code>
+	 * A compound literal expression with two pointer fields: reading each
+	 * field must stay separated (x -> a, y -> b), guarding against merging
+	 * the fields of the aggregate.
+	 */
+	@Test
+	public void compoundLiteralTwoPtrFields() throws ABCException {
+		AST ast = getAST("compoundLiteralTwoPtrFields");
+
+		ptAnalyzer = SimplePointsToAnalysisIF.flowInsensePointsToAnalyzer(ast,
+				ast.getASTFactory().getTypeFactory());
+
+		Function mainFunc = (Function) ast.getInternalOrExternalEntity("main");
+		Map<String, Variable> variables = findVariablesInFunction(mainFunc);
+		Variable x = variables.get("x");
+		Variable y = variables.get("y");
+		List<AssignExprIF> xPts = ptAnalyzer.mayPointsTo(mainFunc,
+				new Entity[]{x});
+		List<AssignExprIF> yPts = ptAnalyzer.mayPointsTo(mainFunc,
+				new Entity[]{y});
+
+		// System.out.println(xPts);
+		assertTrue(exactContains(xPts, "a"));
+		// System.out.println(yPts);
+		assertTrue(exactContains(yPts, "b"));
+	}
+
+	/**
+	 * <code>
+	 * int a;
+	 * struct Inner { int *p; };
+	 * struct Outer { struct Inner in; int x; };
+	 *
+	 * int main() {
+	 *   int *r = (struct Outer){{&a}, 2}.in.p;
+	 *   return *r;
+	 * }
+	 * </code>
+	 * A nested compound literal expression: reading the pointer field of the
+	 * nested aggregate should resolve r to `a`.
+	 */
+	@Test
+	public void compoundLiteralNestedPtrField() throws ABCException {
+		AST ast = getAST("compoundLiteralNestedPtrField");
+
+		ptAnalyzer = SimplePointsToAnalysisIF.flowInsensePointsToAnalyzer(ast,
+				ast.getASTFactory().getTypeFactory());
+
+		Function mainFunc = (Function) ast.getInternalOrExternalEntity("main");
+		Map<String, Variable> variables = findVariablesInFunction(mainFunc);
+		Variable r = variables.get("r");
+		List<AssignExprIF> rPts = ptAnalyzer.mayPointsTo(mainFunc,
+				new Entity[]{r});
+
+		// System.out.println(rPts);
+		assertTrue(exactContains(rPts, "a"));
+	}
+
+	/**
+	 * <code>
 	 * struct T {int x[10];};
 	 *
 	 * int main() {
