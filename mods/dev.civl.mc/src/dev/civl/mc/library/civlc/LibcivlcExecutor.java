@@ -720,6 +720,8 @@ public class LibcivlcExecutor extends BaseLibraryExecutor implements LibraryExec
 		BooleanExpression context = state.getPathCondition(universe);
 		ResultType resultType = ResultType.MAYBE;
 
+		if (universe.getShowProverQueries())
+			universe.setQueryExplanation("proving $assert(" + arguments[0] + ") at " + source.getLocation());
 		if (!civlConfig.prob()) {
 			Query query = (new Heuristics(universe)).applyHeuristicSimplifications(context, assertValue);
 

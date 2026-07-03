@@ -572,6 +572,8 @@ public class LibpointerExecutor extends BaseLibraryExecutor implements LibraryEx
 			return new Evaluation(state, null);
 		}
 		claim = universe.equals(first, second);
+		if (universe.getShowProverQueries())
+			universe.setQueryExplanation("checking pointer equality at " + source.getLocation());
 		resultType = reasoner.valid(claim).getResultType();
 		if (resultType != ResultType.YES && civlConfig.isPropertyToggled(CIVLProperty.ASSERTION_VIOLATION)) {
 			StringBuilder message = new StringBuilder();
@@ -690,6 +692,8 @@ public class LibpointerExecutor extends BaseLibraryExecutor implements LibraryEx
 		// check that offsetBytes is divisible by sizeof(T):
 		BooleanExpression claim = universe.divides(ptr_primType_size, offsetBytes);
 		Reasoner reasoner = universe.reasoner(state.getPathCondition(universe));
+		if (universe.getShowProverQueries())
+			universe.setQueryExplanation("checking $pointer_add offset alignment at " + source.getLocation());
 		ResultType resultType = reasoner.valid(claim).getResultType();
 		if (civlConfig.isPropertyToggled(CIVLProperty.POINTER) && !resultType.equals(ResultType.YES)) {
 			state = this.errorLogger.logError(source, state, pid, this.symbolicAnalyzer.stateInformation(state), claim,

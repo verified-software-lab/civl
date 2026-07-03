@@ -476,6 +476,8 @@ public class CommonEvaluator implements Evaluator {
 		} else {
 			DereferencedResult derefResult = derefOperator.dereference(variableValue, symRef);
 
+			if (universe.getShowProverQueries())
+				universe.setQueryExplanation("checking pointer dereference validity at " + source.getLocation());
 			if (universe.reasoner(state.getPathCondition(universe)).isValid(derefResult.validCondition)) {
 				deref = derefResult.value;
 				if (vid != 0 || !deref.containsSubobject(ModelConfiguration.getInvalidName(universe)))
@@ -2037,6 +2039,8 @@ public class CommonEvaluator implements Evaluator {
 		step = eval.value;
 		state = eval.state;
 		claim = universe.equals(this.zero, step);
+		if (universe.getShowProverQueries())
+			universe.setQueryExplanation("checking range step is non-zero at " + range.getSource().getLocation());
 		validity = universe.reasoner(state.getPathCondition(universe)).valid(claim).getResultType();
 		if (validity == ResultType.YES) {
 			errorLogger.logSimpleError(range.getSource(), state, pid, process, symbolicAnalyzer.stateInformation(state),
@@ -2166,6 +2170,8 @@ public class CommonEvaluator implements Evaluator {
 					universe.and(notNegative, universe.lessThanEquals(index, length)));
 		else
 			claim = universe.and(notNegative, universe.lessThan(index, length));
+		if (universe.getShowProverQueries())
+			universe.setQueryExplanation("checking array index in bounds at " + arraySource.getLocation());
 		resultType = reasoner.valid(claim).getResultType();
 		if (resultType != ResultType.YES) {
 			StringBuilder sb = new StringBuilder();

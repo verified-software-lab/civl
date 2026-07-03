@@ -410,9 +410,14 @@ public class SMTProver implements TheoremProver {
 		universe.incrementProverValidCount();
 		if (show) {
 			String queryKind = checkUNSAT ? "unsat" : "valid";
+			String explanation = universe.getQueryExplanation();
 			out2.println();
 			out2.println(queryName(id1, id2) + "(" + queryKind + "):");
+			if (explanation != null)
+				out2.println("  reason: " + explanation);
 			out2.println();
+			// clear so an un-annotated later query does not inherit a stale reason
+			universe.setQueryExplanation(null);
 		}
 		String inputFilename = queryFilename(id1, id2);
 		Path inputPath = workingDirectory.resolve(inputFilename);

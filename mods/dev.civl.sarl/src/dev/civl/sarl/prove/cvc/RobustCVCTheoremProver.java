@@ -267,12 +267,17 @@ public class RobustCVCTheoremProver implements TheoremProver {
 
 		universe.incrementProverValidCount();
 		if (show) {
+			String explanation = universe.getQueryExplanation();
 			out.println();
 			out.print(info.getFirstAlias() + " assumptions " + id + ":\n");
+			if (explanation != null)
+				out.println("  reason: " + explanation);
 			assumptionDecls.print(out);
 			assumptionText.print(out);
 			out.println();
 			out.flush();
+			// clear so an un-annotated later query does not inherit a stale reason
+			universe.setQueryExplanation(null);
 		}
 
 		ValidityResult result;
@@ -322,12 +327,17 @@ public class RobustCVCTheoremProver implements TheoremProver {
 
 		universe.incrementProverValidCount();
 		if (show) {
+			String explanation = universe.getQueryExplanation();
 			out.println();
 			out.print(info.getFirstAlias() + " assumptions " + id + ":\n");
+			if (explanation != null)
+				out.println("  reason: " + explanation);
 			assumptionDecls.print(out);
 			assumptionText.print(out);
 			out.println();
 			out.flush();
+			// clear so an un-annotated later query does not inherit a stale reason
+			universe.setQueryExplanation(null);
 		}
 
 		ValidityResult result;
