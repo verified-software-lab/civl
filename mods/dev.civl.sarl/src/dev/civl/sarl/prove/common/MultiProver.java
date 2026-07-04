@@ -69,12 +69,34 @@ public class MultiProver implements TheoremProver {
 		if (explanation != null)
 			out.println("Query reason (" + queryKind + "): " + explanation);
 		else
-			out.println("Query reason (" + queryKind + "): <unannotated query>");
+			out.println("Query reason (" + queryKind + "): <unannotated query> [from " + originOfQuery() + "]");
 		out.println(INNER_BORDER);
 		out.flush();
 		// clear so an un-annotated later query does not inherit a stale reason
 		universe.setQueryExplanation(null);
 		return true;
+	}
+
+	/**
+	 * Walks the current call stack and returns a short description of the first
+	 * frame that lies outside the SARL library (i.e., the model-checker code that
+	 * issued this query). This makes an {@code <unannotated query>} self-diagnosing:
+	 * it points at the exact site that should have set a query explanation.
+	 *
+	 * @return a "Class.method(File:line)" description of the originating frame, or
+	 *         "unknown" if none could be determined
+	 */
+	private String originOfQuery() {
+		for (StackTraceElement frame : Thread.currentThread().getStackTrace()) {
+			String className = frame.getClassName();
+
+			// skip JVM/Thread frames and everything inside the SARL library
+			if (className.startsWith("java.") || className.startsWith("dev.civl.sarl."))
+				continue;
+			return frame.getClassName() + "." + frame.getMethodName() + "(" + frame.getFileName() + ":"
+					+ frame.getLineNumber() + ")";
+		}
+		return "unknown";
 	}
 
 	/**
