@@ -2860,6 +2860,8 @@ public class CommonEvaluator implements Evaluator {
 			} else if (!muteErrorSideEffects && civlConfig.isPropertyToggled(CIVLProperty.OUT_OF_BOUNDS)) {
 				// Valid pointer addition condition: inBound || point-to the end
 				// of the array:
+				if (universe.getShowProverQueries())
+					universe.setQueryExplanation("checking pointer addition stays in bounds at " + source.getLocation());
 				resultType = reasoner.valid(universe.or(inBound, universe.equals(totalOffset, extent))).getResultType();
 				if (resultType != ResultType.YES) {
 					StringBuffer message = printedPointerAdditionErrorMessage(state, pid, process, pointer, extent,

@@ -2297,6 +2297,11 @@ public class CommonSymbolicAnalyzer implements SymbolicAnalyzer {
 
 					BooleanExpression claim = derefable ? universe.lessThan(index, length)
 							: universe.lessThanEquals(index, length);
+
+					if (universe.getShowProverQueries())
+						universe.setQueryExplanation(
+								"checking array index within bounds while validating a pointer reference");
+
 					ResultType result = reasoner.valid(claim).getResultType();
 
 					claim = reasoner.simplify(claim);

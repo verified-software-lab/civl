@@ -259,6 +259,11 @@ public class CIVLErrorLogger extends ErrorLog {
 			String message) throws UnsatisfiablePathConditionException {
 		BooleanExpression pc = state.getPathCondition(universe);
 		BooleanExpression npc = universe.not(pc);
+
+		if (universe.getShowProverQueries())
+			universe.setQueryExplanation("checking path-condition feasibility before reporting " + property + " at "
+					+ source.getLocation());
+
 		ValidityResult validityResult = trueReasoner.valid(npc);
 		ResultType nsat = validityResult.getResultType();
 		Certainty certainty;
