@@ -130,7 +130,7 @@ public abstract class BaseLibraryExecutor extends LibraryComponent implements Li
 			Evaluation eval;
 			SymbolicExpression heapObject = null;
 			Pair<BooleanExpression, ResultType> checkDerefable = symbolicAnalyzer.isDerefablePointer(state,
-					firstElementPointer);
+					firstElementPointer, source);
 
 			if (checkDerefable.right == ResultType.YES) {
 				eval = evaluator.dereference(source, state, pid, process, firstElementPointer, false, true);

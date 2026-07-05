@@ -317,7 +317,8 @@ public class LibcivlcExecutor extends BaseLibraryExecutor implements LibraryExec
 
 	private Evaluation executeIsDerefable(State state, int pid, String process, Expression[] arguments,
 			SymbolicExpression[] argumentValues) {
-		SymbolicExpression result = this.symbolicAnalyzer.isDerefablePointer(state, argumentValues[0]).left;
+		SymbolicExpression result = this.symbolicAnalyzer
+				.isDerefablePointer(state, argumentValues[0], arguments[0].getSource()).left;
 
 		return new Evaluation(state, result);
 	}
@@ -338,7 +339,8 @@ public class LibcivlcExecutor extends BaseLibraryExecutor implements LibraryExec
 	private Evaluation executeHavoc(State state, int pid, String process, Expression[] arguments,
 			SymbolicExpression[] argumentValues, CIVLSource source) throws UnsatisfiablePathConditionException {
 		SymbolicExpression pointer = argumentValues[0];
-		Pair<BooleanExpression, ResultType> checkPointer = symbolicAnalyzer.isDerefablePointer(state, pointer);
+		Pair<BooleanExpression, ResultType> checkPointer = symbolicAnalyzer.isDerefablePointer(state, pointer,
+				source);
 
 		if (checkPointer.right != ResultType.YES)
 			state = this.errorLogger.logError(source, state, pid, this.symbolicAnalyzer.stateInformation(state),
@@ -358,7 +360,8 @@ public class LibcivlcExecutor extends BaseLibraryExecutor implements LibraryExec
 	private Evaluation executeReveal(State state, int pid, String process, Expression[] arguments,
 			SymbolicExpression[] argumentValues, CIVLSource source) throws UnsatisfiablePathConditionException {
 		SymbolicExpression pointer = argumentValues[0];
-		Pair<BooleanExpression, ResultType> checkPointer = symbolicAnalyzer.isDerefablePointer(state, pointer);
+		Pair<BooleanExpression, ResultType> checkPointer = symbolicAnalyzer.isDerefablePointer(state, pointer,
+				source);
 
 		if (checkPointer.right != ResultType.YES)
 			state = this.errorLogger.logError(source, state, pid, this.symbolicAnalyzer.stateInformation(state),

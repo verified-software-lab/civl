@@ -2243,7 +2243,8 @@ public class CommonSymbolicAnalyzer implements SymbolicAnalyzer {
 	}
 
 	@Override
-	public Pair<BooleanExpression, ResultType> isDerefablePointer(State state, SymbolicExpression pointer) {
+	public Pair<BooleanExpression, ResultType> isDerefablePointer(State state, SymbolicExpression pointer,
+			CIVLSource source) {
 		if (this.symbolicUtil.isNullPointer(pointer) || pointer.isNull())
 			return new Pair<>(universe.falseExpression(), ResultType.NO);
 
@@ -2260,7 +2261,7 @@ public class CommonSymbolicAnalyzer implements SymbolicAnalyzer {
 		if (value == null)
 			return new Pair<>(universe.falseExpression(), ResultType.NO);
 		return this.checkReference(true, universe.reasoner(state.getPathCondition(universe)),
-				symbolicUtil.getSymRef(pointer), value);
+				symbolicUtil.getSymRef(pointer), value, state, source);
 	}
 
 	/**
@@ -2272,7 +2273,7 @@ public class CommonSymbolicAnalyzer implements SymbolicAnalyzer {
 	 *         expression
 	 */
 	private Triple<SymbolicExpression, BooleanExpression, ResultType> isValidRefOfValue(Reasoner reasoner,
-			boolean derefable, ReferenceExpression ref, SymbolicExpression value) {
+			boolean derefable, ReferenceExpression ref, SymbolicExpression value, State state, CIVLSource source) {
 		BooleanExpression predicate = universe.falseExpression();
 
 		if (ref.isIdentityReference())
@@ -2280,7 +2281,7 @@ public class CommonSymbolicAnalyzer implements SymbolicAnalyzer {
 		else {
 			ReferenceExpression parent = ((NTReferenceExpression) ref).getParent();
 			Triple<SymbolicExpression, BooleanExpression, ResultType> parentTest = isValidRefOfValue(reasoner,
-					derefable, parent, value);
+					derefable, parent, value, state, source);
 			SymbolicExpression targetValue;
 
 			if (parentTest.third != ResultType.YES)
@@ -2298,9 +2299,21 @@ public class CommonSymbolicAnalyzer implements SymbolicAnalyzer {
 					BooleanExpression claim = derefable ? universe.lessThan(index, length)
 							: universe.lessThanEquals(index, length);
 
-					if (universe.getShowProverQueries())
-						universe.setQueryExplanation(
-								"checking array index within bounds while validating a pointer reference");
+					if (universe.getShowProverQueries()) {
+						String arrayStr = state != null
+								? symbolicExpressionToString(source, state, null, targetValue)
+								: targetValue.toString();
+
+						// the array value can be large; keep the annotation readable
+						if (arrayStr.length() > 120)
+							arrayStr = arrayStr.substring(0, 120) + "...";
+
+						String locationStr = source != null ? " at " + source.getLocation() : "";
+
+						universe.setQueryExplanation("checking array index within bounds while validating a pointer"
+								+ " reference: accessing index " + index + " of array " + arrayStr + " with length "
+								+ length + locationStr);
+					}
 
 					ResultType result = reasoner.valid(claim).getResultType();
 
@@ -2356,9 +2369,9 @@ public class CommonSymbolicAnalyzer implements SymbolicAnalyzer {
 	 * @return
 	 */
 	private Pair<BooleanExpression, ResultType> checkReference(boolean derefable, Reasoner reasoner,
-			ReferenceExpression reference, SymbolicExpression object) {
+			ReferenceExpression reference, SymbolicExpression object, State state, CIVLSource source) {
 		Triple<SymbolicExpression, BooleanExpression, ResultType> result = isValidRefOfValue(reasoner, derefable,
-				reference, object);
+				reference, object, state, source);
 
 		return new Pair<>(result.second, result.third);
 	}
@@ -2403,7 +2416,7 @@ public class CommonSymbolicAnalyzer implements SymbolicAnalyzer {
 		if (value == null)
 			return new Pair<>(universe.falseExpression(), ResultType.NO);
 		return this.checkReference(false, universe.reasoner(state.getPathCondition(universe)),
-				symbolicUtil.getSymRef(pointer), value);
+				symbolicUtil.getSymRef(pointer), value, state, civlSource);
 	}
 
 	@Override

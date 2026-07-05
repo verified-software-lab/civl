@@ -1225,7 +1225,8 @@ public class CommonExecutor implements Executor {
 	 */
 	private State assignToPointer(CIVLSource source, State state, int pid, SymbolicExpression pointer,
 			SymbolicExpression value, boolean isInitialization) throws UnsatisfiablePathConditionException {
-		Pair<BooleanExpression, ResultType> checkPointer = symbolicAnalyzer.isDerefablePointer(state, pointer);
+		Pair<BooleanExpression, ResultType> checkPointer = symbolicAnalyzer.isDerefablePointer(state, pointer,
+				source);
 
 		if (checkPointer.right != ResultType.YES) // {
 			state = errorLogger.logError(source, state, pid, symbolicAnalyzer.stateInformation(state),

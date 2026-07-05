@@ -200,13 +200,13 @@ public class LibpointerExecutor extends BaseLibraryExecutor implements LibraryEx
 
 	private Evaluation execute_is_valid_pointer(State state, int pid, String process, Expression[] arguments,
 			SymbolicExpression[] argumentValues, CIVLSource source) throws UnsatisfiablePathConditionException {
-		SymbolicExpression result = this.symbolicAnalyzer.isDerefablePointer(state, argumentValues[0]).left;
+		SymbolicExpression result = this.symbolicAnalyzer.isDerefablePointer(state, argumentValues[0], source).left;
 
 		return new Evaluation(state, result);
 	}
 
 	/**
-	 * 
+	 *
 	 * returns true iff at least one leaf nodes of the given object equal to the
 	 * given value
 	 * 
@@ -367,8 +367,8 @@ public class LibpointerExecutor extends BaseLibraryExecutor implements LibraryEx
 	private Evaluation executeContains(State state, int pid, String process, Expression[] arguments,
 			SymbolicExpression[] argumentValues, CIVLSource source) throws UnsatisfiablePathConditionException {
 		SymbolicExpression first = argumentValues[0], second = argumentValues[1], result;
-		Pair<BooleanExpression, ResultType> checkFirst = symbolicAnalyzer.isDerefablePointer(state, first),
-				checkRight = symbolicAnalyzer.isDerefablePointer(state, second);
+		Pair<BooleanExpression, ResultType> checkFirst = symbolicAnalyzer.isDerefablePointer(state, first, source),
+				checkRight = symbolicAnalyzer.isDerefablePointer(state, second, source);
 
 		if (checkFirst.right != ResultType.YES || checkRight.right != ResultType.YES)
 			result = falseValue;

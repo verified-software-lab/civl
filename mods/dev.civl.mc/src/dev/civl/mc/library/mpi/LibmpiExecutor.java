@@ -212,7 +212,7 @@ public class LibmpiExecutor extends BaseLibraryExecutor implements LibraryExecut
 					"attempt to read/write a non-concrete pointer type variable");
 			return new Evaluation(state, null);
 		}
-		checkPointer = symbolicAnalyzer.isDerefablePointer(state, pointer);
+		checkPointer = symbolicAnalyzer.isDerefablePointer(state, pointer, ptrSource);
 		if (checkPointer.right != ResultType.YES && civlConfig.isPropertyToggled(CIVLProperty.POINTER)) {
 			state = errorLogger.logError(arguments[0].getSource(), state, pid,
 					this.symbolicAnalyzer.stateInformation(state), checkPointer.left, checkPointer.right,
