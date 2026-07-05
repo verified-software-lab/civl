@@ -19,6 +19,7 @@ import dev.civl.abc.ast.type.IF.ObjectType;
 import dev.civl.abc.ast.type.IF.QualifiedObjectType;
 import dev.civl.abc.ast.type.IF.StandardBasicType.BasicTypeKind;
 import dev.civl.abc.ast.type.IF.StructureOrUnionType;
+import dev.civl.abc.ast.type.IF.Type;
 import dev.civl.abc.ast.type.IF.Type.TypeKind;
 import dev.civl.abc.ast.type.IF.TypeFactory;
 import dev.civl.abc.ast.value.IF.IntegerValue;
@@ -208,14 +209,22 @@ public class CompoundLiteralAnalyzer {
 	private Designation processDesignation(DesignationNode desNode,
 			LiteralTypeNode ltNode) throws SyntaxException {
 		Designation result = new Designation(ltNode);
+		Type curTy = ltNode.getType().ignoreQualifiersAtomic();
 
 		for (DesignatorNode designatorNode : desNode) {
 			if (designatorNode instanceof FieldDesignatorNode) {
 				FieldDesignatorNode fdn = (FieldDesignatorNode) designatorNode;
 				IdentifierNode fieldId = fdn.getField();
 				String fieldName = fieldId.name();
-				StructureOrUnionType suType = (StructureOrUnionType) ltNode
-						.getType();
+
+				if (curTy.kind() != TypeKind.STRUCTURE_OR_UNION)
+					throw error(
+							"Field designator ." + fieldName
+									+ " applied to non-structure/union type "
+									+ curTy,
+							fieldId);
+
+				StructureOrUnionType suType = (StructureOrUnionType) curTy;
 				Field[] navseq = suType.findDeepField(fieldName);
 
 				if (navseq == null)
@@ -228,9 +237,16 @@ public class CompoundLiteralAnalyzer {
 				for (Field field : navseq)
 					result.add(new Navigator(field.getMemberIndex(),
 							designatorNode.getSource()));
+				curTy = navseq[navseq.length - 1].getType().ignoreQualifiersAtomic();
 			} else if (designatorNode instanceof ArrayDesignatorNode) {
 				ExpressionNode indexExpr = ((ArrayDesignatorNode) designatorNode)
 						.getIndex();
+
+				if (curTy.kind() != TypeKind.ARRAY)
+					throw error(
+							"Array designator applied to non-array type "
+									+ curTy,
+							designatorNode);
 
 				entityAnalyzer.expressionAnalyzer.processExpression(indexExpr);
 
@@ -239,6 +255,7 @@ public class CompoundLiteralAnalyzer {
 				int index = indexValue.getIntegerValue().intValue();
 
 				result.add(new Navigator(index, designatorNode.getSource()));
+				curTy = ((ArrayType) curTy).getElementType().ignoreQualifiersAtomic();
 			} else
 				throw new ABCRuntimeException(
 						"Unreachable: unknown kind of designator node: "
