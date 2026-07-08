@@ -1,6 +1,7 @@
 package dev.civl.sarl.prove.smt;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -146,6 +147,23 @@ public class SMTTranslator {
 	public static final int EXP_THRESHOLD = 10;
 
 	/**
+	 * Master switch for sub-expression compression, i.e. aliasing large shared
+	 * sub-expressions to top-level 0-ary <code>define-fun</code> macros. When
+	 * <code>false</code>, the translator never creates aliases and every
+	 * expression is emitted inline as a full tree, so the SMT output contains no
+	 * <code>_smt...</code> names.
+	 * <p>
+	 * Disabled because the <code>define-fun</code> macro form provoked quantifier
+	 * matching loops in Z3 on some queries (Z3 auto-selects different, looping
+	 * triggers for the macro-wrapped quantifiers). The inline form solves
+	 * identically to the historical <code>let</code>-based form. Note the
+	 * trade-off: without aliasing, a symbolic expression whose DAG has heavy
+	 * internal sharing is printed with that sharing expanded, so pathological
+	 * cases can produce much larger output.
+	 */
+	public static final boolean ENABLE_SUBEXPR_COMPRESSION = false;
+
+	/**
 	 * If the size of the context or a predicate exceeds this threshold, this
 	 * translator is working in a compressed way.
 	 */
@@ -262,18 +280,25 @@ public class SMTTranslator {
 	private FastList<String> smtTranslation;
 
 	/**
-	 * A map that maps {@link SymbolicExpression}s to temporary binding names so
-	 * that they can be reused. The translation is then processed in a compressed
-	 * way. If this map is instantiated, this translator is working in this
-	 * compressed way.
+	 * If the translated expression is a conjunction (a boolean {@link
+	 * SymbolicOperator#AND} with more than one clause), this holds the translation
+	 * of each individual clause, in order. It is <code>null</code> otherwise. This
+	 * allows a caller (e.g., a theorem prover writing an SMT-LIB script) to emit
+	 * one <code>(assert ...)</code> per clause rather than a single giant
+	 * conjunction. Each entry is assertable on its own: any shared sub-expression
+	 * aliases it references are defined as top-level <code>define-fun</code>s in
+	 * {@link #smtDeclarations}.
 	 */
-	private Map<SymbolicExpression, FastList<String>> subExpressionsBindingNames = null;
+	private List<FastList<String>> conjunctTranslations = null;
 
 	/**
-	 * All binding translations. Eventually, these bindings will be added on the
-	 * head of the translation as <code>(let (bindings) (translation))</code>
+	 * A map that maps {@link SymbolicExpression}s to alias names so that they can
+	 * be reused. Each alias is defined once as a top-level 0-ary
+	 * <code>define-fun</code> in {@link #smtDeclarations}, and all subsequent
+	 * occurrences of the sub-expression are translated as the alias name. If this
+	 * map is instantiated, this translator is working in this compressed way.
 	 */
-	private List<FastList<String>> subExpressionBindings = null;
+	private Map<SymbolicExpression, FastList<String>> subExpressionsBindingNames = null;
 
 	/**
 	 * A stack of bound variables. A new entry will be pushed onto this stack once
@@ -303,14 +328,12 @@ public class SMTTranslator {
 		this.typeMap = new HashMap<>();
 		this.functionSet = new HashSet<>();
 		this.smtDeclarations = new FastList<>();
-		if (theExpression.size() >= FULL_EXPR_SIZE_THRESHOLD) {
+		if (ENABLE_SUBEXPR_COMPRESSION && theExpression.size() >= FULL_EXPR_SIZE_THRESHOLD)
 			this.subExpressionsBindingNames = new HashMap<>();
-			this.subExpressionBindings = new LinkedList<>();
-		}
 		// translate logic functions:
 		for (ProverFunctionInterpretation logicFunction : logicFunctions)
 			translateLogicFunction(logicFunction);
-		this.smtTranslation = translate(theExpression);
+		translateTopLevel(theExpression);
 	}
 
 	public SMTTranslator(SMTTranslator startingContext, SymbolicExpression theExpression) {
@@ -323,17 +346,51 @@ public class SMTTranslator {
 		this.functionSet = new HashSet<>(startingContext.functionSet);
 		this.expressionMap = new HashMap<>(startingContext.expressionMap);
 		this.variableSet = new HashSet<>(startingContext.variableSet);
-		if (theExpression.size() >= FULL_EXPR_SIZE_THRESHOLD || startingContext.subExpressionBindings != null) {
-			this.subExpressionsBindingNames = new HashMap<>();
-			this.subExpressionBindings = new LinkedList<>();
-			// add bindings from context to this translation since some binding
-			// symbols created in context will be used again:
-			if (startingContext.subExpressionBindings != null)
-				this.subExpressionBindings.addAll(startingContext.subExpressionBindings);
+		if (ENABLE_SUBEXPR_COMPRESSION
+				&& (theExpression.size() >= FULL_EXPR_SIZE_THRESHOLD || startingContext.subExpressionsBindingNames != null)) {
+			// reuse the alias names created by the context translator: they are
+			// defined as top-level define-funs in the context's declarations, so
+			// they are visible to this translation as well:
+			this.subExpressionsBindingNames = startingContext.subExpressionsBindingNames != null
+					? new HashMap<>(startingContext.subExpressionsBindingNames)
+					: new HashMap<>();
 		}
 		this.bigArrayDefined = startingContext.bigArrayDefined;
 		this.smtDeclarations = new FastList<>();
 		this.smtTranslation = translate(theExpression);
+	}
+
+	/**
+	 * Translates the top-level expression, and, if it is a conjunction (a boolean
+	 * {@link SymbolicOperator#AND} with more than one clause), also records the
+	 * translation of each individual clause in {@link #conjunctTranslations}. Each
+	 * clause is translated exactly once; the combined translation
+	 * (<code>(and c1 c2 ... cn)</code>) is assembled from the clause translations
+	 * so that {@link #getTranslation()} continues to return the whole conjunction.
+	 * Because all clauses are translated by this same translator instance, their
+	 * declarations and shared sub-expression bindings accumulate correctly.
+	 *
+	 * @param theExpression the expression being translated (typically the context)
+	 */
+	private void translateTopLevel(SymbolicExpression theExpression) {
+		if (theExpression.operator() == SymbolicOperator.AND && theExpression.numArguments() > 1) {
+			int n = theExpression.numArguments();
+			List<FastList<String>> clauses = new ArrayList<>(n);
+			FastList<String> combined = new FastList<>("(", "and");
+
+			for (int i = 0; i < n; i++) {
+				FastList<String> clause = translate((SymbolicExpression) theExpression.argument(i));
+
+				clauses.add(clause);
+				combined.add(" ");
+				combined.append(clause.clone());
+			}
+			combined.add(")");
+			this.conjunctTranslations = clauses;
+			this.smtTranslation = combined;
+		} else {
+			this.smtTranslation = translate(theExpression);
+		}
 	}
 
 	// Private methods...
@@ -1932,35 +1989,37 @@ public class SMTTranslator {
 	}
 
 	private boolean useCompressedName(SymbolicExpression expression) {
+		// function-typed expressions are excluded: a 0-ary define-fun returning a
+		// function sort would be higher-order, which is not standard SMT-LIB:
 		return subExpressionsBindingNames != null && expression.size() > SINGLE_EXPR_SIZE_THRESHOLD
-				&& boundVariableStack.isEmpty() && enableCompression;
+				&& boundVariableStack.isEmpty() && enableCompression
+				&& !(expression.type() instanceof SymbolicFunctionType);
 	}
 
 	/**
-	 * For a translated sub-expression, creating an alias for it. The aliasing is
-	 * implemented using <code>(let binding term)</code>.
+	 * For a translated sub-expression, creates an alias for it. The alias is
+	 * defined once as a top-level 0-ary macro,
+	 * <code>(define-fun name () sort translation)</code>, appended to
+	 * {@link #smtDeclarations}; the alias name is returned and used in place of
+	 * the translation from then on. Since the sub-expression was translated before
+	 * this method is invoked, every symbol its translation refers to (including
+	 * aliases of its own sub-expressions) already appears earlier in
+	 * {@link #smtDeclarations}, so definitions occur in dependency order.
 	 */
 	private FastList<String> translateExpression2binding(SymbolicExpression expression, FastList<String> translation) {
 		// in compressed translation mode:
-		FastList<String> tmpVarName = new FastList<>(newSmtVarName());
-		FastList<String> binding = letTempVarRepresentExpression(tmpVarName.clone(), translation.clone());
-		subExpressionBindings.add(binding);
-		subExpressionsBindingNames.put(expression, tmpVarName.clone());
-		return tmpVarName;
-	}
+		String tmpVarName = newSmtVarName();
+		// translateType may add datatype declarations, so invoke it before
+		// appending the define-fun:
+		FastList<String> smtType = translateType(expression.type());
 
-	/**
-	 * Add a alias binding for the sub-expression: <code>(symbol term)</code>
-	 */
-	private FastList<String> letTempVarRepresentExpression(FastList<String> var, FastList<String> subExpr) {
-		FastList<String> result = new FastList<String>();
-
-		result.add("(");
-		result.append(var);
-		result.add(" ");
-		result.append(subExpr);
-		result.add(") ");
-		return result;
+		smtDeclarations.addAll("(define-fun ", tmpVarName, " () ");
+		smtDeclarations.append(smtType);
+		smtDeclarations.add(" ");
+		smtDeclarations.append(translation.clone());
+		smtDeclarations.add(")\n");
+		subExpressionsBindingNames.put(expression, new FastList<>(tmpVarName));
+		return new FastList<>(tmpVarName);
 	}
 
 	// Exported methods...
@@ -1976,23 +2035,37 @@ public class SMTTranslator {
 	 * @return result of translation of the specified symbolic expression
 	 */
 	public FastList<String> getTranslation() {
-		FastList<String> result = new FastList<>();
-		FastList<String> suffixes = new FastList<>();
+		return smtTranslation;
+	}
 
-		if (subExpressionBindings != null) {
-			// add compressed sub-expression bindings
-			for (FastList<String> binding : subExpressionBindings) {
-				result.add("(let (");
-				result.append(binding.clone());
-				result.add(") ");
-				suffixes.add(")");
-			}
-			result.add(" ");
-			result.append(smtTranslation.clone());
-			result.append(suffixes);
-			return result;
-		} else
-			return smtTranslation;
+	/**
+	 * Returns the translation split into its top-level conjunctive clauses: one
+	 * {@link FastList} per clause of the translated expression, each ready to be
+	 * asserted on its own (any shared sub-expression aliases a clause refers to
+	 * are defined as top-level <code>define-fun</code>s in the declarations
+	 * returned by {@link #getDeclarations()}). If the translated expression is
+	 * not a conjunction, the returned list contains a single element equal to
+	 * {@link #getTranslation()}.
+	 *
+	 * <p>
+	 * This lets a caller emit one <code>(assert clause)</code> per clause of a path
+	 * condition instead of a single <code>(assert (and ...))</code>, which is
+	 * convenient for, e.g., attaching <code>:pattern</code> triggers to quantified
+	 * clauses.
+	 * </p>
+	 *
+	 * @return a non-empty list of assertable clause translations
+	 */
+	public List<FastList<String>> getConjunctTranslations() {
+		List<FastList<String>> result = new ArrayList<>();
+
+		if (conjunctTranslations != null) {
+			for (FastList<String> clause : conjunctTranslations)
+				result.add(clause.clone());
+		} else {
+			result.add(getTranslation());
+		}
+		return result;
 	}
 
 	/**

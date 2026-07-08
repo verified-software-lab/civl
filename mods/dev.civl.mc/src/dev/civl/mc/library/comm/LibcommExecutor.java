@@ -242,7 +242,7 @@ public class LibcommExecutor extends BaseLibraryExecutor
 			SymbolicExpression[] argumentValues)
 			throws UnsatisfiablePathConditionException {
 		Pair<BooleanExpression, ResultType> result = symbolicAnalyzer
-				.isDerefablePointer(state, argumentValues[0]);
+				.isDerefablePointer(state, argumentValues[0], arguments[0].getSource());
 
 		if (result.right != ResultType.YES)
 			state = this.errorLogger.logError(arguments[0].getSource(), state,

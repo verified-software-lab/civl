@@ -5,6 +5,7 @@ import java.util.ArrayList;
 
 import dev.civl.sarl.IF.TheoremProverException;
 import dev.civl.sarl.IF.expr.BooleanExpression;
+import dev.civl.sarl.preuniverse.IF.PreUniverse;
 import dev.civl.sarl.prove.IF.ProverFunctionInterpretation;
 import dev.civl.sarl.prove.IF.TheoremProver;
 import dev.civl.sarl.prove.IF.TheoremProverFactory;
@@ -26,9 +27,16 @@ public class MultiProverFactory implements TheoremProverFactory {
 	 */
 	private Path workingDirectory;
 
-	public MultiProverFactory(TheoremProverFactory[] factories, Path workingDirectory) {
+	/**
+	 * The controlling symbolic universe, used by the produced {@link MultiProver}
+	 * to access output settings such as the query explanation.
+	 */
+	private PreUniverse universe;
+
+	public MultiProverFactory(TheoremProverFactory[] factories, Path workingDirectory, PreUniverse universe) {
 		this.factories = factories;
 		this.workingDirectory = workingDirectory;
+		this.universe = universe;
 	}
 
 	@Override
@@ -52,7 +60,7 @@ public class MultiProverFactory implements TheoremProverFactory {
 				// ignore this prover.
 			}
 		}
-		return new MultiProver(provers.toArray(new TheoremProver[0]));
+		return new MultiProver(provers.toArray(new TheoremProver[0]), universe);
 	}
 
 	@Override

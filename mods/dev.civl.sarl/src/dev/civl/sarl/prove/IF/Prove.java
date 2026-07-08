@@ -95,7 +95,7 @@ public class Prove {
 			factories[count] = newProverFactory(universe, prover, workingDirectory);
 			count++;
 		}
-		return new MultiProverFactory(factories, workingDirectory);
+		return new MultiProverFactory(factories, workingDirectory, universe);
 	}
 
 	/**

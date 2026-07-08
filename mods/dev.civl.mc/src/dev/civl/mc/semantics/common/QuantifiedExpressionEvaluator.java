@@ -565,7 +565,7 @@ public class QuantifiedExpressionEvaluator
 
 			eval = evaluate(state, pid, singlePointer);
 			eval.value = symbolicAnalyzer.isDerefablePointer(state,
-					eval.value).left;
+					eval.value, source).left;
 			return eval;
 		} else {
 			// for \valid(p + range), it is evaluated as
@@ -599,7 +599,7 @@ public class QuantifiedExpressionEvaluator
 			boundVariableStack.peek().put(BOUNDED_OFFSET_IDENTIFIER, offset);
 			eval = evaluate(state, pid, eachPointer);
 			eval.value = symbolicAnalyzer.isDerefablePointer(state,
-					eval.value).left;
+					eval.value, source).left;
 			boundVariableStack.pop();
 			eval.state = stateFactory.popAssumption(eval.state, pid);
 			eval.value = universe.forallInt(offset, lowVal, highVal,

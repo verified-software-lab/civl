@@ -201,13 +201,13 @@ public class LibpointerExecutor extends BaseLibraryExecutor implements LibraryEx
 
 	private Evaluation execute_is_valid_pointer(State state, int pid, String process, Expression[] arguments,
 			SymbolicExpression[] argumentValues, CIVLSource source) throws UnsatisfiablePathConditionException {
-		SymbolicExpression result = this.symbolicAnalyzer.isDerefablePointer(state, argumentValues[0]).left;
+		SymbolicExpression result = this.symbolicAnalyzer.isDerefablePointer(state, argumentValues[0], source).left;
 
 		return new Evaluation(state, result);
 	}
 
 	/**
-	 * 
+	 *
 	 * returns true iff at least one leaf nodes of the given object equal to the
 	 * given value
 	 * 
@@ -368,8 +368,8 @@ public class LibpointerExecutor extends BaseLibraryExecutor implements LibraryEx
 	private Evaluation executeContains(State state, int pid, String process, Expression[] arguments,
 			SymbolicExpression[] argumentValues, CIVLSource source) throws UnsatisfiablePathConditionException {
 		SymbolicExpression first = argumentValues[0], second = argumentValues[1], result;
-		Pair<BooleanExpression, ResultType> checkFirst = symbolicAnalyzer.isDerefablePointer(state, first),
-				checkRight = symbolicAnalyzer.isDerefablePointer(state, second);
+		Pair<BooleanExpression, ResultType> checkFirst = symbolicAnalyzer.isDerefablePointer(state, first, source),
+				checkRight = symbolicAnalyzer.isDerefablePointer(state, second, source);
 
 		if (checkFirst.right != ResultType.YES || checkRight.right != ResultType.YES)
 			result = falseValue;
@@ -573,6 +573,8 @@ public class LibpointerExecutor extends BaseLibraryExecutor implements LibraryEx
 			return new Evaluation(state, null);
 		}
 		claim = universe.equals(first, second);
+		if (universe.getShowProverQueries())
+			universe.setQueryExplanation("checking pointer equality at " + source.getLocation());
 		resultType = reasoner.valid(claim).getResultType();
 		if (resultType != ResultType.YES && civlConfig.isPropertyToggled(CIVLProperty.ASSERTION_VIOLATION)) {
 			StringBuilder message = new StringBuilder();
@@ -700,6 +702,8 @@ public class LibpointerExecutor extends BaseLibraryExecutor implements LibraryEx
 		// check that offsetBytes is a multiple of sizeof(T):
 		BooleanExpression claim = universe.divides(baseSize, offsetBytes);
 		Reasoner reasoner = universe.reasoner(state.getPathCondition(universe));
+		if (universe.getShowProverQueries())
+			universe.setQueryExplanation("checking $pointer_add offset alignment at " + source.getLocation());
 		ResultType resultType = reasoner.valid(claim).getResultType();
 		if (civlConfig.isPropertyToggled(CIVLProperty.POINTER) && !resultType.equals(ResultType.YES)) {
 			state = this.errorLogger.logError(source, state, pid, this.symbolicAnalyzer.stateInformation(state), claim,
