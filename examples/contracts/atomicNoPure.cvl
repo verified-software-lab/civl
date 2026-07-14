@@ -1,0 +1,12 @@
+
+int y = 0;
+
+$atomic_f int f(int x) {
+  y = x;
+}
+
+int main(void) {
+  $parfor (int i:0 .. 1) f(i);
+  $print(y);
+  $assert(y==1);  // should fail
+}

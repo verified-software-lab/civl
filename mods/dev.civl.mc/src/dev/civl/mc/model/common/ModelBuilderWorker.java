@@ -1294,8 +1294,12 @@ public class ModelBuilderWorker {
 	private Set<Variable> computeAccessesAtomicFunction(CIVLFunction function) {
 		assert function.isAtomicFunction();
 		assert !function.isSystemFunction();
-		Scope originalScope = function.containingScope();
-
+		Scope originalScope = function.outerScope();
+		// note: this was function.containingScope(), but that's wrong because a
+		// variable in the containingScope (usually that's the file scope) is external
+		// to the function. The outerScope is correct because it includes all the local
+		// variables (including the formal parameters), so anything strictly above that
+		// scope counts as external.
 		return computeAccesses(originalScope, function.startLocation(), function);
 
 	}
