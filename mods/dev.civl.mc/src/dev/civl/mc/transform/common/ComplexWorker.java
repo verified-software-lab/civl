@@ -3,6 +3,8 @@ package dev.civl.mc.transform.common;
 import static dev.civl.abc.ast.node.IF.expression.OperatorNode.Operator.DIV;
 import static dev.civl.abc.ast.node.IF.expression.OperatorNode.Operator.DIVEQ;
 import static dev.civl.abc.ast.node.IF.expression.OperatorNode.Operator.EQUALS;
+import static dev.civl.abc.ast.node.IF.expression.OperatorNode.Operator.LAND;
+import static dev.civl.abc.ast.node.IF.expression.OperatorNode.Operator.LOR;
 import static dev.civl.abc.ast.node.IF.expression.OperatorNode.Operator.MINUS;
 import static dev.civl.abc.ast.node.IF.expression.OperatorNode.Operator.MINUSEQ;
 import static dev.civl.abc.ast.node.IF.expression.OperatorNode.Operator.NEQ;
@@ -36,18 +38,18 @@ import dev.civl.abc.ast.node.IF.expression.CastNode;
 import dev.civl.abc.ast.node.IF.expression.CompoundLiteralNode;
 import dev.civl.abc.ast.node.IF.expression.ExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.FloatingConstantNode;
-import dev.civl.abc.ast.node.IF.expression.FunctionCallNode;
-import dev.civl.abc.ast.node.IF.expression.IdentifierExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.OperatorNode;
+import dev.civl.abc.ast.node.IF.expression.ExpressionNode.ExpressionKind;
 import dev.civl.abc.ast.node.IF.expression.OperatorNode.Operator;
 import dev.civl.abc.ast.node.IF.statement.BlockItemNode;
 import dev.civl.abc.ast.node.IF.statement.IfNode;
 import dev.civl.abc.ast.node.IF.statement.LoopNode;
+import dev.civl.abc.ast.node.IF.type.AtomicTypeNode;
+import dev.civl.abc.ast.node.IF.type.BasicTypeNode;
 import dev.civl.abc.ast.node.IF.type.TypeNode;
 import dev.civl.abc.ast.node.IF.type.TypedefNameNode;
 import dev.civl.abc.ast.type.IF.ArithmeticType;
 import dev.civl.abc.ast.type.IF.AtomicType;
-import dev.civl.abc.ast.type.IF.FloatingType.FloatKind;
 import dev.civl.abc.ast.type.IF.QualifiedObjectType;
 import dev.civl.abc.ast.type.IF.StandardBasicType;
 import dev.civl.abc.ast.type.IF.StandardBasicType.BasicTypeKind;
@@ -62,6 +64,13 @@ import dev.civl.abc.token.IF.SyntaxException;
 import dev.civl.mc.config.IF.CIVLConstants;
 import dev.civl.mc.model.IF.CIVLInternalException;
 
+/**
+ * This class does the work of the complex number transformation. Note: it
+ * assumes a side-effect-free program, i.e., the side effect free transformer
+ * has already been run. It should not introduce any side-effect expressions.
+ * Note the use of functions is not appropriate for complex operations since
+ * these cannot occur in quantified formulas.
+ */
 public class ComplexWorker extends BaseWorker {
 
 	private static String COMPLEX_H = "complex.h";
@@ -69,10 +78,6 @@ public class ComplexWorker extends BaseWorker {
 	private static String COMPLEX_CVL = "complex.cvl";
 
 	private static String MATH_H = "math.h";
-
-//	private static String MATH_H_MACRO = "_MATH_";
-//
-//	private static String COMPLEX_H_MACRO = "_COMPLEX_";
 
 	private TypeFactory typeFactory;
 
@@ -89,7 +94,8 @@ public class ComplexWorker extends BaseWorker {
 
 	/**
 	 * Is the given type one of the 3 native C complex types: double _Complex, float
-	 * _Complex, or long double _Complex?
+	 * _Complex, or long double _Complex? This includes qualified versions of those
+	 * types and the atomic versions of them.
 	 * 
 	 * @param type the type, which may be null
 	 * @return {@code} true iff {@code type} is one of the 3 native C complex types
@@ -111,6 +117,14 @@ public class ComplexWorker extends BaseWorker {
 		}
 	}
 
+	/**
+	 * Is the given type a boolean type? This corresponds to the C (or CIVL-C) type
+	 * {@code Bool} as well as qualified versions of that type and the atomic
+	 * version.
+	 * 
+	 * @param type any type
+	 * @return {@code true} iff {@code type} is a boolean type
+	 */
 	private boolean isBool(Type type) {
 		if (type == null)
 			return false;
@@ -128,6 +142,15 @@ public class ComplexWorker extends BaseWorker {
 		}
 	}
 
+	/**
+	 * Is the given type a real type? Note that includes integer types,
+	 * enumerations, and (non-complex) floating-point types. It includes such types
+	 * that are qualified, or atomic. In general this corresponds to the notion of
+	 * "real domain" in the C Standard.
+	 * 
+	 * @param type any type
+	 * @return {@code true} iff {@code type} is in the real domain
+	 */
 	private boolean isReal(Type type) {
 		if (type == null)
 			return false;
@@ -160,44 +183,16 @@ public class ComplexWorker extends BaseWorker {
 	}
 
 	/**
-	 * Given a type node for one of the complex types, returns a new type node for
-	 * the corresponding CIVL complex type: one of the $*_complex types. Type
-	 * qualifiers are preserved.
+	 * Constructs a new typedef name node corresponding to the given complex type.
+	 * If the complex type has qualifiers or is atomic, that information is ignored.
+	 * This method simply creates a typedef name node such as "$double_complex"
+	 * without qualifiers.
 	 * 
-	 * Note: a type node for a complex type must be one of the following: a
-	 * TypedefNameNode, BasicTypeNode, or AtomicTypeNode.
-	 * 
-	 * @param kind   a basic type kind, one of *_COMPLEX
-	 * @param source source for the type node for the new node
-	 * @return new typedef name node
+	 * @param source      the source to use for the new node
+	 * @param complexType any complex type
+	 * @return the new typedef name node
 	 */
-	private TypeNode replacementTypeNode(TypeNode complexTypeNode) {
-		Source source = complexTypeNode.getSource();
-		IdentifierNode idn;
-		switch (kind(complexTypeNode.getType())) {
-		case DOUBLE_COMPLEX:
-			idn = nodeFactory.newIdentifierNode(source, "$double_complex");
-			break;
-		case FLOAT_COMPLEX:
-			idn = nodeFactory.newIdentifierNode(source, "$float_complex");
-			break;
-		case LONG_DOUBLE_COMPLEX:
-			idn = nodeFactory.newIdentifierNode(source, "$ldouble_complex");
-			break;
-		default:
-			throw new RuntimeException("unreachable");
-		}
-		TypedefNameNode newtn = nodeFactory.newTypedefNameNode(idn, null);
-		newtn.setAtomicQualified(complexTypeNode.isAtomicQualified());
-		newtn.setConstQualified(complexTypeNode.isConstQualified());
-		newtn.setRestrictQualified(complexTypeNode.isRestrictQualified());
-		newtn.setVolatileQualified(complexTypeNode.isVolatileQualified());
-		newtn.setInputQualified(complexTypeNode.isInputQualified());
-		newtn.setOutputQualified(complexTypeNode.isOutputQualified());
-		return newtn;
-	}
-
-	private TypeNode replacementTypeNode(Type complexType, Source source) {
+	private TypedefNameNode typedefName(Source source, Type complexType) {
 		IdentifierNode idn;
 		switch (kind(complexType)) {
 		case DOUBLE_COMPLEX:
@@ -212,31 +207,95 @@ public class ComplexWorker extends BaseWorker {
 		default:
 			throw new RuntimeException("unreachable");
 		}
+		TypedefNameNode result = nodeFactory.newTypedefNameNode(idn, null);
+		result.setType(complexType);
+		return result;
+	}
 
-		TypedefNameNode newtn = nodeFactory.newTypedefNameNode(idn, null);
+	/**
+	 * Given a type node for one of the complex types, returns a new type node for
+	 * the corresponding CIVL complex type: one of the $*_complex types. Type
+	 * qualifiers are preserved.
+	 * 
+	 * Note: a type node for a complex type must be one of the following: a
+	 * {@link TypedefNameNode}, {@link BasicTypeNode}, or {@link AtomicTypeNode}.
+	 * 
+	 * @param complexTypeNode a basic type kind, one of *_COMPLEX
+	 * @param source          source for the type node for the new node
+	 * @return new typedef name node
+	 */
+	private TypeNode replacementTypeNode(TypeNode complexTypeNode) {
+		Source source = complexTypeNode.getSource();
+		TypedefNameNode typedefName = typedefName(source, complexTypeNode.getType());
+		typedefName.setAtomicQualified(complexTypeNode.isAtomicQualified());
+		typedefName.setConstQualified(complexTypeNode.isConstQualified());
+		typedefName.setRestrictQualified(complexTypeNode.isRestrictQualified());
+		typedefName.setVolatileQualified(complexTypeNode.isVolatileQualified());
+		typedefName.setInputQualified(complexTypeNode.isInputQualified());
+		typedefName.setOutputQualified(complexTypeNode.isOutputQualified());
+		return typedefName;
+	}
 
+	/**
+	 * Given a complex type, this method constructs a type node representing that
+	 * type, preserving qualifiers and atomicity.
+	 * 
+	 * @param complexType any complex type
+	 * @param source      the source to use for the new node
+	 * @return a type node corresponding exactly to the given type
+	 */
+	private TypeNode complexTypeNode(Type complexType, Source source) {
+		TypedefNameNode typedefName = typedefName(source, complexType);
 		// Note: _Atomic(type) is a type specifier, represented by an AtomicType and an
 		// AtomicTypeNode.
 		// _Atomic ... is a type qualifier, represented by an AtomicType and an
 		// arbitrary TypeNode with the atomic-qualified bit set.
 		switch (complexType.kind()) {
 		case BASIC:
-			return newtn;
+			return typedefName;
 		case QUALIFIED: {
 			QualifiedObjectType qot = (QualifiedObjectType) complexType;
-			newtn.setAtomicQualified(false);
-			newtn.setConstQualified(qot.isConstQualified());
-			newtn.setRestrictQualified(qot.isRestrictQualified());
-			newtn.setVolatileQualified(qot.isVolatileQualified());
-			newtn.setInputQualified(qot.isInputQualified());
-			newtn.setOutputQualified(qot.isOutputQualified());
-			return newtn;
+			typedefName.setAtomicQualified(false);
+			typedefName.setConstQualified(qot.isConstQualified());
+			typedefName.setRestrictQualified(qot.isRestrictQualified());
+			typedefName.setVolatileQualified(qot.isVolatileQualified());
+			typedefName.setInputQualified(qot.isInputQualified());
+			typedefName.setOutputQualified(qot.isOutputQualified());
+			return typedefName;
 		}
 		case ATOMIC:
 			// choice: AtomicTypeNode, or just qualify the typedef name node.
-			return nodeFactory.newAtomicTypeNode(source, newtn);
+			return nodeFactory.newAtomicTypeNode(source, typedefName);
 		default:
 			throw new RuntimeException("unreachable");
+		}
+	}
+
+	/**
+	 * Constructs a new node representing the real floating point number 0, with the
+	 * real type corresponding to the given complex type: either float, double, or
+	 * long double type.
+	 * 
+	 * @param complexType the complex type used to determine the real type
+	 * @param source      source to be used for new node
+	 * @return node representing real 0
+	 */
+	private ExpressionNode realZero(Type complexType, Source source) {
+		String zeroString;
+		BasicTypeKind kind = kind(complexType);
+		if (kind == DOUBLE_COMPLEX) {
+			zeroString = "0.0";
+		} else if (kind == FLOAT_COMPLEX) {
+			zeroString = "0.0f";
+		} else if (kind == LONG_DOUBLE_COMPLEX) {
+			zeroString = "0.0l";
+		} else {
+			throw new RuntimeException("unreachable");
+		}
+		try {
+			return nodeFactory.newFloatingConstantNode(source, zeroString);
+		} catch (SyntaxException e) {
+			throw new CIVLInternalException("Syntax error parsing zero constant: " + zeroString, source);
 		}
 	}
 
@@ -265,6 +324,101 @@ public class ComplexWorker extends BaseWorker {
 				|| op == UNARYMINUS;
 	}
 
+	/**
+	 * Constructs new tree that applies the ".real" operator to the given argument.
+	 * 
+	 * Precondition: {@code complexNode} is unattached.
+	 * 
+	 * @param complexNode node for an expression of complex type
+	 * @return expression representing the real part of {@code complexNode}.
+	 */
+	private ExpressionNode realPart(ExpressionNode complexNode) {
+		if (complexNode.expressionKind() == ExpressionKind.COMPOUND_LITERAL) {
+			CompoundLiteralNode cln = (CompoundLiteralNode) complexNode;
+			CompoundInitializerNode cin = cln.getInitializerList();
+			int n = cin.numChildren();
+			assert n == 2;
+			PairNode<DesignationNode, InitializerNode> pair0 = cin.getSequenceChild(0);
+			if (pair0.getLeft() == null) {
+				ExpressionNode result = (ExpressionNode) pair0.getRight();
+				return result.copy();
+			} else {
+				// TODO: find the designation for "real"
+			}
+		}
+		Source source = complexNode.getSource();
+		ExpressionNode result = nodeFactory.newDotNode(source, complexNode,
+				nodeFactory.newIdentifierNode(source, "real"));
+		return result;
+	}
+
+	/**
+	 * Constructs new tree that applies the ".imag" operator to the given argument.
+	 * 
+	 * Precondition: {@code complexNode} is unattached.
+	 * 
+	 * @param complexNode node for an expression of complex type
+	 * @return expression representing the imaginary part of {@code complexNode}.
+	 */
+	private ExpressionNode imagPart(ExpressionNode complexNode) {
+		if (complexNode.expressionKind() == ExpressionKind.COMPOUND_LITERAL) {
+			CompoundLiteralNode cln = (CompoundLiteralNode) complexNode;
+			CompoundInitializerNode cin = cln.getInitializerList();
+			int n = cin.numChildren();
+			assert n == 2;
+			PairNode<DesignationNode, InitializerNode> pair0 = cin.getSequenceChild(0), pair1 = cin.getSequenceChild(1);
+			if (pair0.getLeft() == null && pair1.getLeft() == null) {
+				ExpressionNode result = (ExpressionNode) pair1.getRight();
+				return result.copy();
+			} else {
+				// TODO: find the designation for "imag"
+			}
+		}
+		Source source = complexNode.getSource();
+		ExpressionNode result = nodeFactory.newDotNode(source, complexNode,
+				nodeFactory.newIdentifierNode(source, "imag"));
+		return result;
+	}
+
+	/**
+	 * Makes a compound literal node representing the complex number specified by
+	 * the given real and imaginary parts. Example:
+	 * 
+	 * <pre>
+	 *  ($double_complex){ realPart, imagPart }
+	 * </pre>
+	 * 
+	 * Preconditions: {@code realPart} and {@code imagPart} must be unattached
+	 * 
+	 * @param realPart    the node representing the real part of the complex number
+	 * @param imagPart    the node representing the imaginary part of the complex
+	 *                    number
+	 * @param complexType the type of the new complex value
+	 * @return a new compound literal node representing the complex number
+	 */
+	private ExpressionNode makeComplex(Source source, ExpressionNode realPart, ExpressionNode imagPart,
+			Type complexType) {
+		PairNode<DesignationNode, InitializerNode> realPair = nodeFactory.newPairNode(source, null, realPart),
+				imagPair = nodeFactory.newPairNode(source, null, imagPart);
+		TypeNode typeNode = complexTypeNode(complexType, source);
+		CompoundInitializerNode cin = nodeFactory.newCompoundInitializerNode(source, Arrays.asList(realPair, imagPair));
+		CompoundLiteralNode cln = nodeFactory.newCompoundLiteralNode(source, typeNode, cin);
+		cln.setInitialType(complexType);
+		return cln;
+	}
+
+	/**
+	 * Given an expression node of a real type, and a complex type, this method
+	 * constructs a new tree representing the result of converting that real
+	 * expression to the complex type. The given real expression will be removed if
+	 * it is attached to some parent.
+	 * 
+	 * @param realExpr    any expression of real type (including an integer type,
+	 *                    for example)
+	 * @param complexType any complex type
+	 * @return the expression representing the conversion of the real expression to
+	 *         the complex type
+	 */
 	private ExpressionNode realToComplex(ExpressionNode realExpr, Type complexType) {
 		// Result will look like: ($*_complex){ realExpr, 0 }
 		// The int 0 will be converted to the appropriate real type.
@@ -273,78 +427,116 @@ public class ComplexWorker extends BaseWorker {
 		Source source = realExpr.getSource();
 		ExpressionNode zeroNode = nodeFactory.newIntConstantNode(source, 0);
 		realExpr.remove();
-		PairNode<DesignationNode, InitializerNode> realPair = nodeFactory.newPairNode(source, null, realExpr),
-				imagPair = nodeFactory.newPairNode(source, null, zeroNode);
-		TypeNode typeNode = replacementTypeNode(complexType, source);
-		CompoundInitializerNode cin = nodeFactory.newCompoundInitializerNode(source, Arrays.asList(realPair, imagPair));
-		CompoundLiteralNode cln = nodeFactory.newCompoundLiteralNode(source, typeNode, cin);
-		cln.setInitialType(complexType);
-		return cln;
+		return makeComplex(source, realExpr, zeroNode, complexType);
 	}
 
+	/**
+	 * Constructs a new type node for the real floating type corresponding to the
+	 * given complex type. For example, given the complex type "double _Complex" (or
+	 * any qualified form of that type), this method constructs a type node for the
+	 * type "double" (with no qualifiers).
+	 * 
+	 * @param source      the source to use for the new typedef name node
+	 * @param complexType any of the complex types (with or without qualifiers)
+	 * @return a new type node for the corresponding real type
+	 */
+	private TypeNode realTypeNode(Source source, Type complexType) {
+		switch (kind(complexType)) {
+		case DOUBLE_COMPLEX:
+			return nodeFactory.newBasicTypeNode(source, BasicTypeKind.DOUBLE);
+		case FLOAT_COMPLEX:
+			return nodeFactory.newBasicTypeNode(source, BasicTypeKind.FLOAT);
+		case LONG_DOUBLE_COMPLEX:
+			return nodeFactory.newBasicTypeNode(source, BasicTypeKind.LONG_DOUBLE);
+		default:
+			throw new RuntimeException("Illegal complex type: " + complexType);
+		}
+	}
+
+	/**
+	 * Transforms an expression of complex type to boolean. Pattern: {@code x} of
+	 * float type transforms to {@code x.real != 0.0f || x.imag != 0.0f}. The given
+	 * node will be removed if it is attached.
+	 * 
+	 * @param node        an expression of a complex type
+	 * @param complexType the exact type of the given expression
+	 * @return a new expression node representing the condition that the given
+	 *         complex expression is non-zero
+	 */
 	private ExpressionNode complexToBool(ExpressionNode node, Type complexType) {
 		Source source = node.getSource();
-		String name;
-
-		switch (kind(complexType)) {
-		case FLOAT_COMPLEX:
-			name = "$cfloat2bool";
-			break;
-		case DOUBLE_COMPLEX:
-			name = "$cdouble2bool";
-			break;
-		case LONG_DOUBLE_COMPLEX:
-			name = "$cldouble2bool";
-			break;
-		default:
-			throw new RuntimeException("unreachable");
-		}
 		node.remove();
-		FunctionCallNode fcn = nodeFactory.newFunctionCallNode(source,
-				nodeFactory.newIdentifierExpressionNode(source, nodeFactory.newIdentifierNode(source, name)),
-				Arrays.asList(node));
-		fcn.setInitialType(typeFactory.basicType(BOOL));
-		return fcn;
+		// need to duplicate the node for the imaginary part...
+		ExpressionNode node2 = node.copy();
+		OperatorNode neq1 = nodeFactory.newOperatorNode(source, NEQ, realPart(node),
+				nodeFactory.newIntConstantNode(source, 0));
+		OperatorNode neq2 = nodeFactory.newOperatorNode(source, NEQ, imagPart(node2),
+				nodeFactory.newIntConstantNode(source, 0));
+		OperatorNode or = nodeFactory.newOperatorNode(source, LOR, neq1, neq2);
+		or.setInitialType(typeFactory.basicType(BOOL));
+		return or;
 	}
 
+	/**
+	 * Converts from one complex type to another. Given a node representing an
+	 * expression of one complex type, this method constructs a node representing
+	 * the result of converting that expression to another complex type.
+	 * 
+	 * Example: given an expression node of type "double _Complex", this method
+	 * constructs the compound literal
+	 * 
+	 * <pre>
+	 *  ($double_complex){ (double)node.real, (double)node.imag }
+	 * </pre>
+	 * 
+	 * 
+	 * @param node           a node representing any expression of any complex type
+	 * @param oldComplexType the exactly type of the given expression
+	 * @param newComplexType the new complex type for the expression
+	 * @return a node representing the result of converting the given complex
+	 *         expression to the new complex type (this may be the given node, if
+	 *         the two types are equal)
+	 */
 	private ExpressionNode complexToComplex(ExpressionNode node, Type oldComplexType, Type newComplexType) {
 		Source source = node.getSource();
-		BasicTypeKind kind1 = kind(oldComplexType), kind2 = kind(newComplexType);
-
-		if (kind1 == kind2)
+		if (oldComplexType.equals(newComplexType))
 			return node;
-
-		String name;
-
-		switch (kind(oldComplexType)) {
-		case FLOAT_COMPLEX:
-			name = kind2 == DOUBLE_COMPLEX ? "$cfloat2double" : "$cfloat2ldouble";
-			break;
-		case DOUBLE_COMPLEX:
-			name = kind2 == FLOAT_COMPLEX ? "$cdouble2float" : "$cdouble2ldouble";
-			break;
-		case LONG_DOUBLE_COMPLEX:
-			name = kind2 == FLOAT_COMPLEX ? "$cldouble2float" : "$cldouble2double";
-			break;
-		default:
-			throw new RuntimeException("unreachable");
-		}
 		node.remove();
-		FunctionCallNode fcn = nodeFactory.newFunctionCallNode(source,
-				nodeFactory.newIdentifierExpressionNode(source, nodeFactory.newIdentifierNode(source, name)),
-				Arrays.asList(node));
-		fcn.setInitialType(newComplexType);
-		return fcn;
+		ExpressionNode node2 = node.copy();
+		ExpressionNode realPart = realPart(node);
+		ExpressionNode imagPart = imagPart(node2);
+		ExpressionNode newRealPart = nodeFactory.newCastNode(source, realTypeNode(source, newComplexType), realPart);
+		ExpressionNode newImagPart = nodeFactory.newCastNode(source, realTypeNode(source, newComplexType), imagPart);
+		ExpressionNode result = makeComplex(source, newRealPart, newImagPart, newComplexType);
+		result.setInitialType(newComplexType);
+		return result;
 	}
 
+	/**
+	 * Converts an expression of complex type to real type by dropping the imaginary
+	 * component.
+	 * 
+	 * @param node     an expression of a complex type
+	 * @param realType the real type
+	 * @return result of converting to real type
+	 */
 	private ExpressionNode complexToReal(ExpressionNode node, Type realType) {
-		Source source = node.getSource();
 		node.remove();
-		ExpressionNode result = nodeFactory.newDotNode(source, node, nodeFactory.newIdentifierNode(source, "real"));
+		ExpressionNode result = realPart(node);
 		result.setInitialType(realType);
 		return result;
 	}
 
+	/**
+	 * Converts an expression from one type to another, where at least one of the
+	 * two types is complex.
+	 * 
+	 * @param node    an expression
+	 * @param oldType the type of the given expression
+	 * @param newType the new type
+	 * @return expression representing result of conversion from old type to new
+	 *         type
+	 */
 	private ExpressionNode convert(ExpressionNode node, Type oldType, Type newType) {
 		if (isComplex(oldType)) {
 			if (isBool(newType))
@@ -362,127 +554,166 @@ public class ComplexWorker extends BaseWorker {
 		return node;
 	}
 
+	/**
+	 * Converts a literal node that has one of the original _Complex types to a
+	 * struct literal using the new complex struct types.
+	 * 
+	 * @param fcn a node representing an imaginary constant, such as 1.0i
+	 * @return a tree using the struct representation as ordered pair, e.g.,
+	 *         ($double_complex){1.0, 0.0}.
+	 */
 	private ExpressionNode convertLiteral(FloatingConstantNode fcn) {
 		assert fcn.isComplex();
+		Type complexType = fcn.getInitialType();
 		Source source = fcn.getSource();
 		ComplexFloatingValue value = (ComplexFloatingValue) fcn.getConstantValue();
 		RealFloatingValue realPart = value.getRealPart(), imagPart = value.getImaginaryPart();
 		assert realPart.isZero() == Answer.YES;
-		FloatingConstantNode imagNode = nodeFactory.newFloatingConstantNode(source, fcn.getStringRepresentation(),
-				fcn.wholePart(), fcn.fractionPart(), fcn.exponent(), imagPart);
-		String zeroString, typeString;
-		FloatKind fkind = realPart.getType().getFloatKind();
-		if (fkind == FloatKind.DOUBLE) {
-			zeroString = "0.0";
-			typeString = "$double_complex";
-		} else if (fkind == FloatKind.FLOAT) {
-			zeroString = "0.0f";
-			typeString = "$float_complex";
-		} else if (fkind == FloatKind.LONG_DOUBLE) {
-			zeroString = "0.0l";
-			typeString = "$ldouble_complex";
-		} else {
-			throw new RuntimeException("unreachable");
-		}
-		FloatingConstantNode zeroNode;
-		try {
-			zeroNode = nodeFactory.newFloatingConstantNode(source, zeroString);
-		} catch (SyntaxException e) {
-			throw new CIVLInternalException("Syntax error parsing zero constant: " + zeroString, source);
-		}
-		PairNode<DesignationNode, InitializerNode> realPair = nodeFactory.newPairNode(source, null, zeroNode),
-				imagPair = nodeFactory.newPairNode(source, null, imagNode);
-		IdentifierNode idNode = nodeFactory.newIdentifierNode(source, typeString);
-		TypedefNameNode tdnn = nodeFactory.newTypedefNameNode(idNode, null);
-		CompoundInitializerNode cin = nodeFactory.newCompoundInitializerNode(source, Arrays.asList(realPair, imagPair));
-		CompoundLiteralNode cln = nodeFactory.newCompoundLiteralNode(source, tdnn, cin);
-		cln.setInitialType(fcn.getInitialType());
-		return cln;
+
+		// The representation is used to print the second component of a struct,
+		// so need to strip off the imaginary modifier.
+		String representation = fcn.getStringRepresentation();
+		int n = representation.length();
+		String lower = representation.toLowerCase();
+		if (lower.endsWith("i") || lower.endsWith("j"))
+			representation = representation.substring(0, n - 1);
+		else if (lower.endsWith("if") || lower.endsWith("il") || lower.endsWith("jf") || lower.endsWith("jl"))
+			representation = representation.substring(0, n - 2) + representation.charAt(n - 1);
+
+		FloatingConstantNode imagNode = nodeFactory.newFloatingConstantNode(source, representation, fcn.wholePart(),
+				fcn.fractionPart(), fcn.exponent(), imagPart);
+		ExpressionNode zeroNode = realZero(fcn.getConvertedType(), source);
+		ExpressionNode result = makeComplex(source, zeroNode, imagNode, complexType);
+		result.setInitialType(complexType);
+		return result;
 	}
 
 	/**
-	 * Given an operator node for one of the operators satisfying method
-	 * {@link #isArithmeticOp(Operator)}, produces the replacement node using the
-	 * appropriate function call. For pure operators, the replacement node will be a
-	 * function call node. For operators that combine an assignment with the
-	 * operation (e.g., "+="), the replacement node will be an assignment node in
-	 * which the second argument is the function call node.
+	 * Real addition. Constructs new operator node with children x and y.
 	 * 
-	 * @param opNode an operator node for one of the operators satisfying
-	 *               {@link #isArithmeticOp(Operator)}
-	 * @return the replacement node
+	 * @param source the source to use for the new node
+	 * @param x      expression of real type
+	 * @param y      expression of real type
+	 * @return expression representing sum of {@code x} and {@code y}
 	 */
+	private ExpressionNode plus(Source source, ExpressionNode x, ExpressionNode y) {
+		return nodeFactory.newOperatorNode(source, PLUS, x, y);
+	}
+
+	/**
+	 * Real subtraction. Constructs new operator node with children x and y.
+	 * 
+	 * @param source the source to use for the new node
+	 * @param x      expression of real type
+	 * @param y      expression of real type
+	 * @return expression representing difference of {@code x} and {@code y}
+	 */
+	private ExpressionNode minus(Source source, ExpressionNode x, ExpressionNode y) {
+		return nodeFactory.newOperatorNode(source, MINUS, x, y);
+	}
+
+	/**
+	 * Real multiplication. Constructs new operator node with children x and y.
+	 * 
+	 * @param source the source to use for the new node
+	 * @param x      expression of real type
+	 * @param y      expression of real type
+	 * @return expression representing product of {@code x} and {@code y}
+	 */
+	private ExpressionNode times(Source source, ExpressionNode x, ExpressionNode y) {
+		return nodeFactory.newOperatorNode(source, TIMES, x, y);
+	}
+
+	/**
+	 * Real division. Constructs new operator node with children x and y.
+	 * 
+	 * @param source the source to use for the new node
+	 * @param x      expression of real type
+	 * @param y      expression of real type
+	 * @return expression representing quotient of {@code x} and {@code y}
+	 */
+	private ExpressionNode div(Source source, ExpressionNode x, ExpressionNode y) {
+		return nodeFactory.newOperatorNode(source, DIV, x, y);
+	}
+
 	private ExpressionNode arithmeticReplacement(OperatorNode opNode) {
 		Operator op = opNode.getOperator();
-		ExpressionNode arg0 = opNode.getArgument(0);
 		Source source = opNode.getSource();
-		String funName;
-		switch (op) {
-		case PLUS:
-			funName = "$cadd";
-			break;
-		case PLUSEQ:
-			funName = "$caddeq";
-			break;
-		case MINUS:
-			funName = "$csub";
-			break;
-		case MINUSEQ:
-			funName = "$csubeq";
-			break;
-		case TIMES:
-			funName = "$cmul";
-			break;
-		case TIMESEQ:
-			funName = "$cmuleq";
-			break;
-		case DIV:
-			funName = "$cdiv";
-			break;
-		case DIVEQ:
-			funName = "$cdiveq";
-			break;
-		case EQUALS:
-			funName = "$ceq";
-			break;
-		case NEQ:
-			funName = "$cneq";
-			break;
-		case UNARYMINUS:
-			funName = "$cneg";
-			break;
-		default:
-			throw new RuntimeException("unreachable");
-		}
-
-		BasicTypeKind kind = kind(arg0.getConvertedType());
-		if (kind == FLOAT_COMPLEX)
-			funName += "f";
-		else if (kind == LONG_DOUBLE_COMPLEX)
-			funName += "l";
-		IdentifierNode funNameNode = nodeFactory.newIdentifierNode(source, funName);
-		IdentifierExpressionNode funExprNode = nodeFactory.newIdentifierExpressionNode(source, funNameNode);
-
-		// Pattern: a+b ==> fun(a,b). a+=b ==> fun(&a,b).
-		// Note: have to use a pointer &a. Alternatives would require creating two
-		// copies of a, which would be wrong if evaluation of a has side-effects, e.g.,
-		// if a is array[++i].
-
-		List<ExpressionNode> argList = new LinkedList<>();
 		int numArgs = opNode.getNumberOfArguments();
+		ExpressionNode[] args = new ExpressionNode[numArgs];
+		Type type = opNode.getInitialType();
+		ExpressionNode result;
 
 		for (int i = 0; i < numArgs; i++) {
 			ExpressionNode arg = opNode.getArgument(i);
 			arg.remove();
-			argList.add(arg);
+			args[i] = arg;
 		}
-		if (isAssignOp(op)) {
-			assert numArgs == 2;
-			arg0 = argList.get(0);
-			argList.set(0, nodeFactory.newOperatorNode(arg0.getSource(), Operator.ADDRESSOF, arg0));
+		switch (op) {
+		case PLUS:
+		case MINUS: {
+			// x+y ==> {x.real+y.real, x.imag+y.imag};
+			ExpressionNode x = args[0], y = args[1], xReal = realPart(x), xImag = imagPart(x.copy()),
+					yReal = realPart(y), yImag = imagPart(y.copy());
+			result = makeComplex(source, nodeFactory.newOperatorNode(source, op, xReal, yReal),
+					nodeFactory.newOperatorNode(source, op, xImag, yImag), type);
+			break;
 		}
-		ExpressionNode result = nodeFactory.newFunctionCallNode(source, funExprNode, argList);
-		result.setInitialType(opNode.getInitialType());
+		case TIMES: {
+			// x*y ==> {x.real*y.real - x.imag*y.imag, x.real*y.imag + x.imag*y.real}
+			ExpressionNode x = args[0], y = args[1], xReal = realPart(x), xImag = imagPart(x.copy()),
+					yReal = realPart(y), yImag = imagPart(y.copy());
+			ExpressionNode newReal = minus(source, times(source, xReal, yReal), times(source, xImag, yImag)),
+					newImag = plus(source, times(source, xReal.copy(), yImag.copy()),
+							times(source, xImag.copy(), yReal.copy()));
+			result = makeComplex(source, newReal, newImag, type);
+			break;
+		}
+		case DIV: {
+			// x/y: let a = x.real, b = x.imag, c = y.real, d = y.imag, r = c*c+d*d;
+			// {(a*c+b*d)/r, (b*c-a*d)/r}
+			ExpressionNode x = args[0], y = args[1], a = realPart(x), b = imagPart(x.copy()), c = realPart(y),
+					d = imagPart(y.copy());
+			ExpressionNode r = plus(source, times(y.getSource(), c, c.copy()), times(y.getSource(), d, d.copy()));
+			ExpressionNode newReal = div(source, plus(source, times(source, a, c.copy()), times(source, b, d.copy())),
+					r);
+			ExpressionNode newImag = div(source,
+					minus(source, times(source, b.copy(), c.copy()), times(source, a.copy(), d.copy())), r.copy());
+			result = makeComplex(source, newReal, newImag, type);
+			break;
+		}
+		case UNARYMINUS: {
+			// -x : {-x.real, -x.imag}
+			ExpressionNode x = args[0], xReal = realPart(x), xImag = imagPart(x.copy());
+			ExpressionNode newReal = nodeFactory.newOperatorNode(source, UNARYMINUS, xReal),
+					newImag = nodeFactory.newOperatorNode(source, UNARYMINUS, xImag);
+			result = makeComplex(source, newReal, newImag, type);
+			break;
+		}
+		case EQUALS: {
+			// x==y : x.real==y.real && x.imag==y.imag
+			ExpressionNode x = args[0], xReal = realPart(x), xImag = imagPart(x.copy());
+			ExpressionNode y = args[1], yReal = realPart(y), yImag = imagPart(y.copy());
+			result = nodeFactory.newOperatorNode(source, LAND,
+					nodeFactory.newOperatorNode(source, EQUALS, xReal, yReal),
+					nodeFactory.newOperatorNode(source, EQUALS, xImag, yImag));
+			result.setInitialType(type);
+			break;
+		}
+		case NEQ: {
+			// x!=y : x.real!=y.real || x.imag!=y.imag
+			ExpressionNode x = args[0], xReal = realPart(x), xImag = imagPart(x.copy());
+			ExpressionNode y = args[1], yReal = realPart(y), yImag = imagPart(y.copy());
+			result = nodeFactory.newOperatorNode(source, LOR, nodeFactory.newOperatorNode(source, NEQ, xReal, yReal),
+					nodeFactory.newOperatorNode(source, NEQ, xImag, yImag));
+			result.setInitialType(type);
+			break;
+		}
+		default:
+			throw new RuntimeException("unreachable");
+		// Note: PLUSEQ, MINUSEQ, TIMESEQ, DIVEQ should have been removed by side-effect
+		// remover.
+		}
 		return result;
 	}
 

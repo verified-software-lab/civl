@@ -62,6 +62,11 @@ public class ComplexTest {
 	}
 
 	@Test
+	public void complex_quant() {
+		check("complex_quant.cvl");
+	}
+
+	@Test
 	public void mpi_complex() {
 		assertTrue(ui.run(VERIFY, QUIET, "-input_mpi_nprocs=2", filename("mpi_complex.cvl")));
 	}
