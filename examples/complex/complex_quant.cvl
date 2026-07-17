@@ -1,3 +1,4 @@
+#include <complex.h>
 
 int main(void) {
   int n = 5;
@@ -8,4 +9,6 @@ int main(void) {
   }
   $assert($forall (int i:0 .. n-1) a[i]+a[i] == 2*i + 2*i*1.0I);
   $assert($exists (int i:0 .. n-1) a[i] != 0);
+  $assert($forall (int i:0 .. n-1) creal(a[i]) == i && cimag(a[i]) == i);
+  //$assert($forall (int i:0 .. n-1) cabs(cacos(a[i])) >= 0);
 }

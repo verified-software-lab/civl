@@ -7,90 +7,11 @@ typedef struct $float_complex $float_complex;
 typedef struct $double_complex $double_complex;
 typedef struct $ldouble_complex $ldouble_complex;
 
-// Macros...
-
-#define _Complex_I ($float_complex){0.0f, 1.0f}
-#define I _Complex_I
-
-// These are all specified as macros in the C Spec, but we use
-// functions...
-$double_complex CMPLX(double x, double y);
-$float_complex CMPLXF(float x, float y);
-$ldouble_complex CMPLXL(long double x, long double y);
-
 // CIVL functions not in C spec...
 
 void $cprint($double_complex x);
 void $cprintf($float_complex x);
 void $cprintl($ldouble_complex x);
-
-int $ceq($double_complex x, $double_complex y);
-int $cneq($double_complex x, $double_complex y);
-int $ceqf($float_complex x, $float_complex y);
-int $cneqf($float_complex x, $float_complex y);
-int $ceql($ldouble_complex x, $ldouble_complex y);
-int $cneql($ldouble_complex x, $ldouble_complex y);
-
-$double_complex $cadd($double_complex x, $double_complex y);
-$double_complex $csub($double_complex x, $double_complex y);
-$double_complex $cmul($double_complex x, $double_complex y);
-$double_complex $cdiv($double_complex x, $double_complex y);
-$double_complex $cneg($double_complex x);
-
-$float_complex $caddf($float_complex x, $float_complex y);
-$float_complex $csubf($float_complex x, $float_complex y);
-$float_complex $cmulf($float_complex x, $float_complex y);
-$float_complex $cdivf($float_complex x, $float_complex y);
-$float_complex $cnegf($float_complex x);
-
-$ldouble_complex $caddl($ldouble_complex x, $ldouble_complex y);
-$ldouble_complex $csubl($ldouble_complex x, $ldouble_complex y);
-$ldouble_complex $cmull($ldouble_complex x, $ldouble_complex y);
-$ldouble_complex $cdivl($ldouble_complex x, $ldouble_complex y);
-$ldouble_complex $cnegl($ldouble_complex x);
-
-$double_complex $cfloat2double($float_complex x);
-$ldouble_complex $cfloat2ldouble($float_complex x);
-$float_complex $cdouble2float($double_complex x);
-$ldouble_complex $cdouble2ldouble($double_complex x);
-$float_complex $cldouble2float($ldouble_complex x);
-$double_complex $cldouble2double($ldouble_complex x);
-
-_Bool $cfloat2bool($float_complex x);
-_Bool $cdouble2bool($double_complex x);
-_Bool $cldouble2bool($ldouble_complex x);
-
-$double_complex $caddeq($double_complex * p, $double_complex x);
-$double_complex $csubeq($double_complex * p, $double_complex x);
-$double_complex $cmuleq($double_complex * p, $double_complex x);
-$double_complex $cdiveq($double_complex * p, $double_complex x);
-
-$float_complex $caddeqf($float_complex * p, $float_complex x);
-$float_complex $csubeqf($float_complex * p, $float_complex x);
-$float_complex $cmuleqf($float_complex * p, $float_complex x);
-$float_complex $cdiveqf($float_complex * p, $float_complex x);
-
-$ldouble_complex $caddeql($ldouble_complex * p, $ldouble_complex x);
-$ldouble_complex $csubeql($ldouble_complex * p, $ldouble_complex x);
-$ldouble_complex $cmuleql($ldouble_complex * p, $ldouble_complex x);
-$ldouble_complex $cdiveql($ldouble_complex * p, $ldouble_complex x);
-
-
-// Functions from complex.h for which we provide CIVL
-// implementations...
-
-double               cabs($double_complex);
-float                cabsf($float_complex);
-long double          cabsl($ldouble_complex);
-double               cimag($double_complex);
-float                cimagf($float_complex);
-long double          cimagl($ldouble_complex);
-$double_complex      conj($double_complex);
-$float_complex       conjf($float_complex);
-$ldouble_complex     conjl($ldouble_complex);
-double               creal($double_complex);
-float                crealf($float_complex);
-long double          creall($ldouble_complex);
 
 // Functions from complex.h which will be kept abstract...
 

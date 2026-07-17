@@ -27,19 +27,24 @@ import java.util.List;
 import dev.civl.abc.ast.IF.AST;
 import dev.civl.abc.ast.IF.ASTFactory;
 import dev.civl.abc.ast.conversion.IF.Conversion;
+import dev.civl.abc.ast.entity.IF.Entity;
+import dev.civl.abc.ast.entity.IF.Function;
 import dev.civl.abc.ast.node.IF.ASTNode;
 import dev.civl.abc.ast.node.IF.IdentifierNode;
 import dev.civl.abc.ast.node.IF.PairNode;
 import dev.civl.abc.ast.node.IF.SequenceNode;
 import dev.civl.abc.ast.node.IF.compound.CompoundInitializerNode;
 import dev.civl.abc.ast.node.IF.compound.DesignationNode;
+import dev.civl.abc.ast.node.IF.declaration.DeclarationNode;
 import dev.civl.abc.ast.node.IF.declaration.InitializerNode;
 import dev.civl.abc.ast.node.IF.expression.CastNode;
 import dev.civl.abc.ast.node.IF.expression.CompoundLiteralNode;
 import dev.civl.abc.ast.node.IF.expression.ExpressionNode;
-import dev.civl.abc.ast.node.IF.expression.FloatingConstantNode;
-import dev.civl.abc.ast.node.IF.expression.OperatorNode;
 import dev.civl.abc.ast.node.IF.expression.ExpressionNode.ExpressionKind;
+import dev.civl.abc.ast.node.IF.expression.FloatingConstantNode;
+import dev.civl.abc.ast.node.IF.expression.FunctionCallNode;
+import dev.civl.abc.ast.node.IF.expression.IdentifierExpressionNode;
+import dev.civl.abc.ast.node.IF.expression.OperatorNode;
 import dev.civl.abc.ast.node.IF.expression.OperatorNode.Operator;
 import dev.civl.abc.ast.node.IF.statement.BlockItemNode;
 import dev.civl.abc.ast.node.IF.statement.IfNode;
@@ -77,15 +82,7 @@ public class ComplexWorker extends BaseWorker {
 
 	private static String COMPLEX_CVL = "complex.cvl";
 
-	private static String MATH_H = "math.h";
-
 	private TypeFactory typeFactory;
-
-	/**
-	 * The last index of a child node of root belong to math.h, or -1 if no math.h
-	 * is present. This is needed so that complex.cvl can be inserted after math.h.
-	 */
-	private int mathHIndex = -1;
 
 	public ComplexWorker(String transformerName, ASTFactory astFactory) {
 		super(transformerName, astFactory);
@@ -718,6 +715,123 @@ public class ComplexWorker extends BaseWorker {
 	}
 
 	/**
+	 * Is the function called one of the complex functions that can be replaced by a
+	 * pure expressions?
+	 * 
+	 * @param fcn any function call node
+	 * @return {@code true} iff the the call is to a function in the complex library
+	 *         and that functions is one of the ones that can be defined by a simple
+	 *         expression
+	 */
+	private boolean isReplaceableCall(FunctionCallNode fcn) {
+		ExpressionNode funcExpr = fcn.getFunction();
+		if (funcExpr instanceof IdentifierExpressionNode) {
+			IdentifierNode funcIdent = ((IdentifierExpressionNode) funcExpr).getIdentifier();
+			Entity entity = funcIdent.getEntity();
+			if (entity instanceof Function) {
+				Function func = (Function) entity;
+				DeclarationNode funcDecl = func.getDeclaration(0);
+				Source funcSource = funcDecl.getSource();
+				String funcFilename = funcSource.getFirstToken().getSourceFile().getName();
+				if (COMPLEX_H.equals(funcFilename)) {
+					switch (funcIdent.name()) {
+					case "CMPLX":
+					case "CMPLXF":
+					case "CMPLXL":
+					case "cabs":
+					case "cabsf":
+					case "cabsl":
+					case "creal":
+					case "crealf":
+					case "creall":
+					case "cimag":
+					case "cimagf":
+					case "cimagl":
+					case "conj":
+					case "conjf":
+					case "conjl":
+						return true;
+					default:
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Given a replaceable function call node, this method constructs an expression
+	 * tree which can replace that function call. This allows the call to be used in
+	 * quantified formulas or wherever an expression is asked for.
+	 * 
+	 * @param fcn a function call node satisfying
+	 *            {@link #isReplaceableCall(FunctionCallNode)}
+	 * @return a new expression tree which computes the same thing as the function
+	 */
+	private ExpressionNode transformFunctionCall(FunctionCallNode fcn) {
+		String funcName = ((IdentifierExpressionNode) fcn.getFunction()).getIdentifier().name();
+		Type returnType = fcn.getInitialType();
+		Source source = fcn.getSource();
+		SequenceNode<ExpressionNode> arguments = fcn.getArguments();
+		int numArgs = arguments.numChildren();
+		ExpressionNode[] args = new ExpressionNode[numArgs];
+
+		arguments.remove();
+		for (int i = 0; i < numArgs; i++) {
+			ExpressionNode arg = arguments.getSequenceChild(i);
+			arg.remove();
+			args[i] = arg;
+		}
+		switch (funcName) {
+		case "CMPLX":
+		case "CMPLXF":
+		case "CMPLXL":
+			return makeComplex(source, args[0], args[1], returnType);
+		case "cabs":
+		case "cabsf":
+		case "cabsl": {
+			// unfortunately sqrt and $pow cannot be used in quantified expressions
+			// $pow(x.real*x.real + x.imag*x.imag, 0.5)
+			ExpressionNode x = args[0], xReal = realPart(x), xImag = imagPart(x.copy()),
+					s = plus(source, times(source, xReal, xReal.copy()), times(source, xImag, xImag.copy()));
+			ExpressionNode half;
+			try {
+				half = nodeFactory.newFloatingConstantNode(source, "0.5");
+			} catch (SyntaxException e) {
+				throw new RuntimeException("unrechable");
+			}
+			ExpressionNode result = nodeFactory.newFunctionCallNode(source,
+					nodeFactory.newIdentifierExpressionNode(source, nodeFactory.newIdentifierNode(source, "$pow")),
+					Arrays.asList(s, half));
+			result.setInitialType(returnType);
+			return result;
+		}
+		case "creal":
+		case "crealf":
+		case "creall": {
+			ExpressionNode result = realPart(args[0]);
+			result.setInitialType(returnType);
+			return result;
+		}
+		case "cimag":
+		case "cimagf":
+		case "cimagl": {
+			ExpressionNode result = imagPart(args[0]);
+			result.setInitialType(returnType);
+			return result;
+		}
+		case "conj":
+		case "conjf":
+		case "conjl": {
+			return makeComplex(source, realPart(args[0]),
+					nodeFactory.newOperatorNode(source, UNARYMINUS, imagPart(args[0].copy())), returnType);
+		}
+		default:
+			throw new RuntimeException("unreachable");
+		}
+	}
+
+	/**
 	 * Replaces C complex primitives with CIVL-C structure primitives in complex.cvh
 	 * and complex.cvl.
 	 * 
@@ -795,6 +909,13 @@ public class ComplexWorker extends BaseWorker {
 					parent.setChild(idx, node);
 					change = true;
 				}
+			} else if (node instanceof FunctionCallNode) {
+				if (isReplaceableCall((FunctionCallNode) node)) {
+					node.remove();
+					node = transformFunctionCall((FunctionCallNode) node);
+					parent.setChild(idx, node);
+					change = true;
+				}
 			}
 
 			// now, apply the conversions:
@@ -868,24 +989,13 @@ public class ComplexWorker extends BaseWorker {
 				root.removeChild(i);
 			} else if (COMPLEX_CVL.equals(sourceName)) {
 				hasComplexCvl = true;
-			} else if (MATH_H.equals(sourceName)) {
-				mathHIndex = i;
 			}
 		}
 		// TODO: this only sets the child to null. get rid of the null gaps?
 
 		process(root);
 		if (!hasComplexCvl) {
-			// remove old math.h if present:
-			if (mathHIndex >= 0) {
-				nchildren = root.numChildren();
-				for (int i = 0; i < nchildren; i++) {
-					ASTNode node = root.child(i);
-					if (node != null && MATH_H.equals(node.getSource().getFirstToken().getSourceFile().getName()))
-						root.removeChild(i);
-				}
-			}
-			// insert complex.cvl (which includes math.h and complex.cvh) at beginning:
+			// insert complex.cvl (which includes complex.cvh) at beginning:
 			File file = new File(CIVLConstants.CIVL_LIB_SRC_PATH, COMPLEX_CVL);
 			AST lib = this.parseSystemLibrary(file, EMPTY_MACRO_MAP);
 			SequenceNode<BlockItemNode> libRoot = lib.getRootNode();

@@ -2,7 +2,7 @@
 all: verify run
 
 verify: complex_basics complex1 complex_funs \
-   mpi_complex fourth complex_ops
+   mpi_complex fourth complex_ops complex_quant
 
 run: run_complex_basics run_complex_funs
 
@@ -34,6 +34,9 @@ complex_ops: complex_ops.c
 
 unity: unity.cvl
 	civl verify -inputN=4 $<
+
+complex_quant: complex_quant.cvl
+	civl verify $<
 
 clean:
 	rm -rf *.exec *~ CIVLREP a.out
