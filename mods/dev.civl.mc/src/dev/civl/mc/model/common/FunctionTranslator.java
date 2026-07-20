@@ -2441,7 +2441,6 @@ public class FunctionTranslator {
 			Scope parameterScope, ArrayList<Variable> parameters, Identifier functionIdentifier,
 			FunctionType functionType, CIVLType returnType, CIVLSource functionSource) {
 		AbstractFunctionDefinitionNode absFunNode = (AbstractFunctionDefinitionNode) node;
-		int continuity = absFunNode.continuity();
 		String attr = null;
 
 		if (absFunNode.getAttribute() != null) {
@@ -2456,7 +2455,7 @@ public class FunctionTranslator {
 							+ "It can be declared as an unconstrained input variable instead, e.g.\n" + "$input int N;",
 					node.getSource());
 		return modelFactory.abstractFunction(functionSource, functionIdentifier, parameterScope, parameters, returnType,
-				scope, continuity, attr);
+				scope, attr);
 	}
 
 	/**

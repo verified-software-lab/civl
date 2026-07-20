@@ -1717,18 +1717,12 @@ public interface NodeFactory {
 	 * @param type       The function type with the appropriate parameters and
 	 *                   return type.
 	 * @param contract   Any code contract associated with the function.
-	 * @param continuity The number of derivatives that may be taken; this applies
-	 *                   to real valued functions of real variables only
-	 * @param intervals  sequence of intervals whose Cartesian product specifies the
-	 *                   domain on which this function is differentiable to the
-	 *                   specified degree
 	 * @param attr       nullable. The optional string literal representing the
 	 *                   attribute attached to this abstract function.
 	 * @return An abstract function definition with the specified properties.
 	 */
 	AbstractFunctionDefinitionNode newAbstractFunctionDefinitionNode(Source source, IdentifierNode name, TypeNode type,
-			SequenceNode<ContractNode> contract, int continuity,
-			SequenceNode<PairNode<ExpressionNode, ExpressionNode>> intervals, StringLiteralNode attr);
+			SequenceNode<ContractNode> contract,  StringLiteralNode attr);
 
 	/**
 	 * Creates a new node representing an entire translation unit. The children of

@@ -1158,9 +1158,9 @@ public class CommonModelFactory implements ModelFactory {
 
 	@Override
 	public AbstractFunction abstractFunction(CIVLSource source, Identifier name, Scope parameterScope,
-			List<Variable> parameters, CIVLType returnType, Scope containingScope, int continuity, String attribute) {
+			List<Variable> parameters, CIVLType returnType, Scope containingScope, String attribute) {
 		return new CommonAbstractFunction(source, name, parameterScope, parameters, returnType, containingScope,
-				containingScope.numFunctions(), continuity, attribute);
+				containingScope.numFunctions(), attribute);
 	}
 
 	@Override

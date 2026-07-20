@@ -721,9 +721,8 @@ public class CommonNodeFactory implements NodeFactory {
 
 	@Override
 	public AbstractFunctionDefinitionNode newAbstractFunctionDefinitionNode(Source source, IdentifierNode name,
-			TypeNode type, SequenceNode<ContractNode> contract, int continuity,
-			SequenceNode<PairNode<ExpressionNode, ExpressionNode>> intervals, StringLiteralNode attr) {
-		return new CommonAbstractFunctionDefinitionNode(source, name, type, contract, continuity, intervals, attr);
+			TypeNode type, SequenceNode<ContractNode> contract, StringLiteralNode attr) {
+		return new CommonAbstractFunctionDefinitionNode(source, name, type, contract, attr);
 	}
 
 	@Override

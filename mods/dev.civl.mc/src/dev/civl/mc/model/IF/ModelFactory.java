@@ -938,7 +938,7 @@ public interface ModelFactory {
 	 * @return The abstract function.
 	 */
 	AbstractFunction abstractFunction(CIVLSource source, Identifier name, Scope parameterScope,
-			List<Variable> parameters, CIVLType returnType, Scope containingScope, int continuity, String attribute);
+			List<Variable> parameters, CIVLType returnType, Scope containingScope, String attribute);
 
 	/**
 	 * Create a new function. When the function is constructed, its outermost scope

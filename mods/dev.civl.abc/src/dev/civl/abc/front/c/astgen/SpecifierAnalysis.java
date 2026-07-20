@@ -9,7 +9,6 @@ import static dev.civl.abc.front.IF.CivlcTokenConstant.CHAR;
 import static dev.civl.abc.front.IF.CivlcTokenConstant.COMPLEX;
 import static dev.civl.abc.front.IF.CivlcTokenConstant.CONST;
 import static dev.civl.abc.front.IF.CivlcTokenConstant.DEVICE;
-import static dev.civl.abc.front.IF.CivlcTokenConstant.DIFFERENTIABLE;
 import static dev.civl.abc.front.IF.CivlcTokenConstant.DOMAIN;
 import static dev.civl.abc.front.IF.CivlcTokenConstant.DOUBLE;
 import static dev.civl.abc.front.IF.CivlcTokenConstant.ENUM;
@@ -195,23 +194,10 @@ public class SpecifierAnalysis {
 	List<CommonTree> alignmentExpressionNodes = new LinkedList<CommonTree>();
 
 	/**
-	 * A function specifier of the form $differentiable(n, [a1,b1]...[an,bn]). n is
-	 * the degree of differentiability and [a1,b1]x...x[an,bn] is the domain on
-	 * which the function has that many continuous derivatives.
-	 */
-	CommonTree differentiableNode = null;
-
-	/**
 	 * An optional abstract function attribute attached to the abstract function.
 	 * The attribute is a string literal.
 	 */
 	CommonTree abstractAttributeNode = null;
-
-	/**
-	 * If $differentiable is present, this is the conrete int n which is the number
-	 * of derivatives that exist.
-	 */
-	int differentiableDegree = 0;
 
 	/**
 	 * Creates a new analysis object and conducts the analysis. The
@@ -387,11 +373,6 @@ public class SpecifierAnalysis {
 							abstractAttributeNode = (CommonTree) node.getChild(0);
 					}
 					break;
-				case DIFFERENTIABLE:
-					if (differentiableNode != null)
-						throw error("More than one $differentiable specifier in function declaration", node);
-					differentiableNode = node;
-					differentiableDegree = parseInt((CommonTree) node.getChild(0));
 				case DEVICE:
 					this.deviceSpecifier = true;
 					break;

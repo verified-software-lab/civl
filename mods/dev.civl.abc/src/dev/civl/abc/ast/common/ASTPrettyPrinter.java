@@ -674,22 +674,6 @@ public class ASTPrettyPrinter {
 		result.append(prefix);
 		if (function instanceof AbstractFunctionDefinitionNode) {
 			result.append("$abstract ");
-
-			AbstractFunctionDefinitionNode af = (AbstractFunctionDefinitionNode) function;
-			SequenceNode<PairNode<ExpressionNode, ExpressionNode>> intervals = af.getIntervals();
-
-			if (intervals != null) {
-				result.append("$differentiable(" + af.continuity() + ", ");
-				for (PairNode<ExpressionNode, ExpressionNode> interval : intervals) {
-					result.append("[");
-					result.append(expression2Pretty(interval.getLeft(), maxLength));
-					result.append(",");
-					result.append(expression2Pretty(interval.getRight(), maxLength));
-					result.append("]");
-				}
-				result.append(") ");
-			}
-
 		}
 		if (function.hasGlobalFunctionSpecifier())
 			result.append("__global__ ");
