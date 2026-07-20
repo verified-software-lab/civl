@@ -131,11 +131,6 @@ public interface ExpressionNode extends InitializerNode, SizeableNode, ForLoopIn
 		 */
 		REGULAR_RANGE,
 		/**
-		 * A CIVL-C remote reference expression, which refers to a variable in a
-		 * different process. Can be cast to {@link RemoteExpressionNode}.
-		 */
-		REMOTE_REFERENCE,
-		/**
 		 * The CIVL-C <code>$result</code> built-in variable, which refers to the result
 		 * returned by a function. Can be cast to {@link ResultNode}.
 		 */

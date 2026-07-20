@@ -42,7 +42,6 @@ import dev.civl.abc.ast.node.IF.expression.OperatorNode;
 import dev.civl.abc.ast.node.IF.expression.OperatorNode.Operator;
 import dev.civl.abc.ast.node.IF.expression.QuantifiedExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.RegularRangeNode;
-import dev.civl.abc.ast.node.IF.expression.RemoteOnExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.ScopeOfNode;
 import dev.civl.abc.ast.node.IF.expression.SizeableNode;
 import dev.civl.abc.ast.node.IF.expression.SizeofNode;
@@ -1253,17 +1252,6 @@ public class SideEffectRemover extends BaseTransformer {
 	}
 
 	/**
-	 * A remote reference can occur only in contract, which should not have
-	 * side-effects.
-	 * 
-	 * @param expression
-	 * @return
-	 */
-	private ExprTriple translateRemoteReference(RemoteOnExpressionNode expression) {
-		return new ExprTriple(expression);
-	}
-
-	/**
 	 * Translates a regular range expression into an equivalent triple. Strategy:
 	 * 
 	 * <pre>
@@ -1729,8 +1717,6 @@ public class SideEffectRemover extends BaseTransformer {
 			return translateNonSideEffectExpression(expression);
 		case REGULAR_RANGE:
 			return translateRegularRange((RegularRangeNode) expression, isVoid);
-		case REMOTE_REFERENCE:
-			return translateRemoteReference((RemoteOnExpressionNode) expression);
 		case SCOPEOF:
 			return translateScopeOf((ScopeOfNode) expression, isVoid);
 		case SIZEOF:

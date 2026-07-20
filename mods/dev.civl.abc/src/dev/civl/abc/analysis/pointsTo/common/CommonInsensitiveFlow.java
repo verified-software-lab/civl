@@ -524,7 +524,6 @@ public class CommonInsensitiveFlow implements InsensitiveFlow {
 				processVarDecNodeWorkerForCompoundinitializer(aux, clNode.getInitializerList());
 				return new TempExprAbstraction(aux, null);
 			}
-			case REMOTE_REFERENCE :
 			case QUANTIFIED_EXPRESSION :
 			case LAMBDA :
 			case SPAWN :

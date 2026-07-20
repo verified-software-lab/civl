@@ -78,7 +78,6 @@ import dev.civl.abc.ast.node.IF.expression.OperatorNode.Operator;
 import dev.civl.abc.ast.node.IF.expression.QuantifiedExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.QuantifiedExpressionNode.Quantifier;
 import dev.civl.abc.ast.node.IF.expression.RegularRangeNode;
-import dev.civl.abc.ast.node.IF.expression.RemoteOnExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.ScopeOfNode;
 import dev.civl.abc.ast.node.IF.expression.SizeableNode;
 import dev.civl.abc.ast.node.IF.expression.SizeofNode;
@@ -191,7 +190,6 @@ import dev.civl.abc.ast.node.common.expression.CommonOperatorNode;
 import dev.civl.abc.ast.node.common.expression.CommonProcnullNode;
 import dev.civl.abc.ast.node.common.expression.CommonQuantifiedExpressionNode;
 import dev.civl.abc.ast.node.common.expression.CommonRegularRangeNode;
-import dev.civl.abc.ast.node.common.expression.CommonRemoteExpressionNode;
 import dev.civl.abc.ast.node.common.expression.CommonResultNode;
 import dev.civl.abc.ast.node.common.expression.CommonScopeOfNode;
 import dev.civl.abc.ast.node.common.expression.CommonSelfNode;
@@ -758,26 +756,9 @@ public class CommonNodeFactory implements NodeFactory {
 	}
 
 	@Override
-	public RemoteOnExpressionNode newRemoteOnExpressionNode(Source source, ExpressionNode left, ExpressionNode right) {
-		return new CommonRemoteExpressionNode(source, left, right);
-	}
-
-	@Override
 	public ScopeOfNode newScopeOfNode(Source source, IdentifierExpressionNode variableExpression) {
 		return new CommonScopeOfNode(source, variableExpression);
 	}
-
-	// @Override
-	// public AssumeNode newAssumeNode(Source source, ExpressionNode expression)
-	// {
-	// return new CommonAssumeNode(source, expression);
-	// }
-	//
-	// @Override
-	// public AssertNode newAssertNode(Source source, ExpressionNode expression,
-	// SequenceNode<ExpressionNode> explanation) {
-	// return new CommonAssertNode(source, expression, explanation);
-	// }
 
 	@Override
 	public WhenNode newWhenNode(Source source, ExpressionNode guard, StatementNode body) {

@@ -375,17 +375,6 @@ public class CASTBuilderWorker extends ASTBuilderWorker {
 		return nodeFactory.newStringLiteralNode(source, stringLiteral.getText(), token.getStringLiteral());
 	}
 
-	private ExpressionNode translateAt(Source source, CommonTree expressionTree, SimpleScope scope)
-			throws SyntaxException {
-		CommonTree procExprTree = (CommonTree) expressionTree.getChild(0);
-		CommonTree identifierTree = (CommonTree) expressionTree.getChild(1);
-		ExpressionNode procExpr = translateExpression(procExprTree, scope);
-		IdentifierNode identifierNode = translateIdentifier(identifierTree);
-
-		return nodeFactory.newRemoteOnExpressionNode(source, procExpr,
-				nodeFactory.newIdentifierExpressionNode(newSource(identifierTree), identifierNode));
-	}
-
 	private ExpressionNode translateRegularRange(Source source, CommonTree expressionTree, SimpleScope scope)
 			throws SyntaxException {
 		{// regular range expression lo..hi or lo..hi#step
@@ -765,20 +754,8 @@ public class CASTBuilderWorker extends ASTBuilderWorker {
 			return nodeFactory.newHereNode(source);
 		case SPAWN:
 			return nodeFactory.newSpawnNode(source, translateCall(source, expressionTree, scope));
-		// case TRUE:
-		// return translateTrue(source);
-		// case FALSE:
-		// return translateFalse(source);
 		case RESULT:
 			return nodeFactory.newResultNode(source);
-		case AT:
-			return translateAt(source, expressionTree, scope);
-		// case FORALL:
-		// return translateForall(source, expressionTree, scope);
-		// case UNIFORM:
-		// return translateUniform(source, expressionTree, scope);
-		// case EXISTS:
-		// return translateExists(source, expressionTree, scope);
 		case QUANTIFIED:
 			return translateQuantifiedExpressionNew(source, expressionTree, scope);
 		case DOTDOT:

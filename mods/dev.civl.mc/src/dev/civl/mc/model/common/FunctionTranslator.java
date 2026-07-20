@@ -3560,12 +3560,6 @@ public class FunctionTranslator {
 		case SCOPEOF:
 			result = translateScopeofNode((ScopeOfNode) expressionNode, scope);
 			break;
-		// TODO: check this, but this case does not exist, it is handled
-		// as a constant expression:
-		// case SELF:
-		// result = modelFactory.selfExpression(modelFactory
-		// .sourceOf(expressionNode));
-		// break;
 		case SIZEOF:
 			result = translateSizeofNode((SizeofNode) expressionNode, scope);
 			break;

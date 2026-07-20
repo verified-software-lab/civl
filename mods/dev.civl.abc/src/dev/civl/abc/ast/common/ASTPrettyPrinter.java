@@ -63,7 +63,6 @@ import dev.civl.abc.ast.node.IF.expression.OperatorNode;
 import dev.civl.abc.ast.node.IF.expression.OperatorNode.Operator;
 import dev.civl.abc.ast.node.IF.expression.QuantifiedExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.RegularRangeNode;
-import dev.civl.abc.ast.node.IF.expression.RemoteOnExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.ScopeOfNode;
 import dev.civl.abc.ast.node.IF.expression.SizeableNode;
 import dev.civl.abc.ast.node.IF.expression.SizeofNode;
@@ -2068,15 +2067,6 @@ public class ASTPrettyPrinter {
 		case SPAWN:
 			result.append("$spawn ");
 			result.append(functionCall2Pretty(((SpawnNode) expression).getCall(), vacantLength(maxLength, result)));
-			break;
-		case REMOTE_REFERENCE:
-			result.append("$on(");
-			result.append(expression2Pretty(((RemoteOnExpressionNode) expression).getProcessExpression(),
-					vacantLength(maxLength, result)));
-			result.append(" , ");
-			result.append(expression2Pretty(((RemoteOnExpressionNode) expression).getForeignExpressionNode(),
-					vacantLength(maxLength, result)));
-			result.append(")");
 			break;
 		case RESULT:
 			result.append("\\result");

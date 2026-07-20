@@ -43,14 +43,12 @@ tokens{
     BINDER;
     BINDER_LIST;
     BOOLEAN;
-    BOTH;
     C_TYPE;
     CALL_ACSL;
     CAST;
     CLAUSE_NORMAL;
     CLAUSE_BEHAVIOR;
     CLAUSE_COMPLETE;
-    COL;
     CONTRACT;
     DEPENDSON;
     DIRECT_ABSTRACT_DECLARATOR;
@@ -95,28 +93,12 @@ tokens{
     LOOP_VARIANT;
     MAX;
     MIN;
-    MPI_AGREE;
-    MPI_COLLECTIVE;
-    MPI_COMM_RANK;
-    MPI_COMM_SIZE;
-    MPI_CONSTANT;
-    MPI_EMPTY_IN;
-    MPI_EMPTY_OUT;
-    MPI_EQUALS;
-    MPI_EXPRESSION;
-    MPI_EXTENT;
-    MPI_OFFSET;
-    MPI_VALID;
-    MPI_REGION;
-    MPI_REDUCE;
-    MPI_ABSENT;
     NOTHING;
     NULL_ACSL;
     NUMOF;
     OBJECT_OF;
     OLD;
     OPERATOR;
-    P2P;
     POINTER;
     PROD;
     PURE;
@@ -129,7 +111,6 @@ tokens{
     REAL_ACSL;
     RELCHAIN; // a chain of relational expressions
     RESULT_ACSL;
-    REMOTE_ACCESS;
     REQUIRES_ACSL;
     SET_BINDERS;
     SET_SIMPLE;
@@ -151,7 +132,6 @@ tokens{
     VAR_ID_BASE;
     VAR_ID_SQUARE;
     VAR_ID_STAR;
-    WAITSFOR;
     WRITE_ACSL;
 }
 
@@ -311,23 +291,9 @@ full_contract_block
         -> ^(FUNC_CONTRACT_BLOCK $f* $m* $c*) 
     ;
 
-/* a partial contract block non-terminal represents an ACSL contract
- * block inside an MPI collective block. There is no nested MPI
- * collective block allowed */
-partial_contract_block
-    : (f+=function_clause)* (b+=named_behavior_block)* 
-        (c+=completeness_clause_block)* 
-        -> ^(FUNC_CONTRACT_BLOCK $f* $b* $c*) 
-    ;
-
-/* a block in contracts, either an mpi collective block or a behavior
-* block. Behavior blocks are allowed to be inside an mpi collective
-* block while an mpi collective block will not belong to a behavior
-* block. An mpi collective block appears after a behavior block marks
-* the end of the behavior block. */
+/* a block in contracts: currently only one kind: a behavior block. */
 contract_block
-    : mpi_collective_block
-    | named_behavior_block completeness_clause_block?
+    : named_behavior_block completeness_clause_block?
     ;
 
 function_clause
@@ -443,7 +409,6 @@ simple_clause
     | reads_clause
     | depends_clause
     | guards_clause
-    | waitsfor_clause
     ;
 
 assigns_clause
@@ -461,10 +426,6 @@ allocation_clause
 
 reads_clause
     : reads_key argumentExpressionList ->^(READS_ACSL reads_key argumentExpressionList)
-    ;
-
-waitsfor_clause
-    : waitsfor_key argumentExpressionList -> ^(WAITSFOR waitsfor_key argumentExpressionList)
     ;
 
 depends_clause
@@ -500,14 +461,6 @@ event_base
     | LPAREN event RPAREN
         -> ^(EVENT_PARENTHESIZED event)
     ;
-
-/* ACSL-MPI extensions: constructors */
-mpi_collective_block
-    : mpicollective_key LPAREN IDENTIFIER COMMA kind=mpi_collective_kind  RPAREN COLON
-      c=partial_contract_block -> ^(MPI_COLLECTIVE mpicollective_key IDENTIFIER $kind $c)
-    ;
-
-
 
 /* sec. 2.3.3 contracts with named behaviors */
 named_behavior
@@ -892,7 +845,6 @@ unaryExpression
         -> ^(VALID valid_key term RPAREN)
     | extendedQuantification ->^(QUANTIFIED_EXT extendedQuantification)
     | object_of_key LPAREN term RPAREN -> ^(OBJECT_OF object_of_key LPAREN term RPAREN)
-    | mpi_expression -> ^(MPI_EXPRESSION mpi_expression)
     | old_key LPAREN term RPAREN 
         -> ^(OLD old_key term RPAREN)
 	;
@@ -959,19 +911,6 @@ primaryExpression
         ->^(SET_SIMPLE term)
 	| LPAREN term RPAREN 
 	  	-> ^(TERM_PARENTHESIZED term)
-	| remoteExpression
-	;
-
-
-/* 6.5.0.1 *
- * remote-expression:
- *    REMOTE_ACCESS ( identifier , shiftExpression ).
- * A remote-expression should be used in the same way as a variable 
- * identifier.
- */
-remoteExpression
-    : remote_key LPAREN a=shiftExpression COMMA b=term RPAREN
-        -> ^(REMOTE_ACCESS remote_key  $a $b)
 	;
     
 /* 6.6 */
@@ -985,57 +924,7 @@ constant
 	| CHARACTER_CONSTANT
 	| true_key | false_key  | result_key | nothing_key | ELLIPSIS
     | SELF | null_key
-    | mpi_constant -> ^(MPI_CONSTANT mpi_constant)
 	;
-
-/* ACSL-MPI extensions Expressions and Constants  */
-mpi_expression
-    : mpiemptyin_key LPAREN term RPAREN
-        -> ^(MPI_EMPTY_IN mpiemptyin_key term)
-    | mpiemptyout_key LPAREN term RPAREN
-        -> ^(MPI_EMPTY_OUT mpiemptyout_key term)
-    | mpiagree_key LPAREN a=term RPAREN 
-        -> ^(MPI_AGREE mpiagree_key $a) 
-    | mpiregion_key LPAREN a=term COMMA b=term COMMA c=term RPAREN
-        -> ^(MPI_REGION mpiregion_key $a $b $c)
-    | mpireduce_key LPAREN a=term COMMA b=term COMMA c=term COMMA d=term RPAREN
-        -> ^(MPI_REDUCE mpireduce_key $a $b $c $d)
-    | mpiequals_key LPAREN a=term COMMA b=term RPAREN
-        -> ^(MPI_EQUALS mpiequals_key $a $b)
-    | mpiextent_key LPAREN a=primaryExpression RPAREN
-        -> ^(MPI_EXTENT mpiextent_key $a)
-    | mpioffset_key LPAREN a=term COMMA b=term COMMA c=term RPAREN
-        -> ^(MPI_OFFSET mpioffset_key $a $b $c)
-    | mpivalid_key LPAREN a=term COMMA b=term COMMA c=term RPAREN
-        -> ^(MPI_VALID mpivalid_key $a $b $c)
-    | absent_key a=absent_event after_key b=absent_event until_key c=absent_event
-      -> ^(MPI_ABSENT $a $b $c)
-    ;
-
-absent_event
-: absent_event_sendto_key LPAREN a=term COMMA b=term RPAREN
-  -> ^(ABSENT_EVENT_SENDTO $a $b)
-  | absent_event_sendfrom_key LPAREN a=term COMMA b=term RPAREN
-  -> ^(ABSENT_EVENT_SENDFROM $a $b)        
-  | absent_event_enter_key a=absent_event_optional_argument
-  -> ^(ABSENT_EVENT_ENTER $a)      
-  | absent_event_exit_key a=absent_event_optional_argument
-  -> ^(ABSENT_EVENT_EXIT $a)
-;
-
-absent_event_optional_argument
-    : LPAREN term RPAREN
-        -> ^(TERM_PARENTHESIZED term)
-    | -> ABSENT
-    ;        
-
-mpi_constant
-    : mpicommrank_key |  mpicommsize_key
-    ;
-	
-mpi_collective_kind
-    : col_key | p2p_key | both_key
-    ;
 
 bitimplies_op
 	: MINUSMINUS GT
@@ -1139,10 +1028,6 @@ variant_key
     : {input.LT(1).getText().equals("variant")}? IDENTIFIER
     ;
 
-waitsfor_key
-    : {input.LT(1).getText().equals("waitsfor")}? IDENTIFIER
-    ;
-
 predicate_key
 	: {input.LT(1).getText().equals("predicate")}? IDENTIFIER
 	;
@@ -1229,10 +1114,6 @@ pure_key
 reads_key
     : {input.LT(1).getText().equals("reads")}? IDENTIFIER
     ;
-    
-remote_key
-    : {input.LT(1).getText().equals("\\on")}? EXTENDED_IDENTIFIER
-    ;
 
 /* ACSL dependence-specification extension */
 
@@ -1272,108 +1153,6 @@ write_key
     : {input.LT(1).getText().equals("\\write")}? EXTENDED_IDENTIFIER
 //    -> ^(WRITE_ACSL EXTENDED_IDENTIFIER)
     ;
-    
-/* ACSL MPI-extension keywords */
-
-both_key
-    : {input.LT(1).getText().equals("BOTH")}? IDENTIFIER
-    -> ^(BOTH IDENTIFIER)
-    ;
-
-col_key
-    : {input.LT(1).getText().equals("COL")}? IDENTIFIER
-    -> ^(COL IDENTIFIER)
-    ;
-
-p2p_key
-    : {input.LT(1).getText().equals("P2P")}? IDENTIFIER
-    -> ^(P2P IDENTIFIER)
-    ;
-
-mpiagree_key
-    : {input.LT(1).getText().equals("\\mpi_agree")}? EXTENDED_IDENTIFIER
-//    -> ^(MPI_AGREE EXTENDED_IDENTIFIER)
-    ;
-
-mpicollective_key
-    : {input.LT(1).getText().equals("\\mpi_collective")}? EXTENDED_IDENTIFIER
-//    -> ^(MPI_COLLECTIVE EXTENDED_IDENTIFIER)
-    ;
-
-mpicommsize_key
-    : {input.LT(1).getText().equals("\\mpi_comm_size")}? EXTENDED_IDENTIFIER
-    -> ^(MPI_COMM_SIZE EXTENDED_IDENTIFIER)
-    ;
-
-mpicommrank_key
-    : {input.LT(1).getText().equals("\\mpi_comm_rank")}? EXTENDED_IDENTIFIER
-    -> ^(MPI_COMM_RANK EXTENDED_IDENTIFIER)
-    ;
-
-mpiemptyin_key
-    : {input.LT(1).getText().equals("\\mpi_empty_in")}? EXTENDED_IDENTIFIER
-//    -> ^(MPI_EMPTY_IN EXTENDED_IDENTIFIER)
-    ;
-
-mpiemptyout_key
-    : {input.LT(1).getText().equals("\\mpi_empty_out")}? EXTENDED_IDENTIFIER
-//    -> ^(MPI_EMPTY_OUT EXTENDED_IDENTIFIER)
-    ;
-
-mpiequals_key
-    : {input.LT(1).getText().equals("\\mpi_equals")}? EXTENDED_IDENTIFIER
-//    -> ^(MPI_EQUALS EXTENDED_IDENTIFIER)
-    ;
-
-mpiextent_key
-    : {input.LT(1).getText().equals("\\mpi_extent")}? EXTENDED_IDENTIFIER
-//    -> ^(MPI_EXTENT EXTENDED_IDENTIFIER)
-    ;
-
-mpioffset_key
-    : {input.LT(1).getText().equals("\\mpi_offset")}? EXTENDED_IDENTIFIER
-//    -> ^(MPI_OFFSET EXTENDED_IDENTIFIER)
-    ;
-
-mpivalid_key
-	: {input.LT(1).getText().equals("\\mpi_valid")}? EXTENDED_IDENTIFIER
-        ;
-
-mpiregion_key
-	: {input.LT(1).getText().equals("\\mpi_region")}? EXTENDED_IDENTIFIER
-	;
-
-mpireduce_key
-	: {input.LT(1).getText().equals("\\mpi_reduce")}? EXTENDED_IDENTIFIER
-	;
-
-absent_key
-        : {input.LT(1).getText().equals("\\absentof")}? EXTENDED_IDENTIFIER
-	;
-
-after_key
-        : {input.LT(1).getText().equals("\\after")}? EXTENDED_IDENTIFIER
-	;
-
-until_key
-        : {input.LT(1).getText().equals("\\until")}? EXTENDED_IDENTIFIER
-	;
-
-absent_event_sendto_key
-        : {input.LT(1).getText().equals("\\sendto")}? EXTENDED_IDENTIFIER
-	;
-
-absent_event_sendfrom_key
-        : {input.LT(1).getText().equals("\\sendfrom")}? EXTENDED_IDENTIFIER
-	;
-
-absent_event_enter_key
-        : {input.LT(1).getText().equals("\\enter")}? EXTENDED_IDENTIFIER
-	;
-
-absent_event_exit_key
-        : {input.LT(1).getText().equals("\\exit")}? EXTENDED_IDENTIFIER
-	;
 
 /** ACSL higher-order keywords */
 lambda_key

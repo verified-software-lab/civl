@@ -60,7 +60,6 @@ import static dev.civl.abc.front.c.parse.AcslParser.QUANTIFIED;
 import static dev.civl.abc.front.c.parse.AcslParser.READ_ACSL;
 import static dev.civl.abc.front.c.parse.AcslParser.REAL_ACSL;
 import static dev.civl.abc.front.c.parse.AcslParser.RELCHAIN;
-import static dev.civl.abc.front.c.parse.AcslParser.REMOTE_ACCESS;
 import static dev.civl.abc.front.c.parse.AcslParser.RESULT_ACSL;
 import static dev.civl.abc.front.c.parse.AcslParser.SELF;
 import static dev.civl.abc.front.c.parse.AcslParser.SET_BINDERS;
@@ -1012,8 +1011,6 @@ public class AcslContractWorker {
 			return this.nodeFactory.newWildcardNode(source);
 		case VALID:
 			return this.translateValidNode(expressionTree, source, scope);
-		case REMOTE_ACCESS:
-			return translateRemoteExpression(expressionTree, source, scope);
 		case QUANTIFIED:
 			return translateQuantifiedExpression(expressionTree, source, scope);
 		case FUNC_CALL:
@@ -1176,18 +1173,6 @@ public class AcslContractWorker {
 		return nodeFactory.newQuantifiedExpressionNode(source, quantifier,
 				nodeFactory.newSequenceNode(source, "bound variable declaration list", boundVariableList), restrict,
 				pred);
-	}
-
-	private ExpressionNode translateRemoteExpression(CommonTree tree, Source source, SimpleScope scope)
-			throws SyntaxException {
-		SimpleScope newScope = new SimpleScope(scope);
-		CommonTree procTree = (CommonTree) tree.getChild(1);
-		CommonTree exprTree = (CommonTree) tree.getChild(2);
-		ExpressionNode exprArg, procArg;
-
-		exprArg = translateExpression(exprTree, newScope);
-		procArg = translateExpression(procTree, newScope);
-		return nodeFactory.newRemoteOnExpressionNode(source, procArg, exprArg);
 	}
 
 	private SequenceNode<VariableDeclarationNode> translateBinders(CommonTree tree, Source source, SimpleScope scope)

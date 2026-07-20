@@ -51,7 +51,6 @@ import dev.civl.abc.ast.node.IF.expression.OperatorNode.Operator;
 import dev.civl.abc.ast.node.IF.expression.ProcnullNode;
 import dev.civl.abc.ast.node.IF.expression.QuantifiedExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.RegularRangeNode;
-import dev.civl.abc.ast.node.IF.expression.RemoteOnExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.ResultNode;
 import dev.civl.abc.ast.node.IF.expression.ScopeOfNode;
 import dev.civl.abc.ast.node.IF.expression.SelfNode;
@@ -248,9 +247,6 @@ public class ExpressionAnalyzer {
 				break;
 			case REGULAR_RANGE:
 				processRegularRange((RegularRangeNode) node);
-				break;
-			case REMOTE_REFERENCE:
-				processRemoteExpression((RemoteOnExpressionNode) node);
 				break;
 			case RESULT:
 				processResult((ResultNode) node);
@@ -1187,19 +1183,6 @@ public class ExpressionAnalyzer {
 			assert false;
 		}
 		node.setInitialType(typeFactory.size_t());
-	}
-
-	private void processRemoteExpression(RemoteOnExpressionNode node) throws SyntaxException {
-		ExpressionNode procExpr = node.getProcessExpression();
-		ExpressionNode foreignExpr = node.getForeignExpressionNode();
-
-		processExpression(procExpr);
-		processExpression(foreignExpr);
-		if (!procExpr.getConvertedType().equivalentTo(intType)) {
-			throw error("The argument representing a process in a " + REMOTE_EXPR + " must have a integer type",
-					procExpr);
-		}
-		node.setInitialType(foreignExpr.getConvertedType());
 	}
 
 	private void processResult(ResultNode node) {

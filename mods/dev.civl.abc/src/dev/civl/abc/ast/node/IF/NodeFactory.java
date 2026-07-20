@@ -67,7 +67,6 @@ import dev.civl.abc.ast.node.IF.expression.OperatorNode.Operator;
 import dev.civl.abc.ast.node.IF.expression.QuantifiedExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.QuantifiedExpressionNode.Quantifier;
 import dev.civl.abc.ast.node.IF.expression.RegularRangeNode;
-import dev.civl.abc.ast.node.IF.expression.RemoteOnExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.ScopeOfNode;
 import dev.civl.abc.ast.node.IF.expression.SizeableNode;
 import dev.civl.abc.ast.node.IF.expression.SizeofNode;
@@ -866,21 +865,6 @@ public interface NodeFactory {
 	 * @return the new spawn expression node
 	 */
 	SpawnNode newSpawnNode(Source source, FunctionCallNode callNode);
-
-	/**
-	 * Constructs a remote expression node, representing an expression of the form
-	 * <code>proc_expr@x</code>. This refers to a variable in the process
-	 * <code>p</code> referenced by the expression <code>proc_expr</code>. The
-	 * static variable <code>x</code> can be determined statically now. Later it
-	 * will be evaluated in a dynamic state in <code>p</code>'s context.
-	 * 
-	 * @param source source information for the entire remove expression, including
-	 *               both arguments
-	 * @param left   the left argument, which is an expression of integer type.
-	 * @param right  the right argument, which is a foreign expression that will
-	 *               evaluates on the process represented by the left expression.
-	 */
-	RemoteOnExpressionNode newRemoteOnExpressionNode(Source source, ExpressionNode left, ExpressionNode right);
 
 	/**
 	 * Constructs a new CIVL-C <code>$scopeof</code> expression node. This is an
