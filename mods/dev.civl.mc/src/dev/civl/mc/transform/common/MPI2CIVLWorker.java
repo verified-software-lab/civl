@@ -292,8 +292,7 @@ public class MPI2CIVLWorker extends BaseWorker {
 		VariableDeclarationNode commVar;
 
 		commType = nodeFactory.newTypedefNameNode(
-				nodeFactory.newIdentifierNode(this.newSource("$comm type", CivlcTokenConstant.IDENTIFIER), COMM_TYPE),
-				null);
+				nodeFactory.newIdentifierNode(this.newSource("$comm type", CivlcTokenConstant.IDENTIFIER), COMM_TYPE));
 		commCreateArgs = new ArrayList<>(3);
 		commCreateArgs.add(this.hereNode());
 		commCreateArgs.add(this.identifierExpression(GCOMM_WORLD));
@@ -323,8 +322,7 @@ public class MPI2CIVLWorker extends BaseWorker {
 	private List<VariableDeclarationNode> commSelfDeclaration() {
 		List<VariableDeclarationNode> result = new LinkedList<>();
 		TypeNode commType = nodeFactory.newTypedefNameNode(
-				nodeFactory.newIdentifierNode(this.newSource("$comm type", CivlcTokenConstant.IDENTIFIER), COMM_TYPE),
-				null);
+				nodeFactory.newIdentifierNode(this.newSource("$comm type", CivlcTokenConstant.IDENTIFIER), COMM_TYPE));
 		VariableDeclarationNode commSelfVar = variableDeclaration(MPI_COMM_SELF, commType);
 		ExpressionNode addrOfCommSelfVar = nodeFactory.newOperatorNode(
 				newSource("&" + MPI_COMM_SELF, CivlcTokenConstant.OPERATOR), Operator.ADDRESSOF,
@@ -333,8 +331,7 @@ public class MPI2CIVLWorker extends BaseWorker {
 				newSource("function call " + COMM_SELF_CREATE, CivlcTokenConstant.CALL),
 				identifierExpression(COMM_SELF_CREATE), Arrays.asList(hereNode(), addrOfCommSelfVar));
 		TypeNode gcommType = nodeFactory.newTypedefNameNode(
-				nodeFactory.newIdentifierNode(this.newSource("$gcomm type", CivlcTokenConstant.IDENTIFIER), GCOMM_TYPE),
-				null);
+				nodeFactory.newIdentifierNode(this.newSource("$gcomm type", CivlcTokenConstant.IDENTIFIER), GCOMM_TYPE));
 		VariableDeclarationNode gcommSelfVar = variableDeclaration(GCOMM_SELF, gcommType, commSelfCreate);
 
 		result.add(commSelfVar);
@@ -378,7 +375,7 @@ public class MPI2CIVLWorker extends BaseWorker {
 		TypeNode gcommType;
 		// ExpressionNode gcommCreate;
 
-		gcommType = nodeFactory.newTypedefNameNode(this.identifier(GCOMM_TYPE), null);
+		gcommType = nodeFactory.newTypedefNameNode(this.identifier(GCOMM_TYPE));
 		// gcommCreate = nodeFactory.newFunctionCallNode(this.newSource(
 		// "function call " + GCOMM_CREATE, CivlcTokenConstant.CALL), this
 		// .identifierExpression(GCOMM_CREATE), Arrays.asList(
@@ -390,7 +387,7 @@ public class MPI2CIVLWorker extends BaseWorker {
 		TypeNode gcommType, gcommArrayType;
 		VariableDeclarationNode node;
 
-		gcommType = nodeFactory.newTypedefNameNode(this.identifier(GCOMM_TYPE), null);
+		gcommType = nodeFactory.newTypedefNameNode(this.identifier(GCOMM_TYPE));
 		gcommArrayType = nodeFactory.newArrayTypeNode((Source) null, gcommType, null);
 		node = this.variableDeclaration(GCOMMS, gcommArrayType);
 		return node;

@@ -263,7 +263,6 @@ public interface CivlcTokenConstant {
 	public static final int DECLARATION_SPECIFIERS = CivlCParser.DECLARATION_SPECIFIERS;
 	public static final int DECLARATOR = CivlCParser.DECLARATOR;
 	public static final int DEFAULT_LABELED_STATEMENT = CivlCParser.DEFAULT_LABELED_STATEMENT;
-	public static final int DERIVATIVE_EXPRESSION = CivlCParser.DERIVATIVE_EXPRESSION;
 	public static final int DESIGNATED_INITIALIZER = CivlCParser.DESIGNATED_INITIALIZER;
 	public static final int DESIGNATION = CivlCParser.DESIGNATION;
 	public static final int DIRECT_ABSTRACT_DECLARATOR = CivlCParser.DIRECT_ABSTRACT_DECLARATOR;
@@ -289,8 +288,6 @@ public interface CivlcTokenConstant {
 	public static final int PARAMETER_LIST = CivlCParser.PARAMETER_LIST;
 	public static final int PARAMETER_TYPE_LIST = CivlCParser.PARAMETER_TYPE_LIST;
 	public static final int PARENTHESIZED_EXPRESSION = CivlCParser.PARENTHESIZED_EXPRESSION;
-	public static final int PARTIAL = CivlCParser.PARTIAL;
-	public static final int PARTIAL_LIST = CivlCParser.PARTIAL_LIST;
 	public static final int POINTER = CivlCParser.POINTER;
 	public static final int POST_DECREMENT = CivlCParser.POST_DECREMENT;
 	public static final int POST_INCREMENT = CivlCParser.POST_INCREMENT;

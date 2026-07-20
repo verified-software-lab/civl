@@ -199,7 +199,7 @@ public class CommonFocusOrderedTransformNode extends CommonFocusTransformNode
 		// $forall (int i: lo..hi; int j: lo..hi) !(i op j) || (expr[i] op expr[j])
 		QuantifiedExpressionNode forallExpr = nodeFactory
 				.newQuantifiedExpressionNode(forallSource, Quantifier.FORALL,
-						boundVarList, null, forallBody, null);
+						boundVarList, null, forallBody);
 
 		result.add(nodeFactory.newExpressionStatementNode(
 				functionCall("$assume", Arrays.asList((ExpressionNode) forallExpr))));

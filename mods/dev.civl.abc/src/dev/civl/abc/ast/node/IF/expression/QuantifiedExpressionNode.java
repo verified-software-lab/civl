@@ -22,7 +22,7 @@ import dev.civl.abc.ast.node.IF.declaration.VariableDeclarationNode;
  * variable-decl-sub-list:
  *   type ID (, ID)* (: domain)?
  *   
- * quantifier: $forall | $exists | $uniform
+ * quantifier: $forall | $exists
  * </pre>
  * 
  * e.g.,
@@ -50,12 +50,7 @@ public interface QuantifiedExpressionNode extends ExpressionNode {
 		/**
 		 * The existential quantifier "there exists".
 		 */
-		EXISTS,
-		/**
-		 * A special case of the universal quantifier for expression of uniform
-		 * continuity.
-		 */
-		UNIFORM;
+		EXISTS
 	}
 
 	/**
@@ -64,15 +59,6 @@ public interface QuantifiedExpressionNode extends ExpressionNode {
 	 * @return The quantifier used by this quantifier expression.
 	 */
 	Quantifier quantifier();
-
-	/**
-	 * The following is an experimental field for the <code>$uniform</code>
-	 * operator. It is a sequence of real closed intervals that specify the
-	 * domain of uniform convergence of a big-O expression.
-	 * 
-	 * @return the interval sequence; may be <code>null</code>
-	 */
-	SequenceNode<PairNode<ExpressionNode, ExpressionNode>> intervalSequence();
 
 	/**
 	 * the bound variable declaration list, which is a sequence node of pairs of

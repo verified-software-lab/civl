@@ -269,9 +269,9 @@ public class AcslContractWorker {
 		List<BlockItemNode> translatedBlockItems = new LinkedList<>();
 
 		if (contractTree.getTokenStartIndex() < 0 && contractTree.getTokenStopIndex() < 0) {
-			// empty contract.  we have no source.   fix to include /*@ */ in tree.
-			return new ACSLSpecTranslation(null, translatedContractNodes,
-					translatedTransformNodes, translatedBlockItems);
+			// empty contract. we have no source. fix to include /*@ */ in tree.
+			return new ACSLSpecTranslation(null, translatedContractNodes, translatedTransformNodes,
+					translatedBlockItems);
 		}
 		switch (contractTree.getType()) {
 		case AcslParser.FUNC_CONTRACT:
@@ -1169,13 +1169,13 @@ public class AcslContractWorker {
 			pred = translateExpression(predTree, newScope);
 			restrict = null;
 		} else {
-			throw error("Unexpexted quantifier " + quantifierTree.getType(), quantifierTree);
+			throw error("Unexpected quantifier " + quantifierTree.getType(), quantifierTree);
 		}
 		binders = translateBinders(bindersTree, source, newScope);
 		boundVariableList.add(nodeFactory.newPairNode(source, binders, null));
 		return nodeFactory.newQuantifiedExpressionNode(source, quantifier,
 				nodeFactory.newSequenceNode(source, "bound variable declaration list", boundVariableList), restrict,
-				pred, null);
+				pred);
 	}
 
 	private ExpressionNode translateRemoteExpression(CommonTree tree, Source source, SimpleScope scope)
@@ -1407,7 +1407,7 @@ public class AcslContractWorker {
 			}
 		}
 		case TYPE_ID:
-			return this.nodeFactory.newTypedefNameNode(this.translateIdentifier((CommonTree) tree.getChild(0)), null);
+			return this.nodeFactory.newTypedefNameNode(this.translateIdentifier((CommonTree) tree.getChild(0)));
 		default:
 			throw this.error("unknown kind of logic type", tree);
 		}

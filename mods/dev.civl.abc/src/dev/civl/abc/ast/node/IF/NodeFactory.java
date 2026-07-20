@@ -53,7 +53,6 @@ import dev.civl.abc.ast.node.IF.expression.CastNode;
 import dev.civl.abc.ast.node.IF.expression.CharacterConstantNode;
 import dev.civl.abc.ast.node.IF.expression.CompoundLiteralNode;
 import dev.civl.abc.ast.node.IF.expression.ConstantNode;
-import dev.civl.abc.ast.node.IF.expression.DerivativeExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.DotNode;
 import dev.civl.abc.ast.node.IF.expression.EnumerationConstantNode;
 import dev.civl.abc.ast.node.IF.expression.ExpressionNode;
@@ -374,13 +373,10 @@ public interface NodeFactory {
 	 * Returns a new instance of a typedef name node. This is a use of a typedef
 	 * name. The source is the same as that of the identifier name.
 	 * 
-	 * @param name      the identifier node representing the use of the typedef name
-	 * @param scopeList optional CIVL-C construct: list of scope parameters used to
-	 *                  instantiate a scope-parameterized typedef
+	 * @param name the identifier node representing the use of the typedef name
 	 * @return the new typedef name node wrapping the given identifier node
 	 */
-	// TODO get rid of scopeList
-	TypedefNameNode newTypedefNameNode(IdentifierNode name, SequenceNode<ExpressionNode> scopeList);
+	TypedefNameNode newTypedefNameNode(IdentifierNode name);
 
 	/**
 	 * Returns a new instance of range type node; this is the CIVL-C type
@@ -848,7 +844,7 @@ public interface NodeFactory {
 			ExpressionNode arg2);
 
 	/**
-	 * Constrcts a new <code>sizeof</code> expression. This takes one argument,
+	 * Constructs a new <code>sizeof</code> expression. This takes one argument,
 	 * which can be either a type name or an expression.
 	 * 
 	 * @param source   source information for the occurrence of the entire
@@ -917,17 +913,11 @@ public interface NodeFactory {
 	 *                                     true when the quantified variables is in
 	 *                                     the domain
 	 * @param expression                   The quantified expression.
-	 * @param intervalSequence             field for the <code>$uniform</code>
-	 *                                     operator---a sequence of real closed
-	 *                                     intervals that specify the domain of
-	 *                                     uniform convergence of a big-O
-	 *                                     expression; may be <code>null</code>
 	 * @return The new quantified expression with the given children.
 	 */
 	QuantifiedExpressionNode newQuantifiedExpressionNode(Source source, Quantifier quantifier,
 			SequenceNode<PairNode<SequenceNode<VariableDeclarationNode>, ExpressionNode>> boundVariableDeclarationList,
-			ExpressionNode restriction, ExpressionNode expression,
-			SequenceNode<PairNode<ExpressionNode, ExpressionNode>> intervalSequence);
+			ExpressionNode restriction, ExpressionNode expression);
 
 	/**
 	 * Constructs a new array lambda expression.
@@ -1005,21 +995,6 @@ public interface NodeFactory {
 	// Quantifier quantifier, VariableDeclarationNode variable,
 	// ExpressionNode lower, ExpressionNode upper,
 	// ExpressionNode expression);
-
-	/**
-	 * Constructs a new CIVL-C derivative expression, used to represent the
-	 * (partial) derivative of a function with respect to any number of variables,
-	 * evaluated at a point.
-	 * 
-	 * @param source    The source code elements.
-	 * @param function  The abstract function whose derivative is being taken.
-	 * @param partials  The list of partial derivatives.
-	 * @param arguments The arguments to the uninterpreted function evaluation.
-	 * @return The new derivative expression with the given children.
-	 */
-	DerivativeExpressionNode newDerivativeExpressionNode(Source source, ExpressionNode function,
-			SequenceNode<PairNode<IdentifierExpressionNode, IntegerConstantNode>> partials,
-			SequenceNode<ExpressionNode> arguments);
 
 	/**
 	 * <p>

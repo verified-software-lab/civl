@@ -26,6 +26,8 @@ import dev.civl.abc.ast.node.IF.PragmaNode;
 import dev.civl.abc.ast.node.IF.SequenceNode;
 import dev.civl.abc.ast.node.IF.StaticAssertionNode;
 import dev.civl.abc.ast.node.IF.acsl.ContractNode;
+import dev.civl.abc.ast.node.IF.acsl.ExtendedQuantifiedExpressionNode;
+import dev.civl.abc.ast.node.IF.acsl.ExtendedQuantifiedExpressionNode.ExtendedQuantifier;
 import dev.civl.abc.ast.node.IF.acsl.TransformNode;
 import dev.civl.abc.ast.node.IF.compound.CompoundInitializerNode;
 import dev.civl.abc.ast.node.IF.compound.DesignationNode;
@@ -36,19 +38,15 @@ import dev.civl.abc.ast.node.IF.declaration.FunctionDeclarationNode;
 import dev.civl.abc.ast.node.IF.declaration.FunctionDefinitionNode;
 import dev.civl.abc.ast.node.IF.declaration.InitializerNode;
 import dev.civl.abc.ast.node.IF.declaration.VariableDeclarationNode;
-import dev.civl.abc.ast.node.IF.acsl.ExtendedQuantifiedExpressionNode;
-import dev.civl.abc.ast.node.IF.acsl.ExtendedQuantifiedExpressionNode.ExtendedQuantifier;
 import dev.civl.abc.ast.node.IF.expression.ArrayLambdaNode;
-import dev.civl.abc.ast.node.IF.expression.LambdaNode;
 import dev.civl.abc.ast.node.IF.expression.CharacterConstantNode;
 import dev.civl.abc.ast.node.IF.expression.CompoundLiteralNode;
-import dev.civl.abc.ast.node.IF.expression.DerivativeExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.ExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.FloatingConstantNode;
 import dev.civl.abc.ast.node.IF.expression.FunctionCallNode;
 import dev.civl.abc.ast.node.IF.expression.GenericSelectionNode;
-import dev.civl.abc.ast.node.IF.expression.IdentifierExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.IntegerConstantNode;
+import dev.civl.abc.ast.node.IF.expression.LambdaNode;
 import dev.civl.abc.ast.node.IF.expression.OperatorNode;
 import dev.civl.abc.ast.node.IF.expression.OperatorNode.Operator;
 import dev.civl.abc.ast.node.IF.expression.QuantifiedExpressionNode;
@@ -411,50 +409,6 @@ public class CASTBuilderWorker extends ASTBuilderWorker {
 		ExpressionNode expression = this.translateExpression((CommonTree) expressionTree.getChild(0), scope);
 
 		return nodeFactory.newScopeOfNode(source, expression);
-	}
-
-	/**
-	 * Translates a derivative expression
-	 * 
-	 * @param source         The source information.
-	 * @param expressionTree CommonTree of type DERIV, representing a derivative
-	 *                       expression.
-	 * @param scope          The scope containing this expression.
-	 * @return A DerivativeExpressionNode corresponding to the ANTLR tree.
-	 * @throws SyntaxException
-	 */
-	private DerivativeExpressionNode translateDeriv(Source source, CommonTree derivTree, SimpleScope scope)
-			throws SyntaxException {
-		CommonTree functionTree = (CommonTree) derivTree.getChild(0);
-		CommonTree partialListTree = (CommonTree) derivTree.getChild(1);
-		CommonTree argumentListTree = (CommonTree) derivTree.getChild(2);
-		int numPartials = partialListTree.getChildCount();
-		int numArgs = argumentListTree.getChildCount();
-		ExpressionNode function = translateExpression(functionTree, scope);
-		List<PairNode<IdentifierExpressionNode, IntegerConstantNode>> partials;
-		List<ExpressionNode> arguments;
-
-		partials = new LinkedList<PairNode<IdentifierExpressionNode, IntegerConstantNode>>();
-		arguments = new LinkedList<ExpressionNode>();
-		for (int i = 0; i < numPartials; i++) {
-			CommonTree partialTree = (CommonTree) partialListTree.getChild(i);
-			ExpressionNode partialIdentifier = translateExpression((CommonTree) partialTree.getChild(0), scope);
-			ExpressionNode partialDegree = translateExpression((CommonTree) partialTree.getChild(1), scope);
-
-			assert partialIdentifier instanceof IdentifierExpressionNode;
-			assert partialDegree instanceof IntegerConstantNode;
-			partials.add(nodeFactory.newPairNode(newSource(partialTree), (IdentifierExpressionNode) partialIdentifier,
-					(IntegerConstantNode) partialDegree));
-		}
-		for (int i = 0; i < numArgs; i++) {
-			CommonTree argumentTree = (CommonTree) argumentListTree.getChild(i);
-			ExpressionNode argumentNode = translateExpression(argumentTree, scope);
-
-			arguments.add(argumentNode);
-		}
-		return nodeFactory.newDerivativeExpressionNode(source, function,
-				nodeFactory.newSequenceNode(newSource(partialListTree), "partials", partials),
-				nodeFactory.newSequenceNode(newSource(argumentListTree), "arguments", arguments));
 	}
 
 	private GenericSelectionNode translateGenericSelection(Source source, CommonTree genericSelectionTree,
@@ -827,8 +781,6 @@ public class CASTBuilderWorker extends ASTBuilderWorker {
 		// return translateExists(source, expressionTree, scope);
 		case QUANTIFIED:
 			return translateQuantifiedExpressionNew(source, expressionTree, scope);
-		case DERIVATIVE_EXPRESSION:
-			return translateDeriv(source, expressionTree, scope);
 		case DOTDOT:
 			return translateRegularRange(source, expressionTree, scope);
 		case ELLIPSIS:
@@ -964,25 +916,15 @@ public class CASTBuilderWorker extends ASTBuilderWorker {
 		CommonTree boundVariableDeclListTree = (CommonTree) quantifiedTree.getChild(1);
 		CommonTree bodyTree = (CommonTree) quantifiedTree.getChild(2);
 		CommonTree restrictionTree = (CommonTree) quantifiedTree.getChild(3);
-		CommonTree intervalSequenceTree = (CommonTree) quantifiedTree.getChild(4);
 		Quantifier quantifier = translateQuantifier(quantifierTree);
 		ExpressionNode restrict = null, body;
 		SequenceNode<PairNode<SequenceNode<VariableDeclarationNode>, ExpressionNode>> boundVariableDeclListNode = this
 				.translateBoundVariableDeclarationList(source, boundVariableDeclListTree, newScope);
-		SequenceNode<PairNode<ExpressionNode, ExpressionNode>> intervalSequence = null;
 
 		if (restrictionTree != null && restrictionTree.getToken().getType() != ABSENT)
 			restrict = this.translateExpression(source, restrictionTree, newScope);
 		body = this.translateExpression(bodyTree, newScope);
-		if (intervalSequenceTree != null && intervalSequenceTree.getToken().getType() != ABSENT) {
-			if (quantifier != Quantifier.UNIFORM)
-				error("Interval sequence can only be used with $uniform", quantifiedTree);
-			intervalSequence = translateIntervalSequence(intervalSequenceTree, scope);
-			// TODO: check the number of intervals = the number of bound
-			// variables
-		}
-		return nodeFactory.newQuantifiedExpressionNode(source, quantifier, boundVariableDeclListNode, restrict, body,
-				intervalSequence);
+		return nodeFactory.newQuantifiedExpressionNode(source, quantifier, boundVariableDeclListNode, restrict, body);
 	}
 
 	private PairNode<SequenceNode<VariableDeclarationNode>, ExpressionNode> translateBoundVariableDeclarationSubList(
@@ -1012,8 +954,6 @@ public class CASTBuilderWorker extends ASTBuilderWorker {
 			return Quantifier.FORALL;
 		case EXISTS:
 			return Quantifier.EXISTS;
-		case UNIFORM:
-			return Quantifier.UNIFORM;
 		default:
 			throw this.error("unknown quantifier", quantifierTree);
 		}
@@ -1223,7 +1163,7 @@ public class CASTBuilderWorker extends ASTBuilderWorker {
 			CommonTree identifierTree = (CommonTree) typedefNameTree.getChild(0);
 			IdentifierNode identifierNode = translateIdentifier(identifierTree);
 
-			result = nodeFactory.newTypedefNameNode(identifierNode, null);
+			result = nodeFactory.newTypedefNameNode(identifierNode);
 			// special handling for CIVL-C built-in types that are defined
 			// using typedefs, i.e. $state, $mem:
 			if (((TypedefNameNode) result).getName().name().equals(CIVLC_MEM_TYPEDEF_NAME))

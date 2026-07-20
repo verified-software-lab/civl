@@ -46,7 +46,6 @@ tokens
 	DECLARATION_SPECIFIERS;   // list of declaration specifiers
 	DECLARATOR;               // a declarator
 	DEFAULT_LABELED_STATEMENT;// default: stmt
-	DERIVATIVE_EXPRESSION;    // complete derivative expression
 	DESIGNATED_INITIALIZER;   // used in compound initializer
 	DESIGNATION;              // designation, used in compound initializer
 	DIRECT_ABSTRACT_DECLARATOR;   // direct declarator sans identifier
@@ -67,16 +66,12 @@ tokens
 	INITIALIZER_LIST;         // initializer list in compound initializer
 	INIT_DECLARATOR;          // initializer-declaration pair
 	INIT_DECLARATOR_LIST;     // list of initializer-declarator pairs
-	INTERVAL;                 // a closed real interval [a,b] (used by $uniform)
-	INTERVAL_SEQ;             // a sequence of INTERVAL
 	LIB_NAME;                 // name of a library
 	OPERATOR;                 // symbol indicating an operator
 	PARAMETER_DECLARATION;    // parameter declaration in function decl
 	PARAMETER_LIST;           // list of parameter decls in function decl
 	PARAMETER_TYPE_LIST;      // parameter list and optional "..."
 	PARENTHESIZED_EXPRESSION; // ( expr )
-	PARTIAL;                  // CIVL-C partial derivative operator
-	PARTIAL_LIST;             // list of partial operators
 	POINTER;                  // * used in declarator
 	POST_DECREMENT;           // expr--
 	POST_INCREMENT;           // expr++
@@ -213,32 +208,28 @@ import dev.civl.abc.front.IF.RuntimeParseException;
  */
 
 
-/* One of the CIVL-C first-order quantifiers.
- * UNIFORM represents uniform continuity.
- */
+/* One of the CIVL-C first-order quantifiers. */
 quantifier
-	: FORALL | EXISTS | UNIFORM
+	: FORALL | EXISTS
 	;
 
-/* A CIVL-C quantified expression using $exists, $forall, or $uniform.
+/* A CIVL-C quantified expression using $exists, $forall.
  * Examples:
  *   $forall (int i) a[i]==i
  *   $forall (int i | 0<=i && i<n) a[i]==b[i]
- * An optional interval sequence is allowed for $uniform.  That's
- * an experimental feature that may go away.
  */
 quantifiedExpression
-	: quantifier intervalSeq LPAREN boundVariableDeclarationList
+	: quantifier LPAREN boundVariableDeclarationList
         ( BITOR
             (restrict=conditionalExpression | restrict=quantifiedExpression)
             RPAREN
             body1=expression
             -> ^(QUANTIFIED quantifier boundVariableDeclarationList
-                $body1 $restrict intervalSeq)
+                $body1 $restrict)
         | RPAREN
             body2=expression
             -> ^(QUANTIFIED quantifier boundVariableDeclarationList
-                $body2 ABSENT intervalSeq)
+                $body2 ABSENT)
         )
 	;
 
@@ -276,35 +267,12 @@ primaryExpression
 	| LPAREN expression RPAREN
         -> ^(PARENTHESIZED_EXPRESSION LPAREN expression RPAREN)
 	| genericSelection
-	| derivativeExpression
 	;
 
 /* 6.5.1.1 */
 genericSelection
 	: GENERIC LPAREN assignmentExpression COMMA genericAssocList RPAREN
         -> ^(GENERIC assignmentExpression genericAssocList)
-	;
-
-/* A CIVL-C derivative expression.  Some sequence
- * of partial-differentiation operators applied to a function.
- */
-derivativeExpression
-	: DERIV LSQUARE IDENTIFIER COMMA partialList RSQUARE
-      LPAREN argumentExpressionList RPAREN
-      -> ^(DERIVATIVE_EXPRESSION IDENTIFIER partialList
-           argumentExpressionList RPAREN)
-	;
-
-/* A list of partial derivative operators.  This is a CIVL-C addition.
- */
-partialList
-	: partial (COMMA partial)* -> ^(PARTIAL_LIST partial+)
-	;
-
-/* A CIVL-C partial-derivative operator */
-partial
-	: LCURLY IDENTIFIER COMMA INTEGER_CONSTANT RCURLY
-        -> ^(PARTIAL IDENTIFIER INTEGER_CONSTANT)
 	;
 
 /* 6.5.1.1 */
@@ -462,23 +430,14 @@ scope DeclarationScope;
 	| unaryExpression
 	;
 
-/* A CIVL-C "remote" expression: a@b. This is used in contracts in MPI
- * programs to refer to the value of a variable on another process. */
-remoteExpression
-	: (castExpression -> castExpression)
-        ( (AT)=> AT y=castExpression
-            -> ^(OPERATOR AT ^(ARGUMENT_LIST $remoteExpression $y))
-        )*
-	;
-
 /* 6.5.5.  Multiplicative expressions: a*b, a/b, and a%b. */
 multiplicativeExpression
-	: (remoteExpression -> remoteExpression)
-        ( (STAR)=> STAR y=remoteExpression
+	: (castExpression -> castExpression)
+        ( (STAR)=> STAR y=castExpression
             -> ^(OPERATOR STAR ^(ARGUMENT_LIST $multiplicativeExpression $y))
-        | (DIV)=> DIV y=remoteExpression
+        | (DIV)=> DIV y=castExpression
             -> ^(OPERATOR DIV ^(ARGUMENT_LIST $multiplicativeExpression $y))
-        | (MOD)=> MOD y=remoteExpression
+        | (MOD)=> MOD y=castExpression
             -> ^(OPERATOR MOD ^(ARGUMENT_LIST $multiplicativeExpression $y))
         )*
 	;
@@ -612,18 +571,6 @@ conditionalExpression
         | -> logicalImpliesExpression
     	)
 	;
-
-/* A closed interval of real numbers [a,b].  Used in a $uniform expression. */
-interval
-    : LSQUARE conditionalExpression COMMA conditionalExpression RSQUARE
-        -> ^(INTERVAL conditionalExpression conditionalExpression)
-    ;
-
-/* A (possibly empty) sequence of interval */
-intervalSeq
-    : i+= interval i+= interval* -> ^(INTERVAL_SEQ $i+)
-    | -> ABSENT
-    ;
 
 /* A CIVL-C array lambda expression.  Examples:
  *   (int[])$lambda(int i,j | i<j && j<n) 2*i+j
@@ -1007,22 +954,14 @@ functionSpecifier
     | FATOMIC -> ^(FATOMIC)
     | DEVICE
     | GLOBAL
-    | differentiableSpecifier
     ;
 
 abstractSpecifier
     : ABSTRACT (  -> ^(ABSTRACT)
-               | CONTIN LPAREN INTEGER_CONSTANT RPAREN
-                 -> ^(ABSTRACT INTEGER_CONSTANT)
                | LPAREN STRING_LITERAL RPAREN
                  -> ^(ABSTRACT STRING_LITERAL)
                )
     ;
-
-differentiableSpecifier
-	: DIFFERENTIABLE LPAREN INTEGER_CONSTANT COMMA intervalSeq RPAREN
-	  -> ^(DIFFERENTIABLE INTEGER_CONSTANT intervalSeq)
-	;
 
 libraryName
 	: LSQUARE i0=IDENTIFIER i1+=(SUB | IDENTIFIER)* RSQUARE

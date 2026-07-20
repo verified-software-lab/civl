@@ -528,8 +528,6 @@ public class CommonInsensitiveFlow implements InsensitiveFlow {
 			case QUANTIFIED_EXPRESSION :
 			case LAMBDA :
 			case SPAWN :
-			case DERIVATIVE_EXPRESSION :
-				throw unimplemented(expr.expressionKind() + " kind expression");
 			default :
 				return null;
 		}

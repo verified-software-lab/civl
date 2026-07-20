@@ -47,8 +47,6 @@ import dev.civl.mc.model.IF.expression.CharLiteralExpression;
 import dev.civl.mc.model.IF.expression.CompoundLiteralExpression;
 import dev.civl.mc.model.IF.expression.ConditionalExpression;
 import dev.civl.mc.model.IF.expression.DereferenceExpression;
-import dev.civl.mc.model.IF.expression.DerivativeCallExpression;
-import dev.civl.mc.model.IF.expression.DifferentiableExpression;
 import dev.civl.mc.model.IF.expression.DomainGuardExpression;
 import dev.civl.mc.model.IF.expression.DotExpression;
 import dev.civl.mc.model.IF.expression.DynamicTypeOfExpression;
@@ -116,8 +114,6 @@ import dev.civl.mc.model.common.expression.CommonCharLiteralExpression;
 import dev.civl.mc.model.common.expression.CommonCompoundLiteralExpression;
 import dev.civl.mc.model.common.expression.CommonConditionalExpression;
 import dev.civl.mc.model.common.expression.CommonDereferenceExpression;
-import dev.civl.mc.model.common.expression.CommonDerivativeCallExpression;
-import dev.civl.mc.model.common.expression.CommonDifferentiableExpression;
 import dev.civl.mc.model.common.expression.CommonDomainGuardExpression;
 import dev.civl.mc.model.common.expression.CommonDotExpression;
 import dev.civl.mc.model.common.expression.CommonDynamicTypeOfExpression;
@@ -639,13 +635,6 @@ public class CommonModelFactory implements ModelFactory {
 			derefExprType = typeFactory.civlSetType(derefExprType);
 		// systemScope: indicates unknown scope
 		return new CommonDereferenceExpression(source, this.systemScope, derefExprType, pointer);
-	}
-
-	@Override
-	public DerivativeCallExpression derivativeCallExpression(CIVLSource source, AbstractFunction function,
-			List<Pair<Variable, IntegerLiteralExpression>> partials, List<Expression> arguments) {
-		return new CommonDerivativeCallExpression(source, joinScope(arguments), getLowerScope(arguments), function,
-				partials, arguments);
 	}
 
 	@Override
@@ -1799,17 +1788,6 @@ public class CommonModelFactory implements ModelFactory {
 	public CIVLFunction nondetFunction(CIVLSource source, Identifier name, CIVLType returnType, Scope containingScope) {
 		return new CommonNondetFunction(source, name, returnType, containingScope,
 				containingScope != null ? containingScope.numFunctions() : -1);
-	}
-
-	@Override
-	public DifferentiableExpression differentiableExpression(CIVLSource source, AbstractFunction function, int degree,
-			Expression[] lowerBounds, Expression[] upperBounds) {
-		Scope lscope = null;
-		Scope rscope = null;
-		// TODO: figure out those scopes
-
-		return new CommonDifferentiableExpression(source, lscope, rscope, typeFactory.booleanType, function, degree,
-				lowerBounds, upperBounds);
 	}
 
 	@Override

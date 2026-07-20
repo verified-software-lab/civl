@@ -1768,9 +1768,6 @@ public class MFASTBuilderWorker {
 			case "$EXISTS":
 				q = Quantifier.EXISTS;
 				break;
-			case "$UNIFORM":
-				q = Quantifier.UNIFORM;
-				break;
 			default:
 				assert false;
 			}
@@ -1791,8 +1788,7 @@ public class MFASTBuilderWorker {
 				restrictExprNode = translateExpr(rExpr);
 			}
 			predExprNode = translateExpr(pExpr);
-			return nodeFactory.newQuantifiedExpressionNode(src, q, boundVarDeclsNode, restrictExprNode, predExprNode,
-					null);
+			return nodeFactory.newQuantifiedExpressionNode(src, q, boundVarDeclsNode, restrictExprNode, predExprNode);
 		} else
 			assert false;
 
@@ -3382,7 +3378,7 @@ public class MFASTBuilderWorker {
 		String FARR_DESC = "farr_desc";
 		IdentifierNode fArrDescNode = nodeFactory.newIdentifierNode(src, FARR_DESC);
 
-		return nodeFactory.newTypedefNameNode(fArrDescNode, null);
+		return nodeFactory.newTypedefNameNode(fArrDescNode);
 	}
 
 	// The driver of generating CIVL AST from FORTRAN parse tree.

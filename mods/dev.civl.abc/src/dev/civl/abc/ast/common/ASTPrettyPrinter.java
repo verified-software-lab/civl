@@ -52,14 +52,12 @@ import dev.civl.abc.ast.node.IF.expression.ArrowNode;
 import dev.civl.abc.ast.node.IF.expression.CastNode;
 import dev.civl.abc.ast.node.IF.expression.CompoundLiteralNode;
 import dev.civl.abc.ast.node.IF.expression.ConstantNode;
-import dev.civl.abc.ast.node.IF.expression.DerivativeExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.DotNode;
 import dev.civl.abc.ast.node.IF.expression.ExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.ExpressionNode.ExpressionKind;
 import dev.civl.abc.ast.node.IF.expression.FunctionCallNode;
 import dev.civl.abc.ast.node.IF.expression.GenericSelectionNode;
 import dev.civl.abc.ast.node.IF.expression.IdentifierExpressionNode;
-import dev.civl.abc.ast.node.IF.expression.IntegerConstantNode;
 import dev.civl.abc.ast.node.IF.expression.LambdaNode;
 import dev.civl.abc.ast.node.IF.expression.OperatorNode;
 import dev.civl.abc.ast.node.IF.expression.OperatorNode.Operator;
@@ -2031,9 +2029,6 @@ public class ASTPrettyPrinter {
 			result.append(constant);
 			break;
 		}
-		case DERIVATIVE_EXPRESSION:
-			result.append(derivative2Pretty((DerivativeExpressionNode) expression, maxLength));
-			break;
 		case DOT: {
 			DotNode dot = (DotNode) expression;
 
@@ -2161,37 +2156,6 @@ public class ASTPrettyPrinter {
 
 		result.append("(");
 		result.append(compoundStatement2Pretty("", compound, false, maxLength));
-		result.append(")");
-		return trimStringBuffer(result, maxLength);
-	}
-
-	private static StringBuffer derivative2Pretty(DerivativeExpressionNode deriv, int maxLength) {
-		if (maxLength == 0)
-			return EMPTY_STRING_BUFFER;
-
-		StringBuffer result = new StringBuffer();
-		int numPartials = deriv.getNumberOfPartials();
-		int numArgs = deriv.getNumberOfArguments();
-
-		result.append("$D[");
-		result.append(expression2Pretty(deriv.getFunction(), vacantLength(maxLength, result)));
-		for (int i = 0; i < numPartials; i++) {
-			PairNode<IdentifierExpressionNode, IntegerConstantNode> partial = deriv.getPartial(i);
-
-			result.append(", {");
-			result.append(partial.getLeft().getIdentifier().name());
-			result.append(",");
-			result.append(partial.getRight().getConstantValue());
-			result.append("}");
-		}
-		result.append("](");
-		for (int i = 0; i < numArgs; i++) {
-			ExpressionNode arg = deriv.getArgument(i);
-
-			if (i != 0)
-				result.append(", ");
-			result.append(expression2Pretty(arg, vacantLength(maxLength, result)));
-		}
 		result.append(")");
 		return trimStringBuffer(result, maxLength);
 	}

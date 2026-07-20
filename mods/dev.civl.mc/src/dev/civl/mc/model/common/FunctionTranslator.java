@@ -46,7 +46,6 @@ import dev.civl.abc.ast.node.IF.expression.CastNode;
 import dev.civl.abc.ast.node.IF.expression.CompoundLiteralNode;
 import dev.civl.abc.ast.node.IF.expression.ConstantNode;
 import dev.civl.abc.ast.node.IF.expression.ConstantNode.ConstantKind;
-import dev.civl.abc.ast.node.IF.expression.DerivativeExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.DotNode;
 import dev.civl.abc.ast.node.IF.expression.EnumerationConstantNode;
 import dev.civl.abc.ast.node.IF.expression.ExpressionNode;
@@ -120,7 +119,6 @@ import dev.civl.abc.token.IF.StringLiteral;
 import dev.civl.gmc.CommandLineException;
 import dev.civl.mc.config.IF.CIVLConfiguration;
 import dev.civl.mc.model.IF.AbstractFunction;
-import dev.civl.mc.model.IF.AccuracyAssumptionBuilder;
 import dev.civl.mc.model.IF.CIVLException;
 import dev.civl.mc.model.IF.CIVLFunction;
 import dev.civl.mc.model.IF.CIVLInternalException;
@@ -143,7 +141,6 @@ import dev.civl.mc.model.IF.expression.CompoundLiteralExpression.CIVLCompoundLit
 import dev.civl.mc.model.IF.expression.CompoundLiteralExpression.CIVLLiteralObject;
 import dev.civl.mc.model.IF.expression.Expression;
 import dev.civl.mc.model.IF.expression.FunctionIdentifierExpression;
-import dev.civl.mc.model.IF.expression.IntegerLiteralExpression;
 import dev.civl.mc.model.IF.expression.LHSExpression;
 import dev.civl.mc.model.IF.expression.LambdaExpression;
 import dev.civl.mc.model.IF.expression.LiteralExpression;
@@ -236,13 +233,6 @@ public class FunctionTranslator {
 	 */
 	private CIVLFunction function;
 
-	/**
-	 * The accuracy assumption builder, which performs Taylor expansions after
-	 * assumptions involving abstract functions.
-	 */
-	@SuppressWarnings("unused")
-	private AccuracyAssumptionBuilder accuracyAssumptionBuilder;
-
 	private CIVLConfiguration civlConfig;
 
 	/* **************************** Constructors *************************** */
@@ -270,7 +260,6 @@ public class FunctionTranslator {
 		this.functionBodyNode = bodyNode;
 		this.setFunction(function);
 		this.functionInfo = new FunctionInfo(function);
-		this.accuracyAssumptionBuilder = new CommonAccuracyAssumptionBuilder(modelFactory);
 		this.civlConfig = civlConfig;
 	}
 
@@ -298,7 +287,6 @@ public class FunctionTranslator {
 		this.typeFactory = modelFactory.typeFactory();
 		this.setFunction(function);
 		this.functionInfo = new FunctionInfo(function);
-		this.accuracyAssumptionBuilder = new CommonAccuracyAssumptionBuilder(modelFactory);
 		this.civlConfig = civlConfig;
 	}
 
@@ -3551,9 +3539,6 @@ public class FunctionTranslator {
 		case CONSTANT:
 			result = translateConstantNode(scope, (ConstantNode) expressionNode);
 			break;
-		case DERIVATIVE_EXPRESSION:
-			result = translateDerivativeExpressionNode((DerivativeExpressionNode) expressionNode, scope);
-			break;
 		case DOT:
 			result = translateDotNode((DotNode) expressionNode, scope);
 			break;
@@ -4001,49 +3986,6 @@ public class FunctionTranslator {
 		return modelFactory.scopeofExpression(source, (LHSExpression) argument);
 	}
 
-	private Expression translateDerivativeExpressionNode(DerivativeExpressionNode node, Scope scope) {
-		Expression result;
-		ExpressionNode functionExpression = node.getFunction();
-		Function callee;
-		CIVLFunction abstractFunction;
-		List<Pair<Variable, IntegerLiteralExpression>> partials = new ArrayList<Pair<Variable, IntegerLiteralExpression>>();
-		List<Expression> arguments = new ArrayList<Expression>();
-
-		if (functionExpression instanceof IdentifierExpressionNode) {
-			callee = (Function) ((IdentifierExpressionNode) functionExpression).getIdentifier().getEntity();
-		} else
-			throw new CIVLUnimplementedFeatureException(
-					"Function call must use identifier for now: " + functionExpression.getSource());
-		abstractFunction = modelBuilder.functionMap.get(callee);
-		assert abstractFunction != null;
-		assert abstractFunction instanceof AbstractFunction;
-		for (int i = 0; i < node.getNumberOfPartials(); i++) {
-			PairNode<IdentifierExpressionNode, IntegerConstantNode> partialNode = node.getPartial(i);
-			Variable partialVariable = null;
-			IntegerLiteralExpression partialDegree;
-
-			for (Variable param : abstractFunction.parameters()) {
-				if (param.name().name().equals(partialNode.getLeft().getIdentifier().name())) {
-					partialVariable = param;
-					break;
-				}
-			}
-			assert partialVariable != null;
-			partialDegree = modelFactory.integerLiteralExpression(modelFactory.sourceOf(partialNode.getRight()),
-					partialNode.getRight().getConstantValue().getIntegerValue());
-			partials.add(new Pair<Variable, IntegerLiteralExpression>(partialVariable, partialDegree));
-		}
-		for (int i = 0; i < node.getNumberOfArguments(); i++) {
-			Expression actual = translateExpressionNode(node.getArgument(i), scope, true);
-
-			actual = arrayToPointer(actual);
-			arguments.add(actual);
-		}
-		result = modelFactory.derivativeCallExpression(modelFactory.sourceOf(node), (AbstractFunction) abstractFunction,
-				partials, arguments);
-		return result;
-	}
-
 	/**
 	 * A function call used as an expression. At present, this should only happen
 	 * when the function is an abstract function.
@@ -4475,9 +4417,6 @@ public class FunctionTranslator {
 			break;
 		case FORALL:
 			quantifier = Quantifier.FORALL;
-			break;
-		case UNIFORM:
-			quantifier = Quantifier.UNIFORM;
 			break;
 		default:
 			throw new CIVLUnimplementedFeatureException("quantifier " + quantifiedNode.quantifier(), source);

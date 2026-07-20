@@ -27,8 +27,6 @@ import dev.civl.mc.model.IF.expression.CharLiteralExpression;
 import dev.civl.mc.model.IF.expression.CompoundLiteralExpression;
 import dev.civl.mc.model.IF.expression.ConditionalExpression;
 import dev.civl.mc.model.IF.expression.DereferenceExpression;
-import dev.civl.mc.model.IF.expression.DerivativeCallExpression;
-import dev.civl.mc.model.IF.expression.DifferentiableExpression;
 import dev.civl.mc.model.IF.expression.DomainGuardExpression;
 import dev.civl.mc.model.IF.expression.DotExpression;
 import dev.civl.mc.model.IF.expression.DynamicTypeOfExpression;
@@ -336,7 +334,7 @@ public interface ModelFactory {
 	 * 
 	 * @param source            The source file information for this expression.
 	 * @param quantifier        The quantifier for this quantified expression. One
-	 *                          of {FORALL, EXISTS, UNIFORM}.
+	 *                          of {FORALL, EXISTS}.
 	 * @param boundVariableList the list of bound variables as long as their domains
 	 *                          (optional)
 	 * @param restriction       The boolean-valued expression involving the bound
@@ -555,37 +553,6 @@ public interface ModelFactory {
 	 */
 	AbstractFunctionCallExpression abstractFunctionCallExpression(CIVLSource source, AbstractFunction function,
 			List<Expression> arguments);
-
-	/**
-	 * An expression for a call to the derivative of an abstract function.
-	 * 
-	 * @param source    The source file information for this expression.
-	 * @param function  The abstract function being called.
-	 * @param partials  The pairs representing which partial derivatives are taken.
-	 *                  Each pair is comprised of the variable for the parameter in
-	 *                  which the partial derivative is taken, and an integer
-	 *                  indicating how many times that partial is taken.
-	 * @param arguments The arguments to the function call.
-	 * @return The new derivative call expression.
-	 */
-	DerivativeCallExpression derivativeCallExpression(CIVLSource source, AbstractFunction function,
-			List<Pair<Variable, IntegerLiteralExpression>> partials, List<Expression> arguments);
-
-	/**
-	 * An expression representing the claim that some function is differentiable.
-	 * Specifically, the function has <code>degree</code> continuous derivatives on
-	 * the Cartesian product of the closed intervals specified by the lower and
-	 * upper bounds.
-	 * 
-	 * @param source
-	 * @param function
-	 * @param degree
-	 * @param lowerBounds
-	 * @param upperBounds
-	 * @return
-	 */
-	DifferentiableExpression differentiableExpression(CIVLSource source, AbstractFunction function, int degree,
-			Expression[] lowerBounds, Expression[] upperBounds);
 
 	/*
 	 * ************************************************************************

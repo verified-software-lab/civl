@@ -35,7 +35,6 @@ import dev.civl.abc.ast.node.IF.expression.CastNode;
 import dev.civl.abc.ast.node.IF.expression.CharacterConstantNode;
 import dev.civl.abc.ast.node.IF.expression.CompoundLiteralNode;
 import dev.civl.abc.ast.node.IF.expression.ConstantNode;
-import dev.civl.abc.ast.node.IF.expression.DerivativeExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.DotNode;
 import dev.civl.abc.ast.node.IF.expression.EnumerationConstantNode;
 import dev.civl.abc.ast.node.IF.expression.ExpressionNode;
@@ -222,9 +221,6 @@ public class ExpressionAnalyzer {
 				break;
 			case CONSTANT:
 				processConstant((ConstantNode) node);
-				break;
-			case DERIVATIVE_EXPRESSION:
-				processDerivativeExpression((DerivativeExpressionNode) node);
 				break;
 			case DOT:
 				processDot((DotNode) node);
@@ -1065,12 +1061,6 @@ public class ExpressionAnalyzer {
 	}
 
 	private void processQuantifiedExpression(QuantifiedExpressionNode node) throws SyntaxException {
-		if (node.intervalSequence() != null) {
-			for (PairNode<ExpressionNode, ExpressionNode> interval : node.intervalSequence()) {
-				processExpression(interval.getLeft());
-				processExpression(interval.getRight());
-			}
-		}
 		for (PairNode<SequenceNode<VariableDeclarationNode>, ExpressionNode> variableSubList : node
 				.boundVariableList()) {
 			for (VariableDeclarationNode variable : variableSubList.getLeft())
@@ -1184,33 +1174,6 @@ public class ExpressionAnalyzer {
 		node.setInitialType(typeNode.getType());
 		if (!node.isSideEffectFree(false))
 			throw this.error("array lambdas are not allowed to have side effects.", node);
-	}
-
-	private void processDerivativeExpression(DerivativeExpressionNode node) throws SyntaxException {
-		ExpressionNode functionNode = node.getFunction();
-		Type tmpType;
-		TypeKind tmpKind;
-		FunctionType functionType;
-
-		processExpression(functionNode);
-		tmpType = functionNode.getType();
-		tmpKind = tmpType.kind();
-		for (int i = 0; i < node.getNumberOfPartials(); i++) {
-			processExpression(node.getPartial(i).getRight());
-		}
-		for (int i = 0; i < node.getNumberOfArguments(); i++) {
-			processExpression(node.getArgument(i));
-		}
-		if (tmpKind == TypeKind.POINTER) {
-			tmpType = ((PointerType) tmpType).referencedType();
-			tmpKind = tmpType.kind();
-		}
-		if (tmpKind == TypeKind.FUNCTION)
-			functionType = (FunctionType) tmpType;
-		else
-			throw error("Function expression in derivative expression does not have function "
-					+ "type or pointer to function type", functionNode);
-		node.setInitialType(functionType.getReturnType());
 	}
 
 	private void processSizeof(SizeofNode node) throws SyntaxException {

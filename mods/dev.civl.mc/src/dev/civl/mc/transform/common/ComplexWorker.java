@@ -204,7 +204,7 @@ public class ComplexWorker extends BaseWorker {
 		default:
 			throw new RuntimeException("unreachable");
 		}
-		TypedefNameNode result = nodeFactory.newTypedefNameNode(idn, null);
+		TypedefNameNode result = nodeFactory.newTypedefNameNode(idn);
 		result.setType(complexType);
 		return result;
 	}

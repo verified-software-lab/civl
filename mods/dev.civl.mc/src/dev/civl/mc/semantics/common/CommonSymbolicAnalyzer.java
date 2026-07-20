@@ -2126,7 +2126,6 @@ public class CommonSymbolicAnalyzer implements SymbolicAnalyzer {
 				break;
 			}
 			case BOUND_VARIABLE:
-			case DERIVATIVE:
 			case FUNCTION_GUARD:
 			case RESULT:
 			case SCOPEOF:

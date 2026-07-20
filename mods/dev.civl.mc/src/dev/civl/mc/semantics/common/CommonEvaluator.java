@@ -35,7 +35,6 @@ import dev.civl.mc.model.IF.expression.CompoundLiteralExpression.CIVLLiteralObje
 import dev.civl.mc.model.IF.expression.CompoundLiteralExpression.CIVLScalarLiteralObject;
 import dev.civl.mc.model.IF.expression.ConditionalExpression;
 import dev.civl.mc.model.IF.expression.DereferenceExpression;
-import dev.civl.mc.model.IF.expression.DerivativeCallExpression;
 import dev.civl.mc.model.IF.expression.DomainGuardExpression;
 import dev.civl.mc.model.IF.expression.DotExpression;
 import dev.civl.mc.model.IF.expression.DynamicTypeOfExpression;
@@ -1134,52 +1133,6 @@ public class CommonEvaluator implements Evaluator {
 		Evaluation eval = evaluate(state, pid, expression.pointer());
 
 		return dereference(expression.pointer().getSource(), eval.state, pid, process, eval.value, true, true);
-	}
-
-	/**
-	 * Evaluates a derivative call expression.
-	 * 
-	 * @param state      the pre-state
-	 * @param pid        the PID of the process running this call
-	 * @param expression the derivative call expression to be evaluated
-	 * @return the evaluation with the properly updated state and the value of the
-	 *         derivative call expression.
-	 * @throws UnsatisfiablePathConditionException
-	 */
-	protected Evaluation evaluateDerivativeCall(State state, int pid, DerivativeCallExpression expression)
-			throws UnsatisfiablePathConditionException {
-		AbstractFunction function = expression.function();
-		SymbolicType returnType = function.returnType().getDynamicType(universe);
-		List<SymbolicType> argumentTypes = new ArrayList<SymbolicType>();
-		List<SymbolicExpression> arguments = new ArrayList<SymbolicExpression>();
-		SymbolicType functionType;
-		SymbolicExpression functionExpression;
-		SymbolicExpression functionApplication;
-		Evaluation result;
-		String derivativeName;
-
-		for (Variable param : function.parameters()) {
-			argumentTypes.add(param.type().getDynamicType(universe));
-		}
-		for (Expression arg : expression.arguments()) {
-			Evaluation eval = evaluate(state, pid, arg);
-			arguments.add(eval.value);
-		}
-		functionType = universe.functionType(argumentTypes, returnType);
-		// The derivative name is the name of the function concatenated with the
-		// names and degrees of the partials. e.g. the name of
-		// $D[rho,{x,1},{y,2}]() is "rhox1y2"
-		derivativeName = function.name().name();
-		for (Pair<Variable, IntegerLiteralExpression> partial : expression.partials()) {
-			derivativeName += partial.left.name().name() + partial.right.value();
-		}
-
-		StringObject funcName = ModelConfiguration.getAbstractFunctionName(universe, derivativeName);
-
-		functionExpression = universe.symbolicConstant(funcName, functionType);
-		functionApplication = universe.apply(functionExpression, arguments);
-		result = new Evaluation(state, functionApplication);
-		return result;
 	}
 
 	/**
@@ -3056,9 +3009,6 @@ public class CommonEvaluator implements Evaluator {
 			break;
 		case DEREFERENCE:
 			result = evaluateDereference(state, pid, process, (DereferenceExpression) expression);
-			break;
-		case DERIVATIVE:
-			result = evaluateDerivativeCall(state, pid, (DerivativeCallExpression) expression);
 			break;
 		case DOMAIN_GUARD:
 			result = evaluateDomainGuard(state, pid, (DomainGuardExpression) expression);

@@ -64,7 +64,6 @@ import dev.civl.abc.ast.node.IF.expression.CastNode;
 import dev.civl.abc.ast.node.IF.expression.CharacterConstantNode;
 import dev.civl.abc.ast.node.IF.expression.CompoundLiteralNode;
 import dev.civl.abc.ast.node.IF.expression.ConstantNode;
-import dev.civl.abc.ast.node.IF.expression.DerivativeExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.DotNode;
 import dev.civl.abc.ast.node.IF.expression.EnumerationConstantNode;
 import dev.civl.abc.ast.node.IF.expression.ExpressionNode;
@@ -178,7 +177,6 @@ import dev.civl.abc.ast.node.common.expression.CommonArrowNode;
 import dev.civl.abc.ast.node.common.expression.CommonCastNode;
 import dev.civl.abc.ast.node.common.expression.CommonCharacterConstantNode;
 import dev.civl.abc.ast.node.common.expression.CommonCompoundLiteralNode;
-import dev.civl.abc.ast.node.common.expression.CommonDerivativeExpressionNode;
 import dev.civl.abc.ast.node.common.expression.CommonDotNode;
 import dev.civl.abc.ast.node.common.expression.CommonEnumerationConstantNode;
 import dev.civl.abc.ast.node.common.expression.CommonExpressionNode;
@@ -407,8 +405,8 @@ public class CommonNodeFactory implements NodeFactory {
 	}
 
 	@Override
-	public TypedefNameNode newTypedefNameNode(IdentifierNode name, SequenceNode<ExpressionNode> scopeList) {
-		return new CommonTypedefNameNode(name.getSource(), name, scopeList);
+	public TypedefNameNode newTypedefNameNode(IdentifierNode name) {
+		return new CommonTypedefNameNode(name.getSource(), name);
 	}
 
 	@Override
@@ -846,13 +844,6 @@ public class CommonNodeFactory implements NodeFactory {
 	}
 
 	@Override
-	public DerivativeExpressionNode newDerivativeExpressionNode(Source source, ExpressionNode function,
-			SequenceNode<PairNode<IdentifierExpressionNode, IntegerConstantNode>> partials,
-			SequenceNode<ExpressionNode> arguments) {
-		return new CommonDerivativeExpressionNode(source, function, partials, arguments);
-	}
-
-	@Override
 	public void setConstantValue(ExpressionNode expression, Value value) {
 		((CommonExpressionNode) expression).setConstantValue(value);
 	}
@@ -1112,10 +1103,9 @@ public class CommonNodeFactory implements NodeFactory {
 	@Override
 	public QuantifiedExpressionNode newQuantifiedExpressionNode(Source source, Quantifier quantifier,
 			SequenceNode<PairNode<SequenceNode<VariableDeclarationNode>, ExpressionNode>> boundVariableDeclarationList,
-			ExpressionNode restriction, ExpressionNode expression,
-			SequenceNode<PairNode<ExpressionNode, ExpressionNode>> intervalSequence) {
+			ExpressionNode restriction, ExpressionNode expression) {
 		return new CommonQuantifiedExpressionNode(source, quantifier, boundVariableDeclarationList, restriction,
-				expression, intervalSequence);
+				expression);
 	}
 
 	@Override

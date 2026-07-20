@@ -355,7 +355,7 @@ public class SideEffectRemover extends BaseTransformer {
 			return nodeFactory.newBasicTypeNode(source, BasicTypeKind.INT);
 		}
 		case PROCESS: {
-			return nodeFactory.newTypedefNameNode(nodeFactory.newIdentifierNode(source, "$proc"), null);
+			return nodeFactory.newTypedefNameNode(nodeFactory.newIdentifierNode(source, "$proc"));
 		}
 		case QUALIFIED: {
 			QualifiedObjectType qualifiedType = (QualifiedObjectType) type;
@@ -1703,7 +1703,6 @@ public class SideEffectRemover extends BaseTransformer {
 			}
 		}
 		case ALIGNOF:
-		case DERIVATIVE_EXPRESSION:
 		case IDENTIFIER_EXPRESSION:
 		case RESULT: {
 			ExprTriple result = new ExprTriple(expression);

@@ -298,8 +298,7 @@ public class LogicFunctionTransformer {
 		pred = tranformExpression(quantNode.expression(), pointersStack);
 		pointersStack.pop();
 		pred = nodeFactory.newQuantifiedExpressionNode(quantNode.getSource(), quantNode.quantifier(),
-				quantNode.boundVariableList().copy(), quantNode.restriction().copy(), pred.copy(),
-				quantNode.intervalSequence().copy());
+				quantNode.boundVariableList().copy(), quantNode.restriction().copy(), pred.copy());
 
 		List<VariableDeclarationNode> offsets_bv = new LinkedList<>();
 		SequenceNode<PairNode<SequenceNode<VariableDeclarationNode>, ExpressionNode>> offsets;
@@ -315,8 +314,7 @@ public class LogicFunctionTransformer {
 		offsets = nodeFactory.newSequenceNode(offsetsSource, "bounded-offset-sequence",
 				Arrays.asList(nodeFactory.newPairNode(offsetsSource,
 						nodeFactory.newSequenceNode(offsetsSource, "bounded-offsets", offsets_bv), null)));
-		return nodeFactory.newQuantifiedExpressionNode(pred.getSource(), quantNode.quantifier(), offsets, null, pred,
-				null);
+		return nodeFactory.newQuantifiedExpressionNode(pred.getSource(), quantNode.quantifier(), offsets, null, pred);
 	}
 
 	/**

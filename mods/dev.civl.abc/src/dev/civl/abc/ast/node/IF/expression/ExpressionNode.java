@@ -80,11 +80,6 @@ public interface ExpressionNode extends InitializerNode, SizeableNode, ForLoopIn
 		 */
 		CONSTANT,
 		/**
-		 * A CIVL-C derivative expression; can be cast to
-		 * {@link DerivativeExpressionNode}.
-		 */
-		DERIVATIVE_EXPRESSION,
-		/**
 		 * A C dot expression, which has the form <code>e.f</code>; can be cast to
 		 * {@link DotNode}.
 		 */

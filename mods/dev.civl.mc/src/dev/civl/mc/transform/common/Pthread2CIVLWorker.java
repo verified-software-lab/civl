@@ -167,7 +167,7 @@ public class Pthread2CIVLWorker extends BaseWorker {
 		if (isMain)
 			pthread_pool_create_function = PTHREAD_POOL_CREATE_MAIN;
 		pthreadPoolType = nodeFactory.newTypedefNameNode(nodeFactory.newIdentifierNode(
-				this.newSource("$phtread_pool_t type", CivlcTokenConstant.IDENTIFIER), PTHREAD_POOL_TYPE), null);
+				this.newSource("$phtread_pool_t type", CivlcTokenConstant.IDENTIFIER), PTHREAD_POOL_TYPE));
 		if (wtInitializer) {
 			pthreadPoolCreateArgs = new ArrayList<>(2);
 			pthreadPoolCreateArgs.add(this.hereNode());

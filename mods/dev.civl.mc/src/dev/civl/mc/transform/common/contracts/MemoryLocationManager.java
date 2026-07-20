@@ -298,7 +298,7 @@ public class MemoryLocationManager {
 				subPred_ptrEquals = nodeFactory.newQuantifiedExpressionNode(
 						source, Quantifier.EXISTS, nodeFactory.newSequenceNode(source,
 								"lvalue-set in assigns transformation", boundVariableDeclarationList),
-						restriction, subPred_ptrEquals, null);
+						restriction, subPred_ptrEquals);
 			}
 			predicate = predicate == null ? subPred_ptrEquals
 					: nodeFactory.newOperatorNode(source, Operator.LOR, predicate, subPred_ptrEquals);

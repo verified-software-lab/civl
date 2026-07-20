@@ -286,8 +286,6 @@ public class ReadSetAnalyzer {
 			break;
 		/* shall not happen section */
 		case MEMORY_UNIT:
-		case DERIVATIVE:
-		case DIFFERENTIABLE:
 			throw new CIVLUnimplementedFeatureException(
 					"dynamic analysis of read set during evaluation of " + "expression of " + kind + " kind");
 		default:

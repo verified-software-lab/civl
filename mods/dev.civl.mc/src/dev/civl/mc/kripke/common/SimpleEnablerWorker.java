@@ -30,8 +30,6 @@ import dev.civl.mc.model.IF.expression.BinaryExpression.BINARY_OPERATOR;
 import dev.civl.mc.model.IF.expression.CastExpression;
 import dev.civl.mc.model.IF.expression.ConditionalExpression;
 import dev.civl.mc.model.IF.expression.DereferenceExpression;
-import dev.civl.mc.model.IF.expression.DerivativeCallExpression;
-import dev.civl.mc.model.IF.expression.DifferentiableExpression;
 import dev.civl.mc.model.IF.expression.DomainGuardExpression;
 import dev.civl.mc.model.IF.expression.DotExpression;
 import dev.civl.mc.model.IF.expression.DynamicTypeOfExpression;
@@ -1430,22 +1428,6 @@ public class SimpleEnablerWorker {
 
 			findObjects(result, state, pid, pointerArg);
 			addPointer(result, state, pointerArg.getSource(), pointerVal);
-			break;
-		}
-		case DERIVATIVE: {
-			DerivativeCallExpression de = (DerivativeCallExpression) expr;
-
-			for (Expression arg : de.arguments())
-				findObjects(result, state, pid, arg);
-			break;
-		}
-		case DIFFERENTIABLE: {
-			DifferentiableExpression de = (DifferentiableExpression) expr;
-
-			for (Expression lb : de.lowerBounds())
-				findObjects(result, state, pid, lb);
-			for (Expression ub : de.upperBounds())
-				findObjects(result, state, pid, ub);
 			break;
 		}
 		case DOMAIN_GUARD: {

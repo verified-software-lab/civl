@@ -381,8 +381,6 @@ public class MemoryUnitExpressionAnalyzer {
 			computeImpactMemoryUnitsOfExpression(writableVars, ((DereferenceExpression) expression).pointer(), result,
 					derefCount + 1);
 			break;
-		case DERIVATIVE:// TODO check if its arguments should be checked
-			break;
 		case DOMAIN_GUARD:
 			computeImpactMemoryUnitsOfExpression(writableVars, ((DomainGuardExpression) expression).domain(), result,
 					derefCount);

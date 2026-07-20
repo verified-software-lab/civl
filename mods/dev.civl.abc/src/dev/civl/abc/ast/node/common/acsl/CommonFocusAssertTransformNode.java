@@ -124,8 +124,7 @@ public class CommonFocusAssertTransformNode extends CommonFocusTransformNode
 						forallNode.getSource(), Quantifier.FORALL,
 						nodeFactory.newSequenceNode(boundVarList.getSource(),
 								"bound var list", newBoundVarList),
-						forallNode.restriction(), newForallExprNode,
-						forallNode.intervalSequence());
+						forallNode.restriction(), newForallExprNode);
 		return restriction == null
 				? transformedBody
 				: nodeFactory.newOperatorNode(forallNode.getSource(),

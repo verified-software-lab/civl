@@ -811,7 +811,7 @@ public abstract class BaseWorker {
 		case ENUMERATION: {
 			EnumerationType enumType = (EnumerationType) type;
 
-			return nodeFactory.newTypedefNameNode(nodeFactory.newIdentifierNode(source, enumType.getTag()), null);
+			return nodeFactory.newTypedefNameNode(nodeFactory.newIdentifierNode(source, enumType.getTag()));
 		}
 		case SCOPE:
 			return nodeFactory.newScopeTypeNode(source);
@@ -1002,7 +1002,7 @@ public abstract class BaseWorker {
 
 	/** @return named_type_def {@link TypeNode} w/ given <code>name</code> */
 	protected TypeNode nodeTypeNamed(String srcMethod, String name) {
-		return nodeFactory.newTypedefNameNode(nodeIdent(srcMethod, name), null);
+		return nodeFactory.newTypedefNameNode(nodeIdent(srcMethod, name));
 	}
 
 	/** @return CIVL <code>$range</code> {@link TypeNode} */
