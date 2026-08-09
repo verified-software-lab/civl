@@ -18,6 +18,7 @@ import dev.civl.abc.ast.node.IF.ASTNode;
 import dev.civl.abc.ast.node.IF.AttributeKey;
 import dev.civl.abc.ast.node.IF.NodePredicate;
 import dev.civl.abc.ast.node.IF.acsl.TransformNode;
+import dev.civl.abc.ast.node.IF.expression.ExpressionNode;
 import dev.civl.abc.token.IF.Source;
 
 public abstract class CommonASTNode implements ASTNode {
@@ -35,7 +36,7 @@ public abstract class CommonASTNode implements ASTNode {
 	private int childIndex = -1;
 
 	private ArrayList<ASTNode> children;
-	
+
 	private LinkedList<TransformNode> transforms;
 
 	private Source source;
@@ -46,8 +47,7 @@ public abstract class CommonASTNode implements ASTNode {
 
 	private void checkModifiable() {
 		if (owner != null)
-			throw new ASTException(
-					"Cannot modify node until released from AST:\n" + this);
+			throw new ASTException("Cannot modify node until released from AST:\n" + this);
 	}
 
 	protected static <T extends ASTNode> T duplicate(T node) {
@@ -69,8 +69,7 @@ public abstract class CommonASTNode implements ASTNode {
 		return newList;
 	}
 
-	public CommonASTNode(Source source,
-			Iterator<? extends ASTNode> childIterator) {
+	public CommonASTNode(Source source, Iterator<? extends ASTNode> childIterator) {
 		int childCount = 0;
 
 		instanceId = instanceCount++;
@@ -83,10 +82,8 @@ public abstract class CommonASTNode implements ASTNode {
 			children.add(child);
 			if (child != null) {
 				if (child.parent() != null)
-					throw new ASTException("Cannot make\n" + child
-							+ "\na child of node\n" + this
-							+ "\nbecause it is already a child of\n"
-							+ child.parent());
+					throw new ASTException("Cannot make\n" + child + "\na child of node\n" + this
+							+ "\nbecause it is already a child of\n" + child.parent());
 				child.parent = this;
 				child.childIndex = childCount;
 			}
@@ -94,8 +91,7 @@ public abstract class CommonASTNode implements ASTNode {
 		}
 	}
 
-	public CommonASTNode(Source source,
-			Iterable<? extends ASTNode> childCollection) {
+	public CommonASTNode(Source source, Iterable<? extends ASTNode> childCollection) {
 		this(source, childCollection.iterator());
 	}
 
@@ -110,21 +106,19 @@ public abstract class CommonASTNode implements ASTNode {
 	}
 
 	public CommonASTNode(Source source, ASTNode child) {
-		this(source, new ASTNode[]{child});
+		this(source, new ASTNode[] { child });
 	}
 
 	public CommonASTNode(Source source, ASTNode child0, ASTNode child1) {
-		this(source, new ASTNode[]{child0, child1});
+		this(source, new ASTNode[] { child0, child1 });
 	}
 
-	public CommonASTNode(Source source, ASTNode child0, ASTNode child1,
-			ASTNode child2) {
-		this(source, new ASTNode[]{child0, child1, child2});
+	public CommonASTNode(Source source, ASTNode child0, ASTNode child1, ASTNode child2) {
+		this(source, new ASTNode[] { child0, child1, child2 });
 	}
 
-	public CommonASTNode(Source source, ASTNode child0, ASTNode child1,
-			ASTNode child2, ASTNode child3) {
-		this(source, new ASTNode[]{child0, child1, child2, child3});
+	public CommonASTNode(Source source, ASTNode child0, ASTNode child1, ASTNode child2, ASTNode child3) {
+		this(source, new ASTNode[] { child0, child1, child2, child3 });
 	}
 
 	@Override
@@ -217,10 +211,8 @@ public abstract class CommonASTNode implements ASTNode {
 		int size;
 
 		if (!(attributeClass.isInstance(value)))
-			throw new IllegalArgumentException(
-					"Attribute " + ((CommonAttributeKey) key).getAttributeName()
-							+ " has type  " + attributeClass + " but given "
-							+ value + " of type " + value.getClass());
+			throw new IllegalArgumentException("Attribute " + ((CommonAttributeKey) key).getAttributeName()
+					+ " has type  " + attributeClass + " but given " + value + " of type " + value.getClass());
 		if (attributes == null)
 			attributes = new ArrayList<Object>();
 		size = attributes.size();
@@ -243,10 +235,8 @@ public abstract class CommonASTNode implements ASTNode {
 		children.add(child);
 		if (child != null) {
 			if (child.parent() != null)
-				throw new ASTException(
-						"Cannot make\n" + child + "\na child of node\n" + this
-								+ "\nbecause it is already a child of\n"
-								+ child.parent());
+				throw new ASTException("Cannot make\n" + child + "\na child of node\n" + this
+						+ "\nbecause it is already a child of\n" + child.parent());
 			((CommonASTNode) child).parent = this;
 			((CommonASTNode) child).childIndex = index;
 		}
@@ -260,11 +250,9 @@ public abstract class CommonASTNode implements ASTNode {
 
 		checkModifiable();
 		if (index < 0)
-			throw new ASTException(
-					"Negative index " + index + " used in setChild on " + this);
+			throw new ASTException("Negative index " + index + " used in setChild on " + this);
 		if (child != null && child.parent() != null)
-			throw new ASTException("Cannot make\n" + child
-					+ "\na child of node\n" + this
+			throw new ASTException("Cannot make\n" + child + "\na child of node\n" + this
 					+ "\nbecause it is already a child of\n" + child.parent());
 		while (index >= numChildren) {
 			children.add(null);
@@ -286,10 +274,8 @@ public abstract class CommonASTNode implements ASTNode {
 	/**
 	 * Insert a sequence of nodes into the child list of this node.
 	 * 
-	 * @param index
-	 *            an integer in [0,numChildren]
-	 * @param list
-	 *            a non-null list of free nodes, any of which may be null
+	 * @param index an integer in [0,numChildren]
+	 * @param list  a non-null list of free nodes, any of which may be null
 	 */
 	protected void insertChildrenAt(int index, List<? extends ASTNode> list) {
 		int oldSize = children.size();
@@ -298,21 +284,17 @@ public abstract class CommonASTNode implements ASTNode {
 
 		checkModifiable();
 		if (index < 0)
-			throw new ASTException("Negative index " + index
-					+ " used in insertChildren on " + this);
+			throw new ASTException("Negative index " + index + " used in insertChildren on " + this);
 		if (index > oldSize)
-			throw new ASTException("Index " + index + " exceeds size " + oldSize
-					+ " in insertChildren on " + this);
+			throw new ASTException("Index " + index + " exceeds size " + oldSize + " in insertChildren on " + this);
 		children.addAll(index, list);
 		for (int i = index; i < index + listSize; i++) {
 			ASTNode child = children.get(i);
 
 			if (child != null) {
 				if (child.parent() != null)
-					throw new ASTException("Cannot make\n" + child
-							+ "\na child of node\n" + this
-							+ "\nbecause it is already a child of\n"
-							+ child.parent());
+					throw new ASTException("Cannot make\n" + child + "\na child of node\n" + this
+							+ "\nbecause it is already a child of\n" + child.parent());
 				((CommonASTNode) child).parent = this;
 				((CommonASTNode) child).childIndex = i;
 			}
@@ -338,7 +320,7 @@ public abstract class CommonASTNode implements ASTNode {
 		}
 		return result;
 	}
-	
+
 	@Override
 	public ASTNode removeChild(int index) {
 		int numChildren = children.size();
@@ -346,8 +328,7 @@ public abstract class CommonASTNode implements ASTNode {
 
 		checkModifiable();
 		if (index < 0 || index >= numChildren)
-			throw new ASTException("Index " + index + " out of range [0,"
-					+ (numChildren - 1) + "]:" + this);
+			throw new ASTException("Index " + index + " out of range [0," + (numChildren - 1) + "]:" + this);
 		oldChild = children.get(index);
 		if (oldChild != null) {
 			((CommonASTNode) oldChild).parent = null;
@@ -386,12 +367,10 @@ public abstract class CommonASTNode implements ASTNode {
 	}
 
 	/**
-	 * Removes children and shifts down to remove the gaps; also applies
-	 * keepOnly to children not removed. This method is meant to be applied to
-	 * sequence nodes.
+	 * Removes children and shifts down to remove the gaps; also applies keepOnly to
+	 * children not removed. This method is meant to be applied to sequence nodes.
 	 * 
-	 * @param keep
-	 *            a node predicate telling which nodes to keep
+	 * @param keep a node predicate telling which nodes to keep
 	 */
 	protected void keepOnlyAndShift(NodePredicate keep) {
 		int numChildren = numChildren();
@@ -425,22 +404,22 @@ public abstract class CommonASTNode implements ASTNode {
 	public Scope getScope() {
 		return scope;
 	}
-	
+
 	@Override
 	public void addTransformAnnotation(TransformNode transformAnnotation) {
 		transforms.add(transformAnnotation);
 	}
-	
+
 	@Override
 	public void addAllTransformAnnotations(List<TransformNode> transformAnnotations) {
 		transforms.addAll(transformAnnotations);
 	}
-	
+
 	@Override
 	public void removeTransformAnnotation(int index) {
 		transforms.remove(index);
 	}
-	
+
 	@Override
 	public List<TransformNode> transformAnnotations() {
 		return transforms;
@@ -483,8 +462,7 @@ public abstract class CommonASTNode implements ASTNode {
 
 	@Override
 	public String toString() {
-		return "Node[" + id + ", " + instanceId + ", "
-				+ source.getSummary(false, false) + "]";
+		return "Node[" + id + ", " + instanceId + ", " + source.getSummary(false, false) + "]";
 	}
 
 	@Override
@@ -531,5 +509,31 @@ public abstract class CommonASTNode implements ASTNode {
 	@Override
 	public StringBuffer prettyRepresentation(int maxLength) {
 		return ASTs.prettyRepresentation(this, maxLength);
+	}
+
+	/**
+	 * Copies type information from v to u deeply. Precondition: u and v are roots
+	 * of isomorphic trees.
+	 */
+	private static void copyTypeInfo(ASTNode u, ASTNode v) {
+		if (u == null)
+			return;
+		int numChildren = v.numChildren();
+		for (int i = 0; i < numChildren; i++)
+			copyTypeInfo(u.child(i), v.child(i));
+		if (u instanceof ExpressionNode) {
+			ExpressionNode ue = (ExpressionNode) u, ve = (ExpressionNode) v;
+			ue.setInitialType(ve.getInitialType());
+			int n = ve.getNumConversions();
+			for (int i = 0; i < n; i++)
+				ue.addConversion(ve.getConversion(i));
+		}
+	}
+
+	@Override
+	public ASTNode copyWithTypes() {
+		ASTNode newNode = this.copy();
+		copyTypeInfo(newNode, this);
+		return newNode;
 	}
 }

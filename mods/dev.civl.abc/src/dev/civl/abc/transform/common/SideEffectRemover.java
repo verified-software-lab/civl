@@ -84,9 +84,11 @@ import dev.civl.abc.ast.type.IF.PointerType;
 import dev.civl.abc.ast.type.IF.QualifiedObjectType;
 import dev.civl.abc.ast.type.IF.StandardBasicType;
 import dev.civl.abc.ast.type.IF.StandardBasicType.BasicTypeKind;
+import dev.civl.abc.ast.type.IF.StandardSignedIntegerType.SignedIntKind;
 import dev.civl.abc.ast.type.IF.StructureOrUnionType;
 import dev.civl.abc.ast.type.IF.Type;
 import dev.civl.abc.ast.type.IF.Type.TypeKind;
+import dev.civl.abc.ast.type.IF.TypeFactory;
 import dev.civl.abc.ast.value.IF.CharacterValue;
 import dev.civl.abc.ast.value.IF.IntegerValue;
 import dev.civl.abc.ast.value.IF.StringValue;
@@ -233,6 +235,8 @@ public class SideEffectRemover extends BaseTransformer {
 	 */
 	private StringOrCompoundInitializerTranslateWorker stringOrCompoundInitializerWorker;
 
+	private TypeFactory typeFactory;
+
 	/* Constructors */
 
 	/**
@@ -243,7 +247,10 @@ public class SideEffectRemover extends BaseTransformer {
 	public SideEffectRemover(ASTFactory astFactory) {
 		super(CODE, LONG_NAME, SHORT_DESCRIPTION, astFactory);
 		initStringOrCompoundInitializerTranslator();
+		typeFactory = astFactory.getTypeFactory();
 	}
+
+	/* Private methods */
 
 	/**
 	 * initialize {@link StringOrCompoundInitializerTranslateWorker} which is used
@@ -267,11 +274,6 @@ public class SideEffectRemover extends BaseTransformer {
 				typeNodeCreator, getConfiguration().getLanguage());
 	}
 
-	/* Private methods */
-
-	// TODO shall this be moved to NodeFactory?
-	// TODO set the type of the returning TypeNode with the given parameter
-	// "type"
 	/**
 	 * Given a {@link Type}, creates a new type node tree that will generate that
 	 * type.
@@ -280,82 +282,90 @@ public class SideEffectRemover extends BaseTransformer {
 	 * @return An AST type node corresponding to the type.
 	 */
 	private TypeNode typeNode(Source source, Type type) {
+		TypeNode result;
+
 		switch (type.kind()) {
-		case ARRAY:
+		case ARRAY: {
 			ArrayType arrayType = (ArrayType) type;
 			ExpressionNode extent;
 
-			if (arrayType.getConstantSize() != null)
+			if (arrayType.getConstantSize() != null) {
 				extent = nodeFactory.newIntConstantNode(source,
 						arrayType.getConstantSize().getIntegerValue().intValueExact());
-			else
-				extent = arrayType.getVariableSize();
-			return nodeFactory.newArrayTypeNode(source, typeNode(source, arrayType.getElementType()),
-					extent == null ? null : extent.copy());
-		case ATOMIC:
+				// use "int" for initial type of this new extent node...
+				extent.setInitialType(typeFactory.signedIntegerType(SignedIntKind.INT));
+			} else {
+				extent = arrayType.getVariableSize(); // this may be null
+				if (extent != null)
+					extent = extent.copyWithTypes();
+			}
+			result = nodeFactory.newArrayTypeNode(source, typeNode(source, arrayType.getElementType()), extent);
+			break;
+		}
+		case ATOMIC: {
 			AtomicType atomicType = (AtomicType) type;
-
-			return nodeFactory.newAtomicTypeNode(source, typeNode(source, atomicType.getBaseType()));
-		case BASIC:
+			result = nodeFactory.newAtomicTypeNode(source, typeNode(source, atomicType.getBaseType()));
+			break;
+		}
+		case BASIC: {
 			StandardBasicType basicType = (StandardBasicType) type;
-
-			return nodeFactory.newBasicTypeNode(source, basicType.getBasicTypeKind());
+			result = nodeFactory.newBasicTypeNode(source, basicType.getBasicTypeKind());
+			break;
+		}
 		case DOMAIN: {
 			DomainType domainType = (DomainType) type;
 
 			if (domainType.hasDimension()) {
 				String dimensionString = Integer.toString(domainType.getDimension());
 				IntegerConstantNode dimensionNode;
-
 				try {
 					dimensionNode = nodeFactory.newIntegerConstantNode(source, dimensionString);
 				} catch (SyntaxException e) {
 					throw new ABCRuntimeException("error creating integer constant node for " + dimensionString);
 				}
-				return nodeFactory.newDomainTypeNode(source, dimensionNode);
+				result = nodeFactory.newDomainTypeNode(source, dimensionNode);
 			} else
-				return nodeFactory.newDomainTypeNode(source);
+				result = nodeFactory.newDomainTypeNode(source);
+			break;
 		}
 		case POINTER: {
 			PointerType pointerType = (PointerType) type;
-
-			return nodeFactory.newPointerTypeNode(source, typeNode(source, pointerType.referencedType()));
+			result = nodeFactory.newPointerTypeNode(source, typeNode(source, pointerType.referencedType()));
+			break;
 		}
 		case VOID:
-			return nodeFactory.newVoidTypeNode(source);
+			result = nodeFactory.newVoidTypeNode(source);
+			break;
 		case ENUMERATION: {
-			// if original type is anonymous enum, need to spell out
-			// the type again.
-			// if original type has tag, and is visible, can leave out
-			// the enumerators
+			// if original type is anonymous enum, need to spell out the type again.
+			// if original type has tag, and is visible, can leave out the enumerators
 			EnumerationType enumType = (EnumerationType) type;
 			String tag = enumType.getTag();
-
 			if (tag != null) {
 				IdentifierNode tagNode = nodeFactory.newIdentifierNode(source, tag);
-				TypeNode result = nodeFactory.newEnumerationTypeNode(source, tagNode, null);
-
-				return result;
+				result = nodeFactory.newEnumerationTypeNode(source, tagNode, null);
 			} else {
 				throw new ABCUnsupportedException("converting anonymous enumeration type  " + type,
 						source.getSummary(false, true));
 			}
+			break;
 		}
 		case STRUCTURE_OR_UNION: {
 			StructureOrUnionType structOrUnionType = (StructureOrUnionType) type;
-
-			return nodeFactory.newStructOrUnionTypeNode(source, structOrUnionType.isStruct(),
+			result = nodeFactory.newStructOrUnionTypeNode(source, structOrUnionType.isStruct(),
 					nodeFactory.newIdentifierNode(source, structOrUnionType.getName()), null);
+			break;
 		}
 		case SCOPE:
-			return nodeFactory.newScopeTypeNode(source);
-		case OTHER_INTEGER: {
+			result = nodeFactory.newScopeTypeNode(source);
+			break;
+		case OTHER_INTEGER:
 			// for now, just using "int" for all the "other integer types"
-			return nodeFactory.newBasicTypeNode(source, BasicTypeKind.INT);
-		}
-		case PROCESS: {
-			return nodeFactory.newTypedefNameNode(nodeFactory.newIdentifierNode(source, "$proc"));
-		}
+			result = nodeFactory.newBasicTypeNode(source, BasicTypeKind.INT);
+			break;
+		case PROCESS:
+			result = nodeFactory.newTypedefNameNode(nodeFactory.newIdentifierNode(source, "$proc"));
+			break;
 		case QUALIFIED: {
 			QualifiedObjectType qualifiedType = (QualifiedObjectType) type;
 			TypeNode baseTypeNode = this.typeNode(source, qualifiedType.getBaseType());
@@ -368,10 +378,12 @@ public class SideEffectRemover extends BaseTransformer {
 			baseTypeNode.setOutputQualified(qualifiedType.isOutputQualified());
 			baseTypeNode.setRestrictQualified(qualifiedType.isRestrictQualified());
 			baseTypeNode.setVolatileQualified(qualifiedType.isVolatileQualified());
-			return baseTypeNode;
+			result = baseTypeNode;
+			break;
 		}
 		case MEM:
-			return nodeFactory.newMemTypeNode(source);
+			result = nodeFactory.newMemTypeNode(source);
+			break;
 		case FUNCTION:
 			// TODO
 		case HEAP:
@@ -379,6 +391,8 @@ public class SideEffectRemover extends BaseTransformer {
 		default:
 			throw new ABCRuntimeException("Unknow or not supported type: " + type, source.getSummary(false, true));
 		}
+		result.setType(type);
+		return result;
 	}
 
 	/**
@@ -405,21 +419,20 @@ public class SideEffectRemover extends BaseTransformer {
 	private void shift(ExprTriple triple, boolean isVoid) {
 		ExpressionNode expression = triple.getNode();
 		Source source = expression.getSource();
-
 		expression.remove();
 		if (isVoid) {
 			triple.addBefore(nodeFactory.newExpressionStatementNode(expression));
 			triple.setNode(null);
 		} else {
+			assert expression.getType() != null;
 			String tmpId = tempVariablePrefix + tempVariableCounter;
-
 			tempVariableCounter++;
-
 			VariableDeclarationNode decl = nodeFactory.newVariableDeclarationNode(source,
 					nodeFactory.newIdentifierNode(source, tmpId), typeNode(source, expression.getType()), expression);
-
-			triple.setNode(
-					nodeFactory.newIdentifierExpressionNode(source, nodeFactory.newIdentifierNode(source, tmpId)));
+			IdentifierExpressionNode idNode = nodeFactory.newIdentifierExpressionNode(source,
+					nodeFactory.newIdentifierNode(source, tmpId));
+			idNode.setInitialType(expression.getType());
+			triple.setNode(idNode);
 			triple.getBefore().add(decl);
 		}
 		triple.getBefore().addAll(triple.getAfter());
@@ -491,10 +504,8 @@ public class SideEffectRemover extends BaseTransformer {
 	private boolean isMallocCall(ExpressionNode node) {
 		if (node instanceof FunctionCallNode) {
 			ExpressionNode functionNode = ((FunctionCallNode) node).getFunction();
-
 			if (functionNode instanceof IdentifierExpressionNode) {
 				String functionName = ((IdentifierExpressionNode) functionNode).getIdentifier().name();
-
 				if ("$malloc".equals(functionName))
 					return true;
 				if ("malloc".equals(functionName))
@@ -508,7 +519,7 @@ public class SideEffectRemover extends BaseTransformer {
 	 * Translates a left-hand-side expression into a triple. The result returned
 	 * will always have empty after clause. The expression component of the triple
 	 * returned will be left-hand-side expression that will refer to the same memory
-	 * unit as the original.
+	 * unit as the original. Note the given lhs may be removed from its parent.
 	 * 
 	 * Example: a[i++] -> [int tmp = i; i=i+1 | a[tmp] | ].
 	 * 
@@ -555,9 +566,7 @@ public class SideEffectRemover extends BaseTransformer {
 				return result;
 			}
 			case SUBSCRIPT: {
-				// expr[i].
-				// expr can be a LHSExpression of array type (like
-				// a[j][k])
+				// expr[i]. expr can be a LHSExpression of array type (like a[j][k])
 				// expr can be an expression of pointer type
 
 				ExprTriple t1 = translate(opNode.getArgument(0), false), t2 = translate(opNode.getArgument(1), false);
@@ -587,7 +596,9 @@ public class SideEffectRemover extends BaseTransformer {
 	 */
 	private IntegerConstantNode newOneNode(Source source) {
 		try {
-			return nodeFactory.newIntegerConstantNode(source, "1");
+			IntegerConstantNode result = nodeFactory.newIntegerConstantNode(source, "1");
+			result.setInitialType(typeFactory.signedIntegerType(SignedIntKind.INT));
+			return result;
 		} catch (SyntaxException e) {
 			throw new ABCRuntimeException("unreachable");
 		}
@@ -645,10 +656,15 @@ public class SideEffectRemover extends BaseTransformer {
 		ExpressionNode arg = opNode.getArgument(0);
 		ExprTriple result = lhsTranslate(arg);
 		ExpressionNode newArg = result.getNode();
-		StatementNode assignment = nodeFactory
-				.newExpressionStatementNode(nodeFactory.newOperatorNode(source, Operator.ASSIGN, newArg.copy(),
-						nodeFactory.newOperatorNode(source, unaryOp, newArg.copy(), newOneNode(source))));
-
+		// x + 1 (for example):
+		OperatorNode newOpNode = nodeFactory.newOperatorNode(source, unaryOp, newArg.copyWithTypes(),
+				newOneNode(source));
+		newOpNode.setInitialType(newArg.getConvertedType());
+		// x = x + 1 (for example):
+		OperatorNode newAssignNode = nodeFactory.newOperatorNode(source, Operator.ASSIGN, newArg.copyWithTypes(),
+				newOpNode);
+		newAssignNode.setInitialType(newArg.getConvertedType());
+		StatementNode assignment = nodeFactory.newExpressionStatementNode(newAssignNode);
 		if (pre)
 			result.addBefore(assignment);
 		else
@@ -702,7 +718,7 @@ public class SideEffectRemover extends BaseTransformer {
 		assign.setArgument(0, newLhs);
 		assign.setArgument(1, newRhs);
 
-		ExprTriple result = new ExprTriple(isVoid ? null : newLhs.copy());
+		ExprTriple result = new ExprTriple(isVoid ? null : newLhs.copyWithTypes());
 
 		result.addAllBefore(leftTriple.getBefore());
 		result.addAllBefore(rightTriple.getBefore());
@@ -993,9 +1009,17 @@ public class SideEffectRemover extends BaseTransformer {
 		ExpressionNode newLhs = result.getNode();
 		ExpressionNode newRhs = rightTriple.getNode();
 		Source source = opNode.getSource();
-		StatementNode assignment = nodeFactory.newExpressionStatementNode(nodeFactory.newOperatorNode(source,
-				Operator.ASSIGN, newLhs.copy(), nodeFactory.newOperatorNode(source, binaryOp, newLhs.copy(), newRhs)));
 
+		// x += y becomes x = x + y (for example)
+
+		// x+y (for example):
+		OperatorNode newOpNode = nodeFactory.newOperatorNode(source, binaryOp, newLhs.copyWithTypes(), newRhs);
+		newOpNode.setInitialType(newLhs.getConvertedType());
+		// x = x + y (for example):
+		OperatorNode newAssignNode = nodeFactory.newOperatorNode(source, Operator.ASSIGN, newLhs.copyWithTypes(),
+				newOpNode);
+		newAssignNode.setInitialType(newLhs.getConvertedType());
+		StatementNode assignment = nodeFactory.newExpressionStatementNode(newAssignNode);
 		result.addAllBefore(rightTriple.getBefore());
 		result.addBefore(assignment);
 		if (isVoid) {
@@ -1092,24 +1116,25 @@ public class SideEffectRemover extends BaseTransformer {
 					nodeFactory.newIdentifierNode(source, tmpId), typeNode(source, conditional.getType()));
 			ExpressionNode tmpNode = nodeFactory.newIdentifierExpressionNode(source,
 					nodeFactory.newIdentifierNode(source, tmpId));
+			tmpNode.setInitialType(conditional.getType());
 			StatementNode ifNode;
-
 			{
 				CompoundStatementNode stmt1, stmt2;
-
 				{
 					List<BlockItemNode> stmtlist = new LinkedList<>(b1);
-
-					stmtlist.add(nodeFactory.newExpressionStatementNode(
-							nodeFactory.newOperatorNode(source, Operator.ASSIGN, tmpNode.copy(), e1)));
+					OperatorNode newOpNode = nodeFactory.newOperatorNode(source, Operator.ASSIGN,
+							tmpNode.copyWithTypes(), e1);
+					newOpNode.setInitialType(tmpNode.getType());
+					stmtlist.add(nodeFactory.newExpressionStatementNode(newOpNode));
 					stmtlist.addAll(a1);
 					stmt1 = nodeFactory.newCompoundStatementNode(source, stmtlist);
 				}
 				{
 					List<BlockItemNode> stmtlist = new LinkedList<>(b2);
-
-					stmtlist.add(nodeFactory.newExpressionStatementNode(
-							nodeFactory.newOperatorNode(source, Operator.ASSIGN, tmpNode.copy(), e2)));
+					OperatorNode newOpNode = nodeFactory.newOperatorNode(source, Operator.ASSIGN,
+							tmpNode.copyWithTypes(), e2);
+					newOpNode.setInitialType(tmpNode.getType());
+					stmtlist.add(nodeFactory.newExpressionStatementNode(newOpNode));
 					stmtlist.addAll(a2);
 					stmt2 = nodeFactory.newCompoundStatementNode(source, stmtlist);
 				}
@@ -1406,6 +1431,7 @@ public class SideEffectRemover extends BaseTransformer {
 		VariableDeclarationNode auxVarDeclForLiteral = newTempVariable(source, type);
 		ExpressionNode auxVar = nodeFactory.newIdentifierExpressionNode(source,
 				auxVarDeclForLiteral.getIdentifier().copy());
+		auxVar.setInitialType(type);
 		ExpressionNode auxVarInit = null;
 		ExprTriple defaultVals = stringOrCompoundInitializerWorker.defaultValues(auxVar, type);
 		ExprTriple result = new ExprTriple(null);
@@ -1416,10 +1442,8 @@ public class SideEffectRemover extends BaseTransformer {
 		result.addAllBefore(defaultVals.getBefore());
 		result.addBefore(auxVarDeclForLiteral);
 		result.addAllBefore(defaultVals.getAfter());
-		auxVar = auxVar.copy();
-		auxVar.setInitialType(type);
-		result.setNode(auxVar);
-		result.addAllBefore(translateCompoundInitializer(ciNode, auxVar.copy(), type, false));
+		result.setNode(auxVar.copyWithTypes());
+		result.addAllBefore(translateCompoundInitializer(ciNode, auxVar.copyWithTypes(), type, false));
 		if (isVoid)
 			shift(result, true);
 		return result;
@@ -1460,28 +1484,6 @@ public class SideEffectRemover extends BaseTransformer {
 			shift(result, true);
 		return result;
 	}
-	// private ExprTriple translateCollective(CollectiveExpressionNode
-	// expression) {
-	// ExprTriple result = new ExprTriple(expression);
-	// ExprTriple e0 = translate(expression.getProcessesGroupExpression(),
-	// false);
-	// // ExprTriple e1 = translate(expression.getLengthExpression());
-	// ExprTriple e2 = translate(expression.getBody(), false);
-	//
-	// makesef(e0);
-	// // makesef(e1);
-	// makesef(e2);
-	// expression.setProcessesGroupExpression(e0.getNode());
-	// // expression.setLengthExpression(e1.getNode());
-	// expression.setBody(e2.getNode());
-	// result.addAllBefore(e0.getBefore());
-	// // result.addAllBefore(e1.getBefore());
-	// result.addAllBefore(e2.getBefore());
-	// result.addAllAfter(e0.getAfter());
-	// // result.addAllAfter(e1.getAfter());
-	// result.addAllAfter(e2.getAfter());
-	// return result;
-	// }
 
 	/**
 	 * Translates a cast expression. Strategy:
@@ -1498,7 +1500,6 @@ public class SideEffectRemover extends BaseTransformer {
 	 */
 	private ExprTriple translateCast(CastNode expression, boolean isVoid) {
 		ExpressionNode arg = expression.getArgument();
-
 		if (isVoid && expression.getType().kind() == TypeKind.VOID) {
 			return translate(arg, true);
 		}
@@ -1506,11 +1507,12 @@ public class SideEffectRemover extends BaseTransformer {
 		ExprTriple triple = translate(arg, false);
 		ExpressionNode newArg = triple.getNode();
 
+		assert newArg.getType() != null;
+
 		// if arg started off as a function call, will newArg
 		// still be a function call? Yes! See translateFunctionCall.
 
-		// mallocs need to keep their casts, i.e., no
-		// tmp=malloc | (int*)tmp | ...
+		// mallocs need to keep their casts, i.e., no tmp=malloc | (int*)tmp | ...
 
 		if (isMallocCall(newArg)) {
 			expression.setArgument(newArg);
@@ -1638,13 +1640,15 @@ public class SideEffectRemover extends BaseTransformer {
 		if (!isVoid) {
 			Source source = lastExpression.getSource();
 			String tmpId = tempVariablePrefix + (tempVariableCounter++);
+			Type type = lastExpression.getType();
 			ExpressionNode tmpNode = nodeFactory.newIdentifierExpressionNode(source,
 					nodeFactory.newIdentifierNode(source, tmpId));
-
+			tmpNode.setInitialType(type);
 			decl = nodeFactory.newVariableDeclarationNode(source, nodeFactory.newIdentifierNode(source, tmpId),
-					typeNode(source, lastExpression.getType()));
-			newCompound.addSequenceChild(nodeFactory.newExpressionStatementNode(
-					nodeFactory.newOperatorNode(source, Operator.ASSIGN, tmpNode, exprTriple.getNode())));
+					typeNode(source, type));
+			OperatorNode opNode = nodeFactory.newOperatorNode(source, Operator.ASSIGN, tmpNode, exprTriple.getNode());
+			opNode.setInitialType(type);
+			newCompound.addSequenceChild(nodeFactory.newExpressionStatementNode(opNode));
 			newExpression = tmpNode.copy();
 		}
 		newBlockItems.add(newCompound);
@@ -1851,7 +1855,7 @@ public class SideEffectRemover extends BaseTransformer {
 			} else {
 				ExpressionNode varExpr = nodeFactory.newIdentifierExpressionNode(decl.getSource(),
 						decl.getIdentifier().copy());
-
+				varExpr.setInitialType(type);
 				initTriple = stringOrCompoundInitializerWorker.defaultValues(varExpr, type);
 				if (initTriple != null) {
 					result.addAll(initTriple.getBefore());
@@ -2154,9 +2158,9 @@ public class SideEffectRemover extends BaseTransformer {
 			CompoundStatementNode body = makeCompound(loop.getBody());
 
 			loop.setBody(body);
-			condItems.add(nodeFactory.newIfNode(condSource,
-					nodeFactory.newOperatorNode(condSource, Operator.NOT, condTriple.getNode()),
-					nodeFactory.newBreakNode(condSource)));
+			OperatorNode opNode = nodeFactory.newOperatorNode(condSource, Operator.NOT, condTriple.getNode());
+			opNode.setInitialType(typeFactory.signedIntegerType(SignedIntKind.INT));
+			condItems.add(nodeFactory.newIfNode(condSource, opNode, nodeFactory.newBreakNode(condSource)));
 			body.insertChildren(0, condItems);
 			loop.setCondition(newOneNode(condSource));
 		} else
@@ -2305,7 +2309,7 @@ public class SideEffectRemover extends BaseTransformer {
 	/**
 	 * Creates an assignment statement node equivalent to the initializer of a
 	 * variable declaration. If the variable declaration has no initializer, returns
-	 * true.
+	 * null.
 	 * 
 	 * @param variable
 	 * @return
@@ -2316,13 +2320,14 @@ public class SideEffectRemover extends BaseTransformer {
 		if (initializer == null)
 			return null;
 		assert initializer instanceof ExpressionNode;
-
-		ExpressionNode rhs = ((ExpressionNode) initializer).copy();
+		ExpressionNode rhs = ((ExpressionNode) initializer).copyWithTypes();
 		ExpressionNode lhs = nodeFactory.newIdentifierExpressionNode(variable.getSource(),
 				variable.getIdentifier().copy());
+		Type type = variable.getEntity().getType();
+		lhs.setInitialType(type);
 		ExpressionNode assign = nodeFactory.newOperatorNode(variable.getSource(), Operator.ASSIGN,
 				Arrays.asList(lhs, rhs));
-
+		assign.setInitialType(type);
 		return nodeFactory.newExpressionStatementNode(assign);
 	}
 
@@ -2337,8 +2342,14 @@ public class SideEffectRemover extends BaseTransformer {
 	private VariableDeclarationNode pureDeclaration(VariableDeclarationNode variable) {
 		if (variable.getInitializer() == null)
 			return variable;
-		return this.nodeFactory.newVariableDeclarationNode(variable.getSource(), variable.getIdentifier().copy(),
-				variable.getTypeNode().copy());
+		Type type = variable.getEntity().getType();
+		TypeNode newTypeNode = variable.getTypeNode().copy();
+		newTypeNode.setType(type);
+		IdentifierNode idNode = variable.getIdentifier(), newIdNode = idNode.copy();
+		newIdNode.setEntity(idNode.getEntity());
+		VariableDeclarationNode result = nodeFactory.newVariableDeclarationNode(variable.getSource(), newIdNode,
+				newTypeNode);
+		return result;
 	}
 
 	/**
@@ -2989,7 +3000,6 @@ public class SideEffectRemover extends BaseTransformer {
 				continue;
 			if (child instanceof ExpressionNode) {
 				List<BlockItemNode> subResult = transformShortCircuitExpression((ExpressionNode) child);
-
 				result.addAll(subResult);
 			}
 		}
@@ -3006,28 +3016,36 @@ public class SideEffectRemover extends BaseTransformer {
 					Source source = expression.getSource();
 					Source rhsSource = rhs.getSource();
 					Source lhsSource = lhs.getSource();
-					Type rhsType = rhs.getConvertedType();
+					Type rhsType = rhs.getType();
 
 					tmpVar = newTempVariable(rhsSource, rhsType);
 
-					IdentifierExpressionNode tmpId = this.nodeFactory.newIdentifierExpressionNode(rhsSource,
-							this.nodeFactory.newIdentifierNode(rhsSource, tmpVar.getName()));
+					IdentifierNode idNode = nodeFactory.newIdentifierNode(rhsSource, tmpVar.getName());
+					IdentifierExpressionNode tmpId = nodeFactory.newIdentifierExpressionNode(rhsSource, idNode);
+					tmpId.setInitialType(rhsType);
 					ExpressionNode condition;
 					ExpressionNode trueAssign, falseAssign;
 
 					lhs.remove();
-					if (isAnd)
+					if (isAnd) {
 						condition = this.nodeFactory.newOperatorNode(lhsSource, Operator.NOT, lhs);
-					else
+						condition.setInitialType(lhs.getType());
+					} else
 						condition = lhs;
-					trueAssign = this.nodeFactory.newOperatorNode(lhsSource, Operator.ASSIGN, Arrays
-							.asList(tmpId.copy(), nodeFactory.newIntegerConstantNode(lhsSource, isAnd ? "0" : "1")));
+
+					IntegerConstantNode icn = nodeFactory.newIntegerConstantNode(lhsSource, isAnd ? "0" : "1");
+
+					icn.setInitialType(typeFactory.signedIntegerType(SignedIntKind.INT));
+					trueAssign = nodeFactory.newOperatorNode(lhsSource, Operator.ASSIGN,
+							Arrays.asList(tmpId.copyWithTypes(), icn));
+					trueAssign.setInitialType(lhs.getType());
 					rhs.remove();
-					falseAssign = this.nodeFactory.newOperatorNode(rhsSource, Operator.ASSIGN,
-							Arrays.asList(tmpId.copy(), rhs));
+					falseAssign = nodeFactory.newOperatorNode(rhsSource, Operator.ASSIGN,
+							Arrays.asList(tmpId.copyWithTypes(), rhs));
+					falseAssign.setInitialType(rhsType);
 					ifElse = nodeFactory.newIfNode(source, condition,
-							this.nodeFactory.newExpressionStatementNode(trueAssign),
-							this.nodeFactory.newExpressionStatementNode(falseAssign));
+							nodeFactory.newExpressionStatementNode(trueAssign),
+							nodeFactory.newExpressionStatementNode(falseAssign));
 					operator.parent().setChild(operator.childIndex(), tmpId);
 					expression = tmpId;
 					expression.setInitialType(rhsType);
@@ -3047,7 +3065,6 @@ public class SideEffectRemover extends BaseTransformer {
 				int loopIndex = loop.childIndex();
 				ASTNode loopParent = loop.parent();
 				VariableDeclarationNode condVar = this.newTempVariable(condSource, expression.getConvertedType());
-
 				newItems.add(condVar);
 				if (tmpVar != null)
 					newItems.add(0, tmpVar);
@@ -3055,13 +3072,15 @@ public class SideEffectRemover extends BaseTransformer {
 					result.add(ifElse);
 				// insert new variable
 				expression.remove();
-				result.add(this.nodeFactory.newExpressionStatementNode(this.nodeFactory.newOperatorNode(condSource,
-						Operator.ASSIGN,
-						Arrays.asList(
-								nodeFactory.newIdentifierExpressionNode(condSource, condVar.getIdentifier().copy()),
-								expression))));
+				IdentifierNode idNode = condVar.getIdentifier().copy();
+				IdentifierExpressionNode idExprNode = nodeFactory.newIdentifierExpressionNode(condSource, idNode);
+				idExprNode.setInitialType(expression.getType());
+				OperatorNode assignNode = nodeFactory.newOperatorNode(condSource, Operator.ASSIGN,
+						Arrays.asList(idExprNode, expression));
+				assignNode.setInitialType(expression.getType());
+				result.add(nodeFactory.newExpressionStatementNode(assignNode));
 				body.insertChildren(body.numChildren(), result);
-				loop.setCondition(nodeFactory.newIdentifierExpressionNode(condSource, condVar.getIdentifier().copy()));
+				loop.setCondition(idExprNode.copyWithTypes());
 				newItems.add(loop);
 				loop.remove();
 				loopParent.setChild(loopIndex, nodeFactory.newCompoundStatementNode(loop.getSource(), newItems));
@@ -3071,9 +3090,9 @@ public class SideEffectRemover extends BaseTransformer {
 				if (ifElse != null)
 					result.add(ifElse);
 				newCond.remove();
-				result.add(nodeFactory.newIfNode(condSource,
-						nodeFactory.newOperatorNode(condSource, Operator.NOT, newCond),
-						nodeFactory.newBreakNode(condSource)));
+				OperatorNode notNode = nodeFactory.newOperatorNode(condSource, Operator.NOT, newCond);
+				notNode.setInitialType(typeFactory.signedIntegerType(SignedIntKind.INT));
+				result.add(nodeFactory.newIfNode(condSource, notNode, nodeFactory.newBreakNode(condSource)));
 				body.insertChildren(0, result);
 				loop.setCondition(newOneNode(condSource));
 			}
@@ -3137,13 +3156,8 @@ public class SideEffectRemover extends BaseTransformer {
 
 		assert this.astFactory == ast.getASTFactory();
 		assert this.nodeFactory == astFactory.getNodeFactory();
-		// System.out
-		// .println("=================== before SideEffectRemover
-		// ===================");
-		// ast.prettyPrint(System.out, false);
 		ast.release();
 		// Fortran disables ShortCircuitWork
-
 		transformShortCircuitWork(rootNode);
 		// rootNode.prettyPrint(System.out);
 		for (int i = 0; i < rootNode.numChildren(); i++) {

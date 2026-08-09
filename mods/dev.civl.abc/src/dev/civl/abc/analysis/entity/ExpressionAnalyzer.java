@@ -124,10 +124,6 @@ import dev.civl.abc.token.IF.UnsourcedException;
  *
  */
 public class ExpressionAnalyzer {
-	/**
-	 * The lexical name of a remote expression:
-	 */
-	static final String REMOTE_EXPR = "\\on";
 
 	/**
 	 * Function used for $print. Don't want to add array conversions to this
@@ -164,9 +160,6 @@ public class ExpressionAnalyzer {
 	private Language language;
 
 	private AttributeKey unknownIdentifier;
-
-	// private List<IdentifierExpressionNode> unknownIdentifiers = new
-	// LinkedList<>();
 
 	// ************************** Constructors ****************************
 

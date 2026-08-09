@@ -35,76 +35,69 @@ public class SideEffectsTest {
 
 	@Test
 	public void postIncr() throws ABCException {
-		assertTrue(ui.run("verify ", TestConstants.QUIET,
-				filename("postIncr.cvl")));
+		assertTrue(ui.run("verify ", TestConstants.QUIET, filename("postIncr.cvl")));
 	}
 
 	@Test
 	public void forLoopIncrSE() throws ABCException {
-		assertTrue(ui.run("verify ", TestConstants.QUIET,
-				filename("forLoopIncretSE.c")));
+		assertTrue(ui.run("verify ", TestConstants.QUIET, filename("forLoopIncretSE.c")));
 	}
 
 	@Test
 	public void strictInitTest() throws ABCException {
-		assertTrue(ui.run("verify ", TestConstants.QUIET,
-				filename("structInitSideEffect.c")));
+		assertTrue(ui.run("verify ", TestConstants.QUIET, filename("structInitSideEffect.c")));
 	}
 
 	@Test
 	public void quantifiedExpressionTest() throws ABCException {
-		assertFalse(ui.run("verify ", TestConstants.QUIET,
-				filename("quantifiedSideEffects.c")));
+		assertFalse(ui.run("verify ", TestConstants.QUIET, filename("quantifiedSideEffects.c")));
 	}
 
 	@Test
 	public void structWithDiv() {
-		assertTrue(ui.run("verify", TestConstants.QUIET,
-				filename("structWithDiv.cvl")));
+		assertTrue(ui.run("verify", TestConstants.QUIET, filename("structWithDiv.cvl")));
 	}
 
 	@Test
 	public void simpleShortCircuit() {
-		assertTrue(ui.run("verify", TestConstants.QUIET,
-				filename("trivilShortCircuits.cvl")));
+		assertTrue(ui.run("verify", TestConstants.QUIET, filename("trivilShortCircuits.cvl")));
 	}
 
 	@Test
 	public void complextShortCircuitExpression() {
-		assertTrue(ui.run("verify", TestConstants.QUIET,
-				filename("complexShortCircuitExpressions.cvl")));
+		assertTrue(ui.run("verify", TestConstants.QUIET, filename("complexShortCircuitExpressions.cvl")));
 	}
 
 	@Test
 	public void complextShortCircuitLoopCondition() {
-		assertTrue(ui.run("verify", TestConstants.QUIET,
-				filename("complexShortCircuitLoopConditions.cvl")));
+		assertTrue(ui.run("verify", TestConstants.QUIET, filename("complexShortCircuitLoopConditions.cvl")));
 	}
 
 	@Test
 	public void nestedShortCircuitLoopCondition() {
-		assertTrue(ui.run("verify", TestConstants.QUIET,
-				filename("nestedShortCircuitLoopConditions.cvl")));
+		assertTrue(ui.run("verify", TestConstants.QUIET, filename("nestedShortCircuitLoopConditions.cvl")));
 	}
 
 	@Test
 	public void errSideEffectInGuard() {
-		assertFalse(ui.run("verify", TestConstants.QUIET,
-				filename("errSideEffectsInGuards.cvl")));
+		assertFalse(ui.run("verify", TestConstants.QUIET, filename("errSideEffectsInGuards.cvl")));
 	}
 
 	// The following two tests require SARL's support of free of error
 	// side-effects:
 	@Ignore
 	public void errSideEffectInQuantified() {
-		assertFalse(ui.run("verify", TestConstants.QUIET,
-				filename("errSideEffectsInQuantified.cvl")));
+		assertFalse(ui.run("verify", TestConstants.QUIET, filename("errSideEffectsInQuantified.cvl")));
 	}
 
 	@Ignore
 	public void errSideEffectInQuantifiedButOK() {
-		assertTrue(ui.run("verify", TestConstants.QUIET,
-				filename("errSideEffectsInQuantifiedButOK.cvl")));
+		assertTrue(ui.run("verify", TestConstants.QUIET, filename("errSideEffectsInQuantifiedButOK.cvl")));
+	}
+
+	@Test
+	public void compoundLiteral() {
+		assertTrue(ui.run("verify", TestConstants.QUIET, filename("compoundLiteral.cvl")));
 	}
 
 	@AfterClass

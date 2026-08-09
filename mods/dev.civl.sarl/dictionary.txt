@@ -28,3 +28,6 @@ vampire
 stdout
 gaussian
 callees
+subclause
+unsequenced
+preprocessing

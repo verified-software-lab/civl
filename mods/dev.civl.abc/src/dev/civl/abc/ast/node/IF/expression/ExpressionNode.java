@@ -187,6 +187,9 @@ public interface ExpressionNode extends InitializerNode, SizeableNode, ForLoopIn
 	@Override
 	ExpressionNode copy();
 
+	@Override
+	ExpressionNode copyWithTypes();
+
 	/**
 	 * Returns the kind of this expression. Every expression belongs to exactly one
 	 * kind.

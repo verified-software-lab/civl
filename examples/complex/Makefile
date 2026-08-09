@@ -1,10 +1,13 @@
 
 all: verify run
 
-verify: complex_basics complex1 complex_funs \
+verify: casts complex_basics complex1 complex_funs \
    mpi_complex fourth complex_ops complex_quant
 
 run: run_complex_basics run_complex_funs
+
+casts: casts.cvl
+	civl verify $<
 
 complex_basics: complex_basics.c
 	civl verify $<
@@ -41,7 +44,7 @@ complex_quant: complex_quant.cvl
 clean:
 	rm -rf *.exec *~ CIVLREP a.out
 
-_PHONY: complex_basics run_complex_basics \
+_PHONY: casts complex_basics run_complex_basics \
    complex1 \
    complex_funs run_complex_funs \
    mpi_complex fourth complex_ops \
