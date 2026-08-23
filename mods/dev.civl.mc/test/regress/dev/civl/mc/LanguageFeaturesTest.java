@@ -954,6 +954,16 @@ public class LanguageFeaturesTest {
 		assertFalse(ui.run(VERIFY, QUIET, filename("missingArgs.c")));
 	}
 
+	@Test
+	public void nestedVariableShadow() {
+		assertTrue(ui.run(VERIFY, QUIET, filename("nestedVariableShadow.c")));
+	}
+
+	@Test
+	public void nestedFunctionShadow() {
+		assertTrue(ui.run(VERIFY, QUIET, filename("nestedFunctionShadow.cvl")));
+	}
+
 	// Fix this bug, then activate this test (Ticket 978)...
 	public void chooseCalls() {
 		assertTrue(ui.run(VERIFY, filename("chooseCalls.cvl")));

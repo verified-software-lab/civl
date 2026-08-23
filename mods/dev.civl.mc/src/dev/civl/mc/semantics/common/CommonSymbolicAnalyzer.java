@@ -336,7 +336,7 @@ public class CommonSymbolicAnalyzer implements SymbolicAnalyzer {
 			lexicalScope = this.modelFactory.model().staticConstantScope();
 		else
 			lexicalScope = state.getDyscope(dyscopeId).lexicalScope();
-		varType = lexicalScope.variable(vid).type();
+		varType = lexicalScope.getVariable(vid).type();
 		return typeOfObjByRef(varType, reference);
 	}
 
@@ -348,7 +348,7 @@ public class CommonSymbolicAnalyzer implements SymbolicAnalyzer {
 		SymbolicExpression varValue;
 
 		if (dyscopeId == ModelConfiguration.DYNAMIC_CONSTANT_SCOPE) {
-			varValue = modelFactory.model().staticConstantScope().variable(vid).constantValue();
+			varValue = modelFactory.model().staticConstantScope().getVariable(vid).constantValue();
 		} else
 			varValue = state.getDyscope(dyscopeId).getValue(vid);
 		return universe.dereference(varValue, reference).type();
@@ -422,7 +422,7 @@ public class CommonSymbolicAnalyzer implements SymbolicAnalyzer {
 		result.append(prefix + "dyscope d" + id + " (parent=" + parentString + ", static=" + lexicalScope.id() + ")\n");
 		result.append(prefix + "| variables\n");
 		for (int i = 0; i < numVars; i++) {
-			Variable variable = lexicalScope.variable(i);
+			Variable variable = lexicalScope.getVariable(i);
 			SymbolicExpression value = dyscope.getValue(i);
 			String varName = variable.name().name();
 
@@ -770,12 +770,12 @@ public class CommonSymbolicAnalyzer implements SymbolicAnalyzer {
 			}
 		} else if (dyscopeId == ModelConfiguration.DYNAMIC_CONSTANT_SCOPE) {
 			result.append(this.stringLiteralToString(source,
-					this.modelFactory.model().staticConstantScope().variable(vid).constantValue()));
+					this.modelFactory.model().staticConstantScope().getVariable(vid).constantValue()));
 		} else if (dyscopeId < 0)
 			result.append("UNDEFINED");
 		else {
 			DynamicScope dyscope = state.getDyscope(dyscopeId);
-			Variable variable = dyscope.lexicalScope().variable(vid);
+			Variable variable = dyscope.lexicalScope().getVariable(vid);
 
 			if (variable.type().equals(this.heapType)) {
 				result.append(heapObjectReferenceToString(source, dyscopeId, this.heapType, reference).third);
@@ -2244,7 +2244,7 @@ public class CommonSymbolicAnalyzer implements SymbolicAnalyzer {
 		SymbolicExpression value;
 
 		if (dyscope == ModelConfiguration.DYNAMIC_CONSTANT_SCOPE) {
-			value = modelFactory.model().staticConstantScope().variable(vid).constantValue();
+			value = modelFactory.model().staticConstantScope().getVariable(vid).constantValue();
 		} else if (dyscope < 0)
 			return new Pair<>(universe.falseExpression(), ResultType.NO);
 		else

@@ -436,7 +436,7 @@ public class SimpleEnablerWorker {
 
 		if (object.type() != heapSymbolicType) {
 			Scope scope = state.getDyscope(dyscopeID).lexicalScope();
-			Variable var = scope.variable(variableID);
+			Variable var = scope.getVariable(variableID);
 
 			addVariable(result, dyscopeID, var);
 		} else { // ... of arrayElementRef of tupleComponentRef of IdentityRef
@@ -532,7 +532,7 @@ public class SimpleEnablerWorker {
 	private boolean containsPointerType(State state, int[] obj) {
 		int len = obj.length, dyid = obj[0], vid = obj[1];
 		DynamicScope ds = state.getDyscope(dyid);
-		Variable var = ds.lexicalScope().variable(vid);
+		Variable var = ds.lexicalScope().getVariable(vid);
 		CIVLType type = var.type();
 
 		if (len == 2)
@@ -1908,7 +1908,7 @@ public class SimpleEnablerWorker {
 				int dyid = vec[0], vid = vec[1];
 				DynamicScope dyscope = theState.getDyscope(dyid);
 				Scope scope = dyscope.lexicalScope();
-				Variable var = scope.variable(vid);
+				Variable var = scope.getVariable(vid);
 
 				out.print(var.name().name() + "#" + dyid);
 				if (vec.length > 2) {

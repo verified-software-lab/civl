@@ -438,10 +438,10 @@ public class CommonEvaluator implements Evaluator {
 
 		// Get the variable value:
 		if (sid == ModelConfiguration.DYNAMIC_CONSTANT_SCOPE) {
-			variable = modelFactory.model().staticConstantScope().variable(vid);
+			variable = modelFactory.model().staticConstantScope().getVariable(vid);
 			variableValue = variable.constantValue();
 		} else {
-			variable = state.getDyscope(sid).lexicalScope().variable(vid);
+			variable = state.getDyscope(sid).lexicalScope().getVariable(vid);
 			if (!analysisOnly && checkOutput && civlConfig.isPropertyToggled(CIVLProperty.OUTPUT_READ))
 				if (variable.isOutput()) {
 					errorLogger.logSimpleError(source, state, pid, process, symbolicAnalyzer.stateInformation(state),
@@ -2847,7 +2847,7 @@ public class CommonEvaluator implements Evaluator {
 					symbolicUtil.getPointer2MemoryBlock(pointer));
 		} else {
 			int vid = symbolicUtil.getVariableId(source, pointer);
-			Variable variable = state.getDyscope(sid).lexicalScope().variable(vid);
+			Variable variable = state.getDyscope(sid).lexicalScope().getVariable(vid);
 
 			objStr = "Variable " + variable.name();
 			objType = state.getVariableValue(sid, vid).type();

@@ -328,7 +328,7 @@ public class ImmutableState implements State {
 		out.println("}");
 		out.println(prefix + "| variables");
 		for (int i = 0; i < numVars; i++) {
-			Variable variable = lexicalScope.variable(i);
+			Variable variable = lexicalScope.getVariable(i);
 			SymbolicExpression value = dyscope.getValue(i);
 
 			out.print(prefix + "| | " + variable.name() + " = ");
@@ -930,7 +930,7 @@ public class ImmutableState implements State {
 		SymbolicExpression[] outputValues = new SymbolicExpression[numOutputs];
 
 		for (int i = 0; i < numOutputs; i++) {
-			Variable outputVariable = rootScope.variable(outputNames[i]);
+			Variable outputVariable = rootScope.getVariable(outputNames[i]);
 
 			outputValues[i] = rootDyscope.getValue(outputVariable.vid());
 		}

@@ -525,7 +525,7 @@ public class LibmemExecutor extends BaseLibraryExecutor implements LibraryExecut
 
 			if (rootValueType == null) {
 				Variable var = state.getDyscope(stateFactory.getDyscopeId(memRef.scopeValue())).lexicalScope()
-						.variable(memRef.vid());
+						.getVariable(memRef.vid());
 
 				assert var.type().typeKind() == TypeKind.PRIMITIVE;
 				rootValueType = var.type().getDynamicType(universe);
@@ -589,7 +589,7 @@ public class LibmemExecutor extends BaseLibraryExecutor implements LibraryExecut
 		// obtained from its value. But primitive types have simple dynamic
 		// types.
 		if (oldValueType == null) {
-			Variable var = state.getDyscope(sid).lexicalScope().variable(memRef.vid());
+			Variable var = state.getDyscope(sid).lexicalScope().getVariable(memRef.vid());
 
 			assert var.type().typeKind() == TypeKind.PRIMITIVE;
 			oldValueType = var.type().getDynamicType(universe);

@@ -1,0 +1,15 @@
+int f(int u, int v) {
+  return u*v;
+}
+
+int (*fp1)(int, int) = f;
+
+int main(void) {
+  int f(int x, int y) { return x+y+1; }
+  int (*fp2)(int, int) = f;
+  $print("fp1  = ", fp1, "\n");
+  $print("fp2  = ", fp2, "\n");
+  $assert(fp1 != fp2);
+  $assert(fp1(1,1)==1);
+  $assert(fp2(1,1)==3);
+}

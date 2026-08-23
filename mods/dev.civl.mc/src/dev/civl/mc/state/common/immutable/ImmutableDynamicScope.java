@@ -264,7 +264,7 @@ public class ImmutableDynamicScope implements DynamicScope {
 		out.println("}");
 		out.println(prefix + "| variables");
 		for (int i = 0; i < numVars; i++) {
-			Variable variable = lexicalScope.variable(i);
+			Variable variable = lexicalScope.getVariable(i);
 			SymbolicExpression value = variableValues[i];
 
 			out.print(prefix + "| | " + variable.name() + " = ");

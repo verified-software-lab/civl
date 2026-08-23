@@ -107,7 +107,7 @@ public class MemoryUnitExpressionAnalyzer {
 				if (i == ModelConfiguration.HEAP_VARIABLE_INDEX)
 					continue;
 				else {
-					Variable variable = myScope.variable(i);
+					Variable variable = myScope.getVariable(i);
 					MemoryUnitExpression memUnit;
 
 					if ((scopeID == 0 && variable.name().name().equals(ModelConfiguration.ATOMIC_LOCK_VARIABLE_INDEX)))

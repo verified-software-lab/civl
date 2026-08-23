@@ -134,7 +134,7 @@ public class CommonMemoryUnitExpression extends CommonExpression
 		Scope scope = variable.scope();
 
 		result = "(s" + scope.id() + ", "
-				+ scope.variable(variable.vid()).name().name() + ", "
+				+ scope.getVariable(variable.vid()).name().name() + ", "
 				+ reference + ")";
 		if (this.writable)
 			result = result + "[w]";

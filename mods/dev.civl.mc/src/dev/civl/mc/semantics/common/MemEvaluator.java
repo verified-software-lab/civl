@@ -423,7 +423,7 @@ public class MemEvaluator extends CommonEvaluator {
 			String obj;
 
 			if (mlr.vid() > 0)
-				obj = dyscope.lexicalScope().variable(mlr.vid()).name().name();
+				obj = dyscope.lexicalScope().getVariable(mlr.vid()).name().name();
 			else
 				obj = "Dyscope" + dyscopeId + "_malloc_" + mlr.heapID() + "_" + mlr.mallocID();
 			for (String ref : prettyPrintValueSetTemplate(universe,
@@ -759,7 +759,7 @@ public class MemEvaluator extends CommonEvaluator {
 		CIVLType type;
 		SymbolicType valueType;
 		int heapID = -1, mallocID = -1;
-		Variable var = state.getDyscope(sid).lexicalScope().variable(vid);
+		Variable var = state.getDyscope(sid).lexicalScope().getVariable(vid);
 
 		// variable type shall not (currently) contain sequence type:
 		// if (Utils.containSequenceType(var.type()))

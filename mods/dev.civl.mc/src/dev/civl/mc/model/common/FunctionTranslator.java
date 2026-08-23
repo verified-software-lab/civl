@@ -2192,7 +2192,7 @@ public class FunctionTranslator {
 						identifierSource);
 			result.setStateFunction(node.hasStatefFunctionSpecifier());
 			result.setPureFunction(node.hasPureFunctionSpecifier());
-			if (scope.getFunction(result.name()) == null)
+			if (scope.getFunction(result.name().name()) == null)
 				scope.addFunction(result);
 			parameterScope.setFunction(result);
 			modelBuilder.functionMap.put(entity, result);
@@ -2942,7 +2942,8 @@ public class FunctionTranslator {
 			if (typeNode.isConstQualified())
 				variable.setConst(true);
 
-			Variable searchVar = scope.contains(variable);
+			// the following looks in scope only (not ancestors):
+			Variable searchVar = scope.getMatch(variable);
 			if (searchVar != null)
 				return new Pair<>(searchVar, Boolean.valueOf(true));
 
@@ -4043,12 +4044,12 @@ public class FunctionTranslator {
 
 		if (boundVariable != null) {
 			result = modelFactory.boundVariableExpression(source, name, boundVariable.type());
-		} else if (scope.variable(name) != null) {
-			VariableExpression varExpression = modelFactory.variableExpression(source, scope.variable(name));
+		} else if (scope.seekVariable(name) != null) {
+			VariableExpression varExpression = modelFactory.variableExpression(source, scope.seekVariable(name));
 
 			result = varExpression;
-		} else if (scope.getFunction(name) != null) {
-			result = modelFactory.functionIdentifierExpression(source, scope.getFunction(name));
+		} else if (scope.seekFunction(name) != null) {
+			result = modelFactory.functionIdentifierExpression(source, scope.seekFunction(name));
 		} else {
 			throw new CIVLInternalException("Can't find declaration of variable " + name, source);
 		}

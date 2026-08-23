@@ -1251,7 +1251,7 @@ public class CommonExecutor implements Executor {
 					"Attempt to dereference pointer into scope which has been removed from state");
 			throw new UnsatisfiablePathConditionException();
 		}
-		variable = state.getDyscope(sid).lexicalScope().variable(vid);
+		variable = state.getDyscope(sid).lexicalScope().getVariable(vid);
 		if (!isInitialization) {
 			if (variable.isInput() && civlConfig.isPropertyToggled(CIVLProperty.INPUT_WRITE)) {
 				String process = state.getProcessState(pid).name();
@@ -1434,7 +1434,7 @@ public class CommonExecutor implements Executor {
 		SymbolicExpression oldValue;
 		Evaluation eval = evaluator.dereference(source, state, pid, process, pointerToVarOrHeapObj, true, false);
 		int sid = stateFactory.getDyscopeId(symbolicUtil.getScopeValue(pointerToVarOrHeapObj));
-		Variable var = eval.state.getDyscope(sid).lexicalScope().variable(vid);
+		Variable var = eval.state.getDyscope(sid).lexicalScope().getVariable(vid);
 
 		state = eval.state;
 		oldValue = eval.value;

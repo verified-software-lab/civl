@@ -366,8 +366,9 @@ public class ModelTranslator {
 
 		if (config.showAST())
 			program.print(out);
-		if (config.showProgram())
+		if (config.showProgram()) {
 			program.prettyPrint(out);
+		}
 		if (config.showTime()) {
 			totalTime = (endTime - startTime);
 			out.println(totalTime + "ms: total time for building the whole program");
