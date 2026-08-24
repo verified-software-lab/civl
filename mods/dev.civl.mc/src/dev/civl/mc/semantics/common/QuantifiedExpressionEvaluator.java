@@ -80,14 +80,12 @@ import dev.civl.sarl.IF.type.SymbolicType;
  * @author ziqing (Ready for review)
  *
  */
-public class QuantifiedExpressionEvaluator
-		extends
-			ErrorSideEffectFreeEvaluator {
+public class QuantifiedExpressionEvaluator extends ErrorSideEffectFreeEvaluator {
 
 	/**
-	 * A stack of map used to store bound variables during evaluation of
-	 * (possibly nested) quantified expressions. LinkedList is used instead of
-	 * Stack because of its more intuitive iteration order.
+	 * A stack of map used to store bound variables during evaluation of (possibly
+	 * nested) quantified expressions. LinkedList is used instead of Stack because
+	 * of its more intuitive iteration order.
 	 */
 	private LinkedList<Map<String, SymbolicConstant>> boundVariableStack = new LinkedList<>();
 
@@ -96,28 +94,27 @@ public class QuantifiedExpressionEvaluator
 	 * {@link ExtendedQuantifiedExpression}s. One extended quantified expression
 	 * specifies a restriction on the free variable of its lambda expression via
 	 * defining the bounds on it. For example
-	 * <code> \sum(0, 10, \lambda i; i+1); </code> The restriction on free
-	 * variable i is <code>0&lt= i &lt=10</code>.
+	 * <code> \sum(0, 10, \lambda i; i+1); </code> The restriction on free variable
+	 * i is <code>0&lt= i &lt=10</code>.
 	 */
 	private Stack<SymbolicExpression> extendedQuantifiedRestrictionsStack = new Stack<>();
 
 	/**
-	 * A Java function interface. An instance of this interface can be assigned
-	 * by a Java method which has two {@link BooleanExpression}s as arguments
-	 * and returns a {@link BooleanExpression}.
+	 * A Java function interface. An instance of this interface can be assigned by a
+	 * Java method which has two {@link BooleanExpression}s as arguments and returns
+	 * a {@link BooleanExpression}.
 	 * 
 	 * @author ziqing
 	 *
 	 */
 	@FunctionalInterface
 	private static interface LogicalOperation {
-		BooleanExpression operation(BooleanExpression op0,
-				BooleanExpression op1);
+		BooleanExpression operation(BooleanExpression op0, BooleanExpression op1);
 	}
 
 	/**
-	 * A Java function interface. An instance of this interface can be assigned
-	 * by a Java method which has a {@link SymbolicConstant} argument and a
+	 * A Java function interface. An instance of this interface can be assigned by a
+	 * Java method which has a {@link SymbolicConstant} argument and a
 	 * {@link BooleanExpression} argument, returns a {@link BooleanExpression}.
 	 * 
 	 * @author ziqing
@@ -125,16 +122,13 @@ public class QuantifiedExpressionEvaluator
 	 */
 	@FunctionalInterface
 	private static interface ApplyConstantOperation {
-		BooleanExpression operation(SymbolicConstant boundVar,
-				BooleanExpression pred);
+		BooleanExpression operation(SymbolicConstant boundVar, BooleanExpression pred);
 	}
 
 	@Override
-	public Evaluation evaluate(State state, int pid, Expression expression)
-			throws UnsatisfiablePathConditionException {
+	public Evaluation evaluate(State state, int pid, Expression expression) throws UnsatisfiablePathConditionException {
 		if (expression.expressionKind() == ExpressionKind.BOUND_VARIABLE)
-			return evaluateBoundVariable(state, pid,
-					(BoundVariableExpression) expression);
+			return evaluateBoundVariable(state, pid, (BoundVariableExpression) expression);
 		else
 			return super.evaluate(state, pid, expression);
 	}
@@ -143,13 +137,11 @@ public class QuantifiedExpressionEvaluator
 	 * Constructor, parameters are similar to
 	 * {@link CommonEvaluator#CommonEvaluator(ModelFactory, StateFactory, LibraryEvaluatorLoader, LibraryExecutorLoader, SymbolicUtility, SymbolicAnalyzer, MemoryUnitFactory, CIVLErrorLogger, CIVLConfiguration)}
 	 */
-	QuantifiedExpressionEvaluator(ModelFactory modelFactory,
-			StateFactory stateFactory, LibraryEvaluatorLoader loader,
-			LibraryExecutorLoader loaderExec, SymbolicUtility symbolicUtil,
-			SymbolicAnalyzer symbolicAnalyzer, MemoryUnitFactory memUnitFactory,
-			CIVLErrorLogger errorLogger, CIVLConfiguration config) {
-		super(modelFactory, stateFactory, loader, loaderExec, symbolicUtil,
-				symbolicAnalyzer, memUnitFactory, errorLogger, config);
+	QuantifiedExpressionEvaluator(ModelFactory modelFactory, StateFactory stateFactory, LibraryEvaluatorLoader loader,
+			LibraryExecutorLoader loaderExec, SymbolicUtility symbolicUtil, SymbolicAnalyzer symbolicAnalyzer,
+			MemoryUnitFactory memUnitFactory, CIVLErrorLogger errorLogger, CIVLConfiguration config) {
+		super(modelFactory, stateFactory, loader, loaderExec, symbolicUtil, symbolicAnalyzer, memUnitFactory,
+				errorLogger, config);
 	}
 
 	/**
@@ -157,25 +149,19 @@ public class QuantifiedExpressionEvaluator
 	 * Evaluate an {@link ArrayLambdaExpression}
 	 * </p>
 	 * 
-	 * @param state
-	 *            The state where the evaluation happens
-	 * @param pid
-	 *            The PID of the process who invokes the evaluation
-	 * @param arrayLambda
-	 *            The expression that will be evaluated
+	 * @param state       The state where the evaluation happens
+	 * @param pid         The PID of the process who invokes the evaluation
+	 * @param arrayLambda The expression that will be evaluated
 	 * @return The evaluation result
 	 * @throws UnsatisfiablePathConditionException
 	 */
 	@Override
-	protected Evaluation evaluateArrayLambda(State state, int pid,
-			ArrayLambdaExpression arrayLambda)
+	protected Evaluation evaluateArrayLambda(State state, int pid, ArrayLambdaExpression arrayLambda)
 			throws UnsatisfiablePathConditionException {
-		List<Pair<List<Variable>, Expression>> boundVariableList = arrayLambda
-				.boundVariableList();
+		List<Pair<List<Variable>, Expression>> boundVariableList = arrayLambda.boundVariableList();
 		CIVLCompleteArrayType exprType = arrayLambda.getExpressionType();
 		NumericSymbolicConstant[] boundVariables;
-		TypeEvaluation typeEval = getDynamicType(state, pid, exprType,
-				arrayLambda.getSource(), false);
+		TypeEvaluation typeEval = getDynamicType(state, pid, exprType, arrayLambda.getSource(), false);
 		SymbolicCompleteArrayType arrayType = (SymbolicCompleteArrayType) typeEval.type;
 		Evaluation eval;
 		int numBoundVars = 0;
@@ -186,30 +172,25 @@ public class QuantifiedExpressionEvaluator
 		for (Pair<List<Variable>, Expression> boundVariableSubList : boundVariableList) {
 			if (boundVariableSubList.right != null)
 				throw new CIVLUnimplementedFeatureException(
-						"declaring bound variables within a specific domain in array lambdas",
-						arrayLambda.getSource());
+						"declaring bound variables within a specific domain in array lambdas", arrayLambda.getSource());
 			for (Variable variable : boundVariableSubList.left) {
 				NumericSymbolicConstant boundVariable;
 
 				assert variable.type().isIntegerType();
-				boundVariable = (NumericSymbolicConstant) universe
-						.symbolicConstant(variable.name().stringObject(),
-								variable.type().getDynamicType(universe));
+				boundVariable = (NumericSymbolicConstant) universe.symbolicConstant(variable.name().stringObject(),
+						variable.type().getDynamicType(universe));
 				boundVariables[numBoundVars++] = boundVariable;
-				boundVariableStack.peek().put(boundVariable.name().getString(),
-						boundVariable);
+				boundVariableStack.peek().put(boundVariable.name().getString(), boundVariable);
 			}
 		}
 		assert exprType.dimension() == numBoundVars;
 		if (arrayLambda.restriction() != null) {
 			eval = evaluate(state, pid, arrayLambda.restriction());
 			if (!eval.value.isTrue())
-				throw new CIVLUnimplementedFeatureException(
-						"non-trivial restriction expression in array lambdas",
+				throw new CIVLUnimplementedFeatureException("non-trivial restriction expression in array lambdas",
 						arrayLambda.getSource());
 		}
-		eval = new Evaluation(state, arrayLambda(state, pid, boundVariables, 0,
-				arrayType, arrayLambda.expression()));
+		eval = new Evaluation(state, arrayLambda(state, pid, boundVariables, 0, arrayType, arrayLambda.expression()));
 		boundVariableStack.pop();
 		return eval;
 	}
@@ -217,18 +198,14 @@ public class QuantifiedExpressionEvaluator
 	/**
 	 * Evaluates a bound variable expression.
 	 * 
-	 * @param state
-	 *            The state where the evaluation happens.
-	 * @param pid
-	 *            The PID of the process who invokes the evaluation.
-	 * @param expression
-	 *            The bound variable expression to be evaluated.
-	 * @return A possibly new state resulted from side effects during the
-	 *         evaluation and the value of the bound variable expression.
+	 * @param state      The state where the evaluation happens.
+	 * @param pid        The PID of the process who invokes the evaluation.
+	 * @param expression The bound variable expression to be evaluated.
+	 * @return A possibly new state resulted from side effects during the evaluation
+	 *         and the value of the bound variable expression.
 	 * @throws UnsatisfiablePathConditionException
 	 */
-	Evaluation evaluateBoundVariable(State state, int pid,
-			BoundVariableExpression expression) {
+	Evaluation evaluateBoundVariable(State state, int pid, BoundVariableExpression expression) {
 		SymbolicConstant value = null;
 		String name = expression.name().name();
 
@@ -238,12 +215,9 @@ public class QuantifiedExpressionEvaluator
 				break;
 		}
 		if (value == null)
-			throw new CIVLInternalException(
-					"unreachable: unknown bound variable",
-					expression.getSource());
+			throw new CIVLInternalException("unreachable: unknown bound variable", expression.getSource());
 		if (value.isNumeric()) {
-			Reasoner reasoner = universe
-					.reasoner(state.getPathCondition(universe));
+			Reasoner reasoner = universe.reasoner(state.getPathCondition(universe));
 			Number number = reasoner.extractNumber((NumericExpression) value);
 
 			if (number != null)
@@ -253,43 +227,38 @@ public class QuantifiedExpressionEvaluator
 	}
 
 	@Override
-	protected Evaluation evaluateQuantifiedExpression(State state, int pid,
-			QuantifiedExpression expression)
+	protected Evaluation evaluateQuantifiedExpression(State state, int pid, QuantifiedExpression expression)
 			throws UnsatisfiablePathConditionException {
-		List<Pair<List<Variable>, Expression>> boundVariableList = expression
-				.boundVariableList();
+		List<Pair<List<Variable>, Expression>> boundVariableList = expression.boundVariableList();
 		Evaluation eval;
 		int numBoundVars = expression.numBoundVariables();
 		SymbolicConstant[] boundVariables = new SymbolicConstant[numBoundVars];
-		BooleanExpression restriction = processBoundVariableList(state, pid,
-				boundVariableList, boundVariables, expression.getSource());
+		BooleanExpression restriction = processBoundVariableList(state, pid, boundVariableList, boundVariables,
+				expression.getSource());
 
 		eval = evaluate(state, pid, expression.restriction());
 		state = eval.state;
 		restriction = universe.and(restriction, (BooleanExpression) eval.value);
 
 		// Temporarily add restriction into path condition:
-		State newState = stateFactory.addToPathcondition(state, pid,
-				restriction);
+		State newState = stateFactory.addToPathcondition(state, pid, restriction);
 		BooleanExpression predicate;
 
 		try {
-			predicate = (BooleanExpression) evaluate(newState, pid,
-					expression.expression()).value;
+			predicate = (BooleanExpression) evaluate(newState, pid, expression.expression()).value;
 		} catch (UnsatisfiablePathConditionException e) {
 			// since the restriction is pushed into the context for evaluating
 			// the predicate, if an unsatisfiable exception was caught, which
 			// means the "restriction && context" is unsatisfiable hence this
 			// expression evaluates to either true (forall) or false (exists).
 			switch (expression.quantifier()) {
-				case EXISTS :
-					return new Evaluation(state, universe.falseExpression());
-				case FORALL :
-					return new Evaluation(state, universe.trueExpression());
-				default :
-					throw new CIVLInternalException(
-							"Unknown quantifier: " + expression.quantifier(),
-							expression.getSource());
+			case EXISTS:
+				return new Evaluation(state, universe.falseExpression());
+			case FORALL:
+				return new Evaluation(state, universe.trueExpression());
+			default:
+				throw new CIVLInternalException("Unknown quantifier: " + expression.quantifier(),
+						expression.getSource());
 			}
 		}
 		// function references:
@@ -300,23 +269,20 @@ public class QuantifiedExpressionEvaluator
 		ApplyConstantOperation quantifiedExpression;
 
 		switch (expression.quantifier()) {
-			case EXISTS :
-				restirctionCombiner = universe::and;
-				quantifiedExpression = universe::exists;
-				break;
-			case FORALL :
-				restirctionCombiner = universe::implies;
-				quantifiedExpression = universe::forall;
-				break;
-			default :
-				throw new CIVLInternalException(
-						"Unknown quantifier: " + expression.quantifier(),
-						expression.getSource());
+		case EXISTS:
+			restirctionCombiner = universe::and;
+			quantifiedExpression = universe::exists;
+			break;
+		case FORALL:
+			restirctionCombiner = universe::implies;
+			quantifiedExpression = universe::forall;
+			break;
+		default:
+			throw new CIVLInternalException("Unknown quantifier: " + expression.quantifier(), expression.getSource());
 		}
 		predicate = restirctionCombiner.operation(restriction, predicate);
 		for (SymbolicConstant complexBoundVar : boundVariables)
-			predicate = quantifiedExpression.operation(complexBoundVar,
-					predicate);
+			predicate = quantifiedExpression.operation(complexBoundVar, predicate);
 		eval = new Evaluation(state, predicate);
 		boundVariableStack.pop();
 		return eval;
@@ -328,9 +294,8 @@ public class QuantifiedExpressionEvaluator
 	 * @throws UnsatisfiablePathConditionException
 	 */
 	@Override
-	protected Evaluation evaluateExtendedQuantifiedExpression(State state,
-			int pid, ExtendedQuantifiedExpression extQuant)
-			throws UnsatisfiablePathConditionException {
+	protected Evaluation evaluateExtendedQuantifiedExpression(State state, int pid,
+			ExtendedQuantifiedExpression extQuant) throws UnsatisfiablePathConditionException {
 		Evaluation eval;
 		Expression function = extQuant.function();
 		NumericExpression low, high;
@@ -344,24 +309,20 @@ public class QuantifiedExpressionEvaluator
 		high = (NumericExpression) eval.value;
 		state = eval.state;
 
-		NumericSymbolicConstant idx = (NumericSymbolicConstant) universe
-				.symbolicConstant(universe.stringObject("i"),
-						universe.integerType());
+		NumericSymbolicConstant idx = (NumericSymbolicConstant) universe.symbolicConstant(universe.stringObject("i"),
+				universe.integerType());
 		BooleanExpression restriction = universe.lessThanEquals(low, idx);
 		Number lowNum, highNum;
 		Reasoner reasoner = universe.reasoner(state.getPathCondition(universe));
-		TypeEvaluation typeEval = this.getDynamicType(state, pid,
-				extQuant.getExpressionType(), source, false);
+		TypeEvaluation typeEval = this.getDynamicType(state, pid, extQuant.getExpressionType(), source, false);
 
-		restriction = universe.and(restriction,
-				universe.lessThanEquals(idx, high));
+		restriction = universe.and(restriction, universe.lessThanEquals(idx, high));
 		// To deal with nested extended-quantified expressions:
 		// Push a lambda function into the stack. During the evaluation of the
 		// extended-quantified expression, applying the top stack entry to a
 		// free variable in a lambda expression will return a boolean-value
 		// restriction for the free variable:
-		extendedQuantifiedRestrictionsStack
-				.push(universe.lambda(idx, restriction));
+		extendedQuantifiedRestrictionsStack.push(universe.lambda(idx, restriction));
 		lowNum = reasoner.extractNumber(low);
 		highNum = reasoner.extractNumber(high);
 		eval = evaluate(typeEval.state, pid, function);
@@ -371,11 +332,9 @@ public class QuantifiedExpressionEvaluator
 
 			lowInt = ((IntegerNumber) lowNum).intValue();
 			highInt = ((IntegerNumber) highNum).intValue();
-			eval.value = computeConcreteFoldExpression(lowInt, highInt,
-					eval.value, quant, typeEval.type, source);
+			eval.value = computeConcreteFoldExpression(lowInt, highInt, eval.value, quant, typeEval.type, source);
 		} else
-			eval = computeNonconcreteFoldExpression(eval.state, pid, reasoner,
-					low, high, eval.value, quant, source);
+			eval = computeNonconcreteFoldExpression(eval.state, pid, reasoner, low, high, eval.value, quant, source);
 		extendedQuantifiedRestrictionsStack.pop();
 		return eval;
 	}
@@ -384,8 +343,8 @@ public class QuantifiedExpressionEvaluator
 	 * 
 	 * <p>
 	 * Evaluate {@link ExtendedQuantifiedExpression} e(i,j,f):
-	 * <code>f(i) op f(i+1) op ... op f(j)</code> where i &lt= j and op stands
-	 * for an {@link ExtendedQuantifier}.
+	 * <code>f(i) op f(i+1) op ... op f(j)</code> where i &lt= j and op stands for
+	 * an {@link ExtendedQuantifier}.
 	 * 
 	 * This method requires both i and j have non-concrete values.
 	 * 
@@ -393,46 +352,34 @@ public class QuantifiedExpressionEvaluator
 	 * condition: <code>e(i,j,f) == e(i,j-1,f) + f(j)</code>
 	 * </p>
 	 * 
-	 * @param state
-	 *            The current state when this method is called
-	 * @param reasoner
-	 *            A reference to a {@link Reasoner}
-	 * @param low
-	 *            The lower bound of the parameter.
-	 * @param high
-	 *            The higher bound of the parameter.
-	 * @param lambda
-	 *            The lambda expression which maps the parameter to an
-	 *            expression
-	 * @param quant
-	 *            The {@link ExtendedQuantifier} which is a kind of a binary
-	 *            operator
-	 * @param source
-	 *            The {@link CIVLSource} related to this method call
+	 * @param state    The current state when this method is called
+	 * @param reasoner A reference to a {@link Reasoner}
+	 * @param low      The lower bound of the parameter.
+	 * @param high     The higher bound of the parameter.
+	 * @param lambda   The lambda expression which maps the parameter to an
+	 *                 expression
+	 * @param quant    The {@link ExtendedQuantifier} which is a kind of a binary
+	 *                 operator
+	 * @param source   The {@link CIVLSource} related to this method call
 	 * @return
 	 */
-	private Evaluation computeNonconcreteFoldExpression(State state, int pid,
-			Reasoner reasoner, NumericExpression low, NumericExpression high,
-			SymbolicExpression lambda, ExtendedQuantifier quant,
-			CIVLSource source) {
+	private Evaluation computeNonconcreteFoldExpression(State state, int pid, Reasoner reasoner, NumericExpression low,
+			NumericExpression high, SymbolicExpression lambda, ExtendedQuantifier quant, CIVLSource source) {
 		NumericExpression result;
 
 		if (reasoner.isValid(universe.lessThan(high, low))) {
-			result = ((SymbolicFunctionType) lambda.type()).outputType()
-					.isInteger() ? universe.zeroInt() : universe.zeroReal();
+			result = ((SymbolicFunctionType) lambda.type()).outputType().isInteger() ? universe.zeroInt()
+					: universe.zeroReal();
 			return new Evaluation(state, result);
 		}
 		switch (quant) {
-			case SUM :
-				// Higher bound in SARL's sigma is exclusive:
-				result = universe.sigma(low,
-						universe.add(high, universe.oneInt()), lambda);
-				break;
-			default :
-				throw new CIVLUnimplementedFeatureException(
-						"evaluating non-concrete extended quantification "
-								+ quant,
-						source);
+		case SUM:
+			// Higher bound in SARL's sigma is exclusive:
+			result = universe.sigma(low, universe.add(high, universe.oneInt()), lambda);
+			break;
+		default:
+			throw new CIVLUnimplementedFeatureException("evaluating non-concrete extended quantification " + quant,
+					source);
 		}
 		return new Evaluation(state, result);
 	}
@@ -440,82 +387,63 @@ public class QuantifiedExpressionEvaluator
 	/**
 	 * <p>
 	 * Evaluate {@link ExtendedQuantifiedExpression} :
-	 * <code>f(i) op f(i+1) op ... op f(j)</code> where i &lt= j and op stands
-	 * for an {@link ExtendedQuantifier}.
+	 * <code>f(i) op f(i+1) op ... op f(j)</code> where i &lt= j and op stands for
+	 * an {@link ExtendedQuantifier}.
 	 * 
 	 * This method requires both i and j have concrete values.
 	 * </p>
 	 * 
-	 * @param low
-	 *            The lower bound of the parameter.
-	 * @param high
-	 *            The higher bound of the parameter.
-	 * @param lambda
-	 *            The lambda expression which maps the parameter to an
-	 *            expression
-	 * @param quant
-	 *            The {@link ExtendedQuantifier} which is a kind of a binary
-	 *            operator
-	 * @param expressionType
-	 *            The expression type of this
-	 *            {@link ExtendedQuantifiedExpression}.
-	 * @param source
-	 *            The {@link CIVLSource} related to this method call
+	 * @param low            The lower bound of the parameter.
+	 * @param high           The higher bound of the parameter.
+	 * @param lambda         The lambda expression which maps the parameter to an
+	 *                       expression
+	 * @param quant          The {@link ExtendedQuantifier} which is a kind of a
+	 *                       binary operator
+	 * @param expressionType The expression type of this
+	 *                       {@link ExtendedQuantifiedExpression}.
+	 * @param source         The {@link CIVLSource} related to this method call
 	 * @return
 	 * @throws UnsatisfiablePathConditionException
 	 */
-	private NumericExpression computeConcreteFoldExpression(int low, int high,
-			SymbolicExpression lambda, ExtendedQuantifier quant,
-			SymbolicType expressionType, CIVLSource source) {
+	private NumericExpression computeConcreteFoldExpression(int low, int high, SymbolicExpression lambda,
+			ExtendedQuantifier quant, SymbolicType expressionType, CIVLSource source) {
 		if (high < low)
-			return expressionType.isInteger()
-					? universe.zeroInt()
-					: universe.zeroReal();
+			return expressionType.isInteger() ? universe.zeroInt() : universe.zeroReal();
 
-		SymbolicExpression applied = universe.apply(lambda,
-				Arrays.asList(universe.integer(low)));
+		SymbolicExpression applied = universe.apply(lambda, Arrays.asList(universe.integer(low)));
 
 		if (!(applied instanceof NumericExpression))
-			throw new CIVLSyntaxException(
-					"the body of $sum must have a numeric type "
-							+ "(int, float, etc.), but the body produced "
-							+ "a value of type " + applied.type(),
-					source);
+			throw new CIVLSyntaxException("the body of $sum must have a numeric type "
+					+ "(int, float, etc.), but the body produced " + "a value of type " + applied.type(), source);
 		NumericExpression result = (NumericExpression) applied;
 
 		for (int i = low + 1; i <= high; i++) {
 			NumericExpression index = universe.integer(i);
 			NumericExpression current;
-			SymbolicExpression currentVal = universe.apply(lambda,
-					Arrays.asList(index));
+			SymbolicExpression currentVal = universe.apply(lambda, Arrays.asList(index));
 
 			if (!(currentVal instanceof NumericExpression))
-				throw new CIVLSyntaxException(
-						"the body of $sum must have a numeric type "
-								+ "(int, float, etc.), but the body produced "
-								+ "a value of type " + currentVal.type(),
+				throw new CIVLSyntaxException("the body of $sum must have a numeric type "
+						+ "(int, float, etc.), but the body produced " + "a value of type " + currentVal.type(),
 						source);
 			current = (NumericExpression) currentVal;
 			switch (quant) {
-				case SUM :
-					result = universe.add(result, current);
-					break;
-				case PROD :
-					result = universe.multiply(result, current);
-					break;
-				default :
-					throw new CIVLUnimplementedFeatureException(
-							"evaluating concrete extended quantification "
-									+ quant,
-							source);
+			case SUM:
+				result = universe.add(result, current);
+				break;
+			case PROD:
+				result = universe.multiply(result, current);
+				break;
+			default:
+				throw new CIVLUnimplementedFeatureException("evaluating concrete extended quantification " + quant,
+						source);
 			}
 		}
 		return result;
 	}
 
 	@Override
-	protected Evaluation evaluateLambda(State state, int pid,
-			LambdaExpression lambda)
+	protected Evaluation evaluateLambda(State state, int pid, LambdaExpression lambda)
 			throws UnsatisfiablePathConditionException {
 		Variable freeVariable = lambda.freeVariable();
 		Evaluation eval = null;
@@ -523,27 +451,22 @@ public class QuantifiedExpressionEvaluator
 		SymbolicType varType;
 		NumericSymbolicConstant freeVariableValue;
 
-		typeEval = getDynamicType(state, pid, freeVariable.type(),
-				freeVariable.getSource(), false);
+		typeEval = getDynamicType(state, pid, freeVariable.type(), freeVariable.getSource(), false);
 		state = typeEval.state;
 		varType = typeEval.type;
 		boundVariableStack.push(new TreeMap<>());
-		freeVariableValue = (NumericSymbolicConstant) universe
-				.symbolicConstant(freeVariable.name().stringObject(), varType);
-		boundVariableStack.peek().put(freeVariableValue.name().getString(),
-				freeVariableValue);
+		freeVariableValue = (NumericSymbolicConstant) universe.symbolicConstant(freeVariable.name().stringObject(),
+				varType);
+		boundVariableStack.peek().put(freeVariableValue.name().getString(), freeVariableValue);
 
 		State oldState = state;
 
 		if (!extendedQuantifiedRestrictionsStack.isEmpty()) {
-			SymbolicExpression restrictFunction = extendedQuantifiedRestrictionsStack
-					.peek();
+			SymbolicExpression restrictFunction = extendedQuantifiedRestrictionsStack.peek();
 			BooleanExpression restriction;
 
-			restriction = (BooleanExpression) universe.apply(restrictFunction,
-					Arrays.asList(freeVariableValue));
-			assert restriction.type()
-					.typeKind() == SymbolicType.SymbolicTypeKind.BOOLEAN;
+			restriction = (BooleanExpression) universe.apply(restrictFunction, Arrays.asList(freeVariableValue));
+			assert restriction.type().typeKind() == SymbolicType.SymbolicTypeKind.BOOLEAN;
 			state = stateFactory.addToPathcondition(state, pid, restriction);
 		}
 		eval = evaluate(state, pid, lambda.lambdaFunction());
@@ -554,18 +477,15 @@ public class QuantifiedExpressionEvaluator
 	}
 
 	@Override
-	protected Evaluation evaluateValid(State state, int pid, Expression pointer,
-			Expression offsets, CIVLSource source)
+	protected Evaluation evaluateValid(State state, int pid, Expression pointer, Expression offsets, CIVLSource source)
 			throws UnsatisfiablePathConditionException {
 		Evaluation eval;
 
 		if (offsets.getExpressionType().isIntegerType()) {
-			Expression singlePointer = modelFactory.binaryExpression(source,
-					BINARY_OPERATOR.PLUS, pointer, offsets);
+			Expression singlePointer = modelFactory.binaryExpression(source, BINARY_OPERATOR.PLUS, pointer, offsets);
 
 			eval = evaluate(state, pid, singlePointer);
-			eval.value = symbolicAnalyzer.isDerefablePointer(state,
-					eval.value).left;
+			eval.value = symbolicAnalyzer.isDerefablePointer(state, eval.value).left;
 			return eval;
 		} else {
 			// for \valid(p + range), it is evaluated as
@@ -574,65 +494,53 @@ public class QuantifiedExpressionEvaluator
 			// step is always one ...
 			NumericExpression lowVal, highVal;
 			NumericSymbolicConstant offset = (NumericSymbolicConstant) universe
-					.symbolicConstant(
-							universe.stringObject(BOUNDED_OFFSET_IDENTIFIER),
-							universe.integerType());
+					.symbolicConstant(universe.stringObject(BOUNDED_OFFSET_IDENTIFIER), universe.integerType());
 
 			eval = evaluate(state, pid, range);
 			state = eval.state;
 			lowVal = symbolicUtil.getLowOfRegularRange(eval.value);
 			highVal = symbolicUtil.getHighOfRegularRange(eval.value);
 
-			BooleanExpression offsetBounds = universe.and(
-					universe.lessThanEquals(lowVal, offset),
+			BooleanExpression offsetBounds = universe.and(universe.lessThanEquals(lowVal, offset),
 					universe.lessThanEquals(offset, highVal));
-			Expression boundVar = modelFactory.boundVariableExpression(
-					offsets.getSource(),
-					modelFactory.identifier(offsets.getSource(),
-							BOUNDED_OFFSET_IDENTIFIER),
-					typeFactory.integerType());
-			Expression eachPointer = modelFactory.binaryExpression(source,
-					BINARY_OPERATOR.POINTER_ADD, pointer, boundVar);
+			Expression boundVar = modelFactory.boundVariableExpression(offsets.getSource(),
+					modelFactory.identifier(offsets.getSource(), BOUNDED_OFFSET_IDENTIFIER), typeFactory.integerType());
+			Expression eachPointer = modelFactory.binaryExpression(source, BINARY_OPERATOR.POINTER_ADD, pointer,
+					boundVar);
 
 			state = stateFactory.pushAssumption(state, pid, offsetBounds);
 			boundVariableStack.push(new TreeMap<>());
 			boundVariableStack.peek().put(BOUNDED_OFFSET_IDENTIFIER, offset);
 			eval = evaluate(state, pid, eachPointer);
-			eval.value = symbolicAnalyzer.isDerefablePointer(state,
-					eval.value).left;
+			eval.value = symbolicAnalyzer.isDerefablePointer(state, eval.value).left;
 			boundVariableStack.pop();
 			eval.state = stateFactory.popAssumption(eval.state, pid);
-			eval.value = universe.forallInt(offset, lowVal, highVal,
-					(BooleanExpression) eval.value);
+			eval.value = universe.forallInt(offset, lowVal, highVal, (BooleanExpression) eval.value);
 			return eval;
 		}
 	}
 
 	/* ********************** Private helper methods ************************ */
 	/**
-	 * Evaluate a list of bound variables to a set of symbolic constants. For
-	 * bound variables bounded by domains, their constraints will be returned as
-	 * a boolean expression.
+	 * Evaluate a list of bound variables to a set of symbolic constants. For bound
+	 * variables bounded by domains, their constraints will be returned as a boolean
+	 * expression.
 	 * 
-	 * @param state
-	 *            The current state
-	 * @param pid
-	 *            The PID of the calling process.
-	 * @param boundVariableList
-	 *            A list of bound variable groups. Each bound variable group
-	 *            shares a domain constraint or has no domain constraint.
-	 * @param boundVariables
-	 *            Output argument. An array eventually will contain symbolic
-	 *            constants which are values of bound variables.
-	 * @param source
-	 *            CIVLSource associates to those bounded variables.
+	 * @param state             The current state
+	 * @param pid               The PID of the calling process.
+	 * @param boundVariableList A list of bound variable groups. Each bound variable
+	 *                          group shares a domain constraint or has no domain
+	 *                          constraint.
+	 * @param boundVariables    Output argument. An array eventually will contain
+	 *                          symbolic constants which are values of bound
+	 *                          variables.
+	 * @param source            CIVLSource associates to those bounded variables.
 	 * @return a constraint on some variables which are bounded by domains.
 	 * @throws UnsatisfiablePathConditionException
 	 */
 	private BooleanExpression processBoundVariableList(State state, int pid,
-			List<Pair<List<Variable>, Expression>> boundVariableList,
-			SymbolicConstant[] boundVariables, CIVLSource source)
-			throws UnsatisfiablePathConditionException {
+			List<Pair<List<Variable>, Expression>> boundVariableList, SymbolicConstant[] boundVariables,
+			CIVLSource source) throws UnsatisfiablePathConditionException {
 		BooleanExpression restriction = universe.trueExpression();
 		Evaluation eval;
 		int index = 0;
@@ -645,39 +553,32 @@ public class QuantifiedExpressionEvaluator
 
 			if (domain != null && boundVariableDecls.size() != 1)
 				throw new CIVLUnimplementedFeatureException(
-						"declaring bound variables within a specific domain in quantified expressions",
-						source);
+						"declaring bound variables within a specific domain in quantified expressions", source);
 			if (domain != null) {
 				// range
 				Variable boundVar = boundVariableDecls.get(0);
 				SymbolicExpression range;
 				NumericExpression lower, upper;
 
-				boundValue = universe.symbolicConstant(
-						boundVar.name().stringObject(),
+				boundValue = universe.symbolicConstant(boundVar.name().stringObject(),
 						boundVar.type().getDynamicType(universe));
 				eval = this.evaluate(state, pid, domain);
 				// TODO assert domain has dimension one
 				boundVariables[index++] = boundValue;
-				this.boundVariableStack.peek()
-						.put(boundValue.name().getString(), boundValue);
+				this.boundVariableStack.peek().put(boundValue.name().getString(), boundValue);
 				state = eval.state;
 				range = eval.value;
 				lower = this.symbolicUtil.getLowOfRegularRange(range);
 				upper = this.symbolicUtil.getHighOfRegularRange(range);
-				restriction = universe.and(restriction, universe.and(
-						this.universe.lessThanEquals(lower,
-								(NumericExpression) boundValue),
-						this.universe.lessThanEquals(
-								(NumericExpression) boundValue, upper)));
+				restriction = universe.and(restriction,
+						universe.and(this.universe.lessThanEquals(lower, (NumericExpression) boundValue),
+								this.universe.lessThanEquals((NumericExpression) boundValue, upper)));
 			} else {
 				for (Variable boundVar : boundVariableDecls) {
-					boundValue = universe.symbolicConstant(
-							boundVar.name().stringObject(),
+					boundValue = universe.symbolicConstant(boundVar.name().stringObject(),
 							boundVar.type().getDynamicType(universe));
 					boundVariables[index++] = boundValue;
-					this.boundVariableStack.peek()
-							.put(boundValue.name().getString(), boundValue);
+					this.boundVariableStack.peek().put(boundValue.name().getString(), boundValue);
 				}
 			}
 		}

@@ -237,7 +237,7 @@ public interface SymbolicUtility {
 
 	/**
 	 * Test if the given value is within the range, which is given by an
-	 * inclusibe lower bound, an exclusibe upper bound and a step
+	 * inclusive lower bound, an exclusive upper bound and a step
 	 * 
 	 * @param value
 	 *            a numeric value to be tested if it is in range.

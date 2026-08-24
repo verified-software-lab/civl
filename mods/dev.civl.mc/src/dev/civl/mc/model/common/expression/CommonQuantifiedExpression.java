@@ -101,9 +101,6 @@ public class CommonQuantifiedExpression extends CommonExpression
 			case FORALL :
 				result += "FORALL";
 				break;
-			case UNIFORM :
-				result += "UNIFORM";
-				break;
 			default :
 				result += "UNKNOWN_QUANTIFIER";
 				break;

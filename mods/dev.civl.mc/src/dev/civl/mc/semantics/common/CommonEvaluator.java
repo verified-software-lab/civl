@@ -537,6 +537,13 @@ public class CommonEvaluator implements Evaluator {
 				errorLogger.logSimpleError(source, state, pid, process, this.symbolicAnalyzer.stateInformation(state),
 						CIVLProperty.DEREFERENCE, "attempt to dereference a null pointer");
 			throwPCException = true;
+		} else if (symbolicUtil.getVariableId(source, pointer) < 0) {
+			// this could happen for example if pointer is the result of adding some int
+			// to NULL.
+			if (civlConfig.isPropertyToggled(CIVLProperty.UNDEFINED_VALUE) && !muteErrorSideEffects)
+				errorLogger.logSimpleError(source, state, pid, process, this.symbolicAnalyzer.stateInformation(state),
+						CIVLProperty.UNDEFINED_VALUE, "attempt to deference an invalid pointer");
+			throwPCException = true;
 		} else {
 			int sid = stateFactory.getDyscopeId(symbolicUtil.getScopeValue(pointer));
 
