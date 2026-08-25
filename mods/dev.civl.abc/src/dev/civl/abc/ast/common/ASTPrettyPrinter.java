@@ -52,20 +52,17 @@ import dev.civl.abc.ast.node.IF.expression.ArrowNode;
 import dev.civl.abc.ast.node.IF.expression.CastNode;
 import dev.civl.abc.ast.node.IF.expression.CompoundLiteralNode;
 import dev.civl.abc.ast.node.IF.expression.ConstantNode;
-import dev.civl.abc.ast.node.IF.expression.DerivativeExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.DotNode;
 import dev.civl.abc.ast.node.IF.expression.ExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.ExpressionNode.ExpressionKind;
 import dev.civl.abc.ast.node.IF.expression.FunctionCallNode;
 import dev.civl.abc.ast.node.IF.expression.GenericSelectionNode;
 import dev.civl.abc.ast.node.IF.expression.IdentifierExpressionNode;
-import dev.civl.abc.ast.node.IF.expression.IntegerConstantNode;
 import dev.civl.abc.ast.node.IF.expression.LambdaNode;
 import dev.civl.abc.ast.node.IF.expression.OperatorNode;
 import dev.civl.abc.ast.node.IF.expression.OperatorNode.Operator;
 import dev.civl.abc.ast.node.IF.expression.QuantifiedExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.RegularRangeNode;
-import dev.civl.abc.ast.node.IF.expression.RemoteOnExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.ScopeOfNode;
 import dev.civl.abc.ast.node.IF.expression.SizeableNode;
 import dev.civl.abc.ast.node.IF.expression.SizeofNode;
@@ -113,7 +110,6 @@ import dev.civl.abc.ast.node.IF.statement.RunNode;
 import dev.civl.abc.ast.node.IF.statement.StatementNode;
 import dev.civl.abc.ast.node.IF.statement.StatementNode.StatementKind;
 import dev.civl.abc.ast.node.IF.statement.SwitchNode;
-import dev.civl.abc.ast.node.IF.statement.UpdateNode;
 import dev.civl.abc.ast.node.IF.statement.WhenNode;
 import dev.civl.abc.ast.node.IF.type.ArrayTypeNode;
 import dev.civl.abc.ast.node.IF.type.BasicTypeNode;
@@ -678,22 +674,6 @@ public class ASTPrettyPrinter {
 		result.append(prefix);
 		if (function instanceof AbstractFunctionDefinitionNode) {
 			result.append("$abstract ");
-
-			AbstractFunctionDefinitionNode af = (AbstractFunctionDefinitionNode) function;
-			SequenceNode<PairNode<ExpressionNode, ExpressionNode>> intervals = af.getIntervals();
-
-			if (intervals != null) {
-				result.append("$differentiable(" + af.continuity() + ", ");
-				for (PairNode<ExpressionNode, ExpressionNode> interval : intervals) {
-					result.append("[");
-					result.append(expression2Pretty(interval.getLeft(), maxLength));
-					result.append(",");
-					result.append(expression2Pretty(interval.getRight(), maxLength));
-					result.append("]");
-				}
-				result.append(") ");
-			}
-
 		}
 		if (function.hasGlobalFunctionSpecifier())
 			result.append("__global__ ");
@@ -1160,8 +1140,6 @@ public class ASTPrettyPrinter {
 			return run2Pretty(prefix, (RunNode) statement, maxLength);
 		case SWITCH:
 			return switch2Pretty(prefix, (SwitchNode) statement, maxLength);
-		case UPDATE:
-			return update2Pretty(prefix, (UpdateNode) statement, maxLength);
 		case WHEN:
 			return when2Pretty(prefix, (WhenNode) statement, maxLength);
 		default:
@@ -1830,19 +1808,6 @@ public class ASTPrettyPrinter {
 
 	}
 
-	private static StringBuffer update2Pretty(String prefix, UpdateNode update, int maxLength) {
-		ExpressionNode call;
-		StringBuffer result = new StringBuffer();
-
-		result.append(prefix);
-		result.append("$update(");
-		result.append(expression2Pretty(update.getCollator(), vacantLength(maxLength, result)));
-		result.append(") ");
-		call = update.getFunctionCall();
-		result.append(expression2Pretty(call, vacantLength(maxLength, result)));
-		return result;
-	}
-
 	/**
 	 * Pretty printing for {@link RunNode}
 	 *
@@ -2047,9 +2012,6 @@ public class ASTPrettyPrinter {
 			result.append(constant);
 			break;
 		}
-		case DERIVATIVE_EXPRESSION:
-			result.append(derivative2Pretty((DerivativeExpressionNode) expression, maxLength));
-			break;
 		case DOT: {
 			DotNode dot = (DotNode) expression;
 
@@ -2089,15 +2051,6 @@ public class ASTPrettyPrinter {
 		case SPAWN:
 			result.append("$spawn ");
 			result.append(functionCall2Pretty(((SpawnNode) expression).getCall(), vacantLength(maxLength, result)));
-			break;
-		case REMOTE_REFERENCE:
-			result.append("$on(");
-			result.append(expression2Pretty(((RemoteOnExpressionNode) expression).getProcessExpression(),
-					vacantLength(maxLength, result)));
-			result.append(" , ");
-			result.append(expression2Pretty(((RemoteOnExpressionNode) expression).getForeignExpressionNode(),
-					vacantLength(maxLength, result)));
-			result.append(")");
 			break;
 		case RESULT:
 			result.append("\\result");
@@ -2177,37 +2130,6 @@ public class ASTPrettyPrinter {
 
 		result.append("(");
 		result.append(compoundStatement2Pretty("", compound, false, maxLength));
-		result.append(")");
-		return trimStringBuffer(result, maxLength);
-	}
-
-	private static StringBuffer derivative2Pretty(DerivativeExpressionNode deriv, int maxLength) {
-		if (maxLength == 0)
-			return EMPTY_STRING_BUFFER;
-
-		StringBuffer result = new StringBuffer();
-		int numPartials = deriv.getNumberOfPartials();
-		int numArgs = deriv.getNumberOfArguments();
-
-		result.append("$D[");
-		result.append(expression2Pretty(deriv.getFunction(), vacantLength(maxLength, result)));
-		for (int i = 0; i < numPartials; i++) {
-			PairNode<IdentifierExpressionNode, IntegerConstantNode> partial = deriv.getPartial(i);
-
-			result.append(", {");
-			result.append(partial.getLeft().getIdentifier().name());
-			result.append(",");
-			result.append(partial.getRight().getConstantValue());
-			result.append("}");
-		}
-		result.append("](");
-		for (int i = 0; i < numArgs; i++) {
-			ExpressionNode arg = deriv.getArgument(i);
-
-			if (i != 0)
-				result.append(", ");
-			result.append(expression2Pretty(arg, vacantLength(maxLength, result)));
-		}
 		result.append(")");
 		return trimStringBuffer(result, maxLength);
 	}

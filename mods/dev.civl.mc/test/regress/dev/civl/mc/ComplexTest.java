@@ -37,6 +37,11 @@ public class ComplexTest {
 	/* **************************** Test Methods *************************** */
 
 	@Test
+	public void casts() {
+		check("casts.cvl");
+	}
+
+	@Test
 	public void complex_basics() {
 		check("complex_basics.c");
 	}
@@ -59,6 +64,11 @@ public class ComplexTest {
 	@Test
 	public void unity() {
 		check("unity.cvl");
+	}
+
+	@Test
+	public void complex_quant() {
+		check("complex_quant.cvl");
 	}
 
 	@Test

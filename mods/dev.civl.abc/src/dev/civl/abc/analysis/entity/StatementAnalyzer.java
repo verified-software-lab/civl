@@ -51,7 +51,6 @@ import dev.civl.abc.ast.node.IF.statement.RunNode;
 import dev.civl.abc.ast.node.IF.statement.StatementNode;
 import dev.civl.abc.ast.node.IF.statement.StatementNode.StatementKind;
 import dev.civl.abc.ast.node.IF.statement.SwitchNode;
-import dev.civl.abc.ast.node.IF.statement.UpdateNode;
 import dev.civl.abc.ast.node.IF.statement.WhenNode;
 import dev.civl.abc.ast.node.IF.type.EnumerationTypeNode;
 import dev.civl.abc.ast.node.IF.type.StructureOrUnionTypeNode;
@@ -384,13 +383,6 @@ public class StatementAnalyzer {
 			if (!guardType.isScalar())
 				throw error("Guard has non-scalar type " + guardType, guard);
 			processStatement(((WhenNode) statement).getBody());
-			break;
-		}
-		case UPDATE: {
-			UpdateNode updateNode = (UpdateNode) statement;
-
-			processExpression(updateNode.getCollator());
-			processExpression(updateNode.getFunctionCall());
 			break;
 		}
 		case CHOOSE: {

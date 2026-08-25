@@ -360,7 +360,7 @@ public class GeneralWorker extends BaseWorker {
 
 		callMain = nodeFactory.newFunctionCallNode(this.newSource("new main function", CivlcTokenConstant.CALL),
 				this.identifierExpression(GEN_MAIN),
-				Arrays.asList(this.identifierExpression(CIVL_ARGC_NAME), argv_value_node()), null);
+				Arrays.asList(this.identifierExpression(CIVL_ARGC_NAME), argv_value_node()));
 		blockItems.add(nodeFactory.newExpressionStatementNode(callMain));
 		mainFuncType = nodeFactory.newFunctionTypeNode(mainSource,
 				nodeFactory.newBasicTypeNode(mainSource, BasicTypeKind.INT),
@@ -548,8 +548,7 @@ public class GeneralWorker extends BaseWorker {
 				}
 
 				FunctionCallNode memsetCallNode = nodeFactory.newFunctionCallNode(memsetSource, memsetIDExprNode, Arrays
-						.asList(memsetFuncCallArg0ExprNode, memsetFuncCallArg1ExprNode, memsetFuncCallArg2ExprNode),
-						null);
+						.asList(memsetFuncCallArg0ExprNode, memsetFuncCallArg1ExprNode, memsetFuncCallArg2ExprNode));
 				ExpressionStatementNode memsetFuncCallNode = nodeFactory.newExpressionStatementNode(memsetCallNode);
 				ASTNode callocBlockNode = callocStatementNode.parent();
 				int callocStatementIndex = callocStatementNode.childIndex();

@@ -30,8 +30,6 @@ import dev.civl.mc.model.IF.expression.BinaryExpression.BINARY_OPERATOR;
 import dev.civl.mc.model.IF.expression.CastExpression;
 import dev.civl.mc.model.IF.expression.ConditionalExpression;
 import dev.civl.mc.model.IF.expression.DereferenceExpression;
-import dev.civl.mc.model.IF.expression.DerivativeCallExpression;
-import dev.civl.mc.model.IF.expression.DifferentiableExpression;
 import dev.civl.mc.model.IF.expression.DomainGuardExpression;
 import dev.civl.mc.model.IF.expression.DotExpression;
 import dev.civl.mc.model.IF.expression.DynamicTypeOfExpression;
@@ -66,7 +64,6 @@ import dev.civl.mc.model.IF.statement.ParallelAssignStatement;
 import dev.civl.mc.model.IF.statement.ReturnStatement;
 import dev.civl.mc.model.IF.statement.Statement;
 import dev.civl.mc.model.IF.statement.Statement.StatementKind;
-import dev.civl.mc.model.IF.statement.UpdateStatement;
 import dev.civl.mc.model.IF.type.CIVLArrayType;
 import dev.civl.mc.model.IF.type.CIVLCompleteArrayType;
 import dev.civl.mc.model.IF.type.CIVLFunctionType;
@@ -439,7 +436,7 @@ public class SimpleEnablerWorker {
 
 		if (object.type() != heapSymbolicType) {
 			Scope scope = state.getDyscope(dyscopeID).lexicalScope();
-			Variable var = scope.variable(variableID);
+			Variable var = scope.getVariable(variableID);
 
 			addVariable(result, dyscopeID, var);
 		} else { // ... of arrayElementRef of tupleComponentRef of IdentityRef
@@ -535,7 +532,7 @@ public class SimpleEnablerWorker {
 	private boolean containsPointerType(State state, int[] obj) {
 		int len = obj.length, dyid = obj[0], vid = obj[1];
 		DynamicScope ds = state.getDyscope(dyid);
-		Variable var = ds.lexicalScope().variable(vid);
+		Variable var = ds.lexicalScope().getVariable(vid);
 		CIVLType type = var.type();
 
 		if (len == 2)
@@ -1105,16 +1102,6 @@ public class SimpleEnablerWorker {
 			findObjects(resultAll, theState, pid, rs.expression());
 			break;
 		}
-		case UPDATE: {
-			UpdateStatement us = (UpdateStatement) statement;
-
-			for (Expression arg : us.arguments()) {
-				findObjects(resultAll, theState, pid, arg);
-			}
-			findObjects(resultAll, theState, pid, us.collator());
-			computeMem(resultAll, resultWrite, pid, us.call());
-			break;
-		}
 		default:
 			throw new CIVLInternalException("unknown statement kind", statement);
 		}
@@ -1443,22 +1430,6 @@ public class SimpleEnablerWorker {
 			addPointer(result, state, pointerArg.getSource(), pointerVal);
 			break;
 		}
-		case DERIVATIVE: {
-			DerivativeCallExpression de = (DerivativeCallExpression) expr;
-
-			for (Expression arg : de.arguments())
-				findObjects(result, state, pid, arg);
-			break;
-		}
-		case DIFFERENTIABLE: {
-			DifferentiableExpression de = (DifferentiableExpression) expr;
-
-			for (Expression lb : de.lowerBounds())
-				findObjects(result, state, pid, lb);
-			for (Expression ub : de.upperBounds())
-				findObjects(result, state, pid, ub);
-			break;
-		}
 		case DOMAIN_GUARD: {
 			DomainGuardExpression dge = (DomainGuardExpression) expr;
 			int n = dge.dimension();
@@ -1560,8 +1531,6 @@ public class SimpleEnablerWorker {
 			break;
 		case SIZEOF_TYPE:
 			findObjects(result, state, pid, ((SizeofTypeExpression) expr).getTypeArgument());
-			break;
-		case STATE_NULL: // nothing
 			break;
 		case STRING_LITERAL: // nothing
 			break;
@@ -1939,7 +1908,7 @@ public class SimpleEnablerWorker {
 				int dyid = vec[0], vid = vec[1];
 				DynamicScope dyscope = theState.getDyscope(dyid);
 				Scope scope = dyscope.lexicalScope();
-				Variable var = scope.variable(vid);
+				Variable var = scope.getVariable(vid);
 
 				out.print(var.name().name() + "#" + dyid);
 				if (vec.length > 2) {

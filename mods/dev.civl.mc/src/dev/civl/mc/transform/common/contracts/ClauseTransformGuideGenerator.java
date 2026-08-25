@@ -131,28 +131,6 @@ public class ClauseTransformGuideGenerator {
 
 	/* *********** Methods transforming special expressions ********** */
 
-//	private static void transformAcslOldExpression(ContractClause clause, ASTFactory astFactory,
-//			ExpressionNode civlcPreState, boolean isLocal, boolean useRankAsPID, ClauseTransformGuide out)
-//			throws SyntaxException {
-//		NodeFactory nf = astFactory.getNodeFactory();
-//
-//		for (ExpressionNode expr : clause.specialReferences.acslOldExpressions) {
-//			if (civlcPreState == null)
-//				throw new CIVLSyntaxException("\\old expressions are not allowed in post-condition", expr.getSource());
-//
-//			OperatorNode old = (OperatorNode) expr;
-//			ExpressionNode proc = !useRankAsPID
-//					// TODO: need an expression represent current process:
-//					? nf.newIntegerConstantNode(old.getSource(), "0")
-//					: identifierExpression(nf, MPIContractUtilities.MPI_COMM_RANK_CONST, old.getSource());
-//
-//			out.substitutions.put(old,
-//					new ValueAtNodeSubstituteGuide(
-//							nf.newOperatorNode(civlcPreState.getSource(), Operator.DEREFERENCE, civlcPreState.copy()),
-//							proc, old.getArgument(0), old));
-//		}
-//	}
-
 	private static void transformAcslResult(ContractClause clause, ASTFactory astFactory, ClauseTransformGuide out) {
 		NodeFactory nf = astFactory.getNodeFactory();
 
@@ -281,7 +259,7 @@ public class ClauseTransformGuideGenerator {
 	private static StatementNode createAssumption(NodeFactory nf, ExpressionNode pred) {
 		ExpressionNode assumeIdentifier = identifierExpression(nf, BaseWorker.ASSUME, pred.getSource());
 		FunctionCallNode assumeCall = nf.newFunctionCallNode(pred.getSource(), assumeIdentifier,
-				Arrays.asList(pred.copy()), null);
+				Arrays.asList(pred.copy()));
 
 		return nf.newExpressionStatementNode(assumeCall);
 	}

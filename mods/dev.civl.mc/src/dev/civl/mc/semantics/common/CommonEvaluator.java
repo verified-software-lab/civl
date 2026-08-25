@@ -35,7 +35,6 @@ import dev.civl.mc.model.IF.expression.CompoundLiteralExpression.CIVLLiteralObje
 import dev.civl.mc.model.IF.expression.CompoundLiteralExpression.CIVLScalarLiteralObject;
 import dev.civl.mc.model.IF.expression.ConditionalExpression;
 import dev.civl.mc.model.IF.expression.DereferenceExpression;
-import dev.civl.mc.model.IF.expression.DerivativeCallExpression;
 import dev.civl.mc.model.IF.expression.DomainGuardExpression;
 import dev.civl.mc.model.IF.expression.DotExpression;
 import dev.civl.mc.model.IF.expression.DynamicTypeOfExpression;
@@ -145,12 +144,6 @@ public class CommonEvaluator implements Evaluator {
 	public static String INT_TO_POINTER_FUNCTION = "_int2Pointer";
 	public static String CHAR_TO_INT_FUNCTION = "_char2int";
 	public static String INT_TO_CHAR_FUNCTION = "_int2char";
-
-	/**
-	 * A bounded process identifier identifies the bound variable in the lambda
-	 * expression which represents a value of a {@link ValueAtExpression}
-	 */
-	protected static String BOUNDED_PROCESS_IDENTIFIER = "_p";
 
 	/**
 	 * A bounded offset identifier identifies the bound variable in the quantified
@@ -445,10 +438,10 @@ public class CommonEvaluator implements Evaluator {
 
 		// Get the variable value:
 		if (sid == ModelConfiguration.DYNAMIC_CONSTANT_SCOPE) {
-			variable = modelFactory.model().staticConstantScope().variable(vid);
+			variable = modelFactory.model().staticConstantScope().getVariable(vid);
 			variableValue = variable.constantValue();
 		} else {
-			variable = state.getDyscope(sid).lexicalScope().variable(vid);
+			variable = state.getDyscope(sid).lexicalScope().getVariable(vid);
 			if (!analysisOnly && checkOutput && civlConfig.isPropertyToggled(CIVLProperty.OUTPUT_READ))
 				if (variable.isOutput()) {
 					errorLogger.logSimpleError(source, state, pid, process, symbolicAnalyzer.stateInformation(state),
@@ -545,6 +538,13 @@ public class CommonEvaluator implements Evaluator {
 				// null pointer dereference
 				errorLogger.logSimpleError(source, state, pid, process, this.symbolicAnalyzer.stateInformation(state),
 						CIVLProperty.DEREFERENCE, "attempt to dereference a null pointer");
+			throwPCException = true;
+		} else if (symbolicUtil.getVariableId(source, pointer) < 0) {
+			// this could happen for example if pointer is the result of adding some int
+			// to NULL.
+			if (civlConfig.isPropertyToggled(CIVLProperty.UNDEFINED_VALUE) && !muteErrorSideEffects)
+				errorLogger.logSimpleError(source, state, pid, process, this.symbolicAnalyzer.stateInformation(state),
+						CIVLProperty.UNDEFINED_VALUE, "attempt to deference an invalid pointer");
 			throwPCException = true;
 		} else {
 			int sid = stateFactory.getDyscopeId(symbolicUtil.getScopeValue(pointer));
@@ -1142,52 +1142,6 @@ public class CommonEvaluator implements Evaluator {
 		Evaluation eval = evaluate(state, pid, expression.pointer());
 
 		return dereference(expression.pointer().getSource(), eval.state, pid, process, eval.value, true, true);
-	}
-
-	/**
-	 * Evaluates a derivative call expression.
-	 * 
-	 * @param state      the pre-state
-	 * @param pid        the PID of the process running this call
-	 * @param expression the derivative call expression to be evaluated
-	 * @return the evaluation with the properly updated state and the value of the
-	 *         derivative call expression.
-	 * @throws UnsatisfiablePathConditionException
-	 */
-	protected Evaluation evaluateDerivativeCall(State state, int pid, DerivativeCallExpression expression)
-			throws UnsatisfiablePathConditionException {
-		AbstractFunction function = expression.function();
-		SymbolicType returnType = function.returnType().getDynamicType(universe);
-		List<SymbolicType> argumentTypes = new ArrayList<SymbolicType>();
-		List<SymbolicExpression> arguments = new ArrayList<SymbolicExpression>();
-		SymbolicType functionType;
-		SymbolicExpression functionExpression;
-		SymbolicExpression functionApplication;
-		Evaluation result;
-		String derivativeName;
-
-		for (Variable param : function.parameters()) {
-			argumentTypes.add(param.type().getDynamicType(universe));
-		}
-		for (Expression arg : expression.arguments()) {
-			Evaluation eval = evaluate(state, pid, arg);
-			arguments.add(eval.value);
-		}
-		functionType = universe.functionType(argumentTypes, returnType);
-		// The derivative name is the name of the function concatenated with the
-		// names and degrees of the partials. e.g. the name of
-		// $D[rho,{x,1},{y,2}]() is "rhox1y2"
-		derivativeName = function.name().name();
-		for (Pair<Variable, IntegerLiteralExpression> partial : expression.partials()) {
-			derivativeName += partial.left.name().name() + partial.right.value();
-		}
-
-		StringObject funcName = ModelConfiguration.getAbstractFunctionName(universe, derivativeName);
-
-		functionExpression = universe.symbolicConstant(funcName, functionType);
-		functionApplication = universe.apply(functionExpression, arguments);
-		result = new Evaluation(state, functionApplication);
-		return result;
 	}
 
 	/**
@@ -2510,7 +2464,6 @@ public class CommonEvaluator implements Evaluator {
 			for (int i = 0; i < numFields; i++) {
 				StructOrUnionField field = structType.getField(i);
 				TypeEvaluation componentEval = getDynamicType(state, pid, field.type(), source, false);
-
 				state = componentEval.state;
 				componentTypes.add(componentEval.type);
 			}
@@ -2909,7 +2862,7 @@ public class CommonEvaluator implements Evaluator {
 					symbolicUtil.getPointer2MemoryBlock(pointer));
 		} else {
 			int vid = symbolicUtil.getVariableId(source, pointer);
-			Variable variable = state.getDyscope(sid).lexicalScope().variable(vid);
+			Variable variable = state.getDyscope(sid).lexicalScope().getVariable(vid);
 
 			objStr = "Variable " + variable.name();
 			objType = state.getVariableValue(sid, vid).type();
@@ -3071,9 +3024,6 @@ public class CommonEvaluator implements Evaluator {
 			break;
 		case DEREFERENCE:
 			result = evaluateDereference(state, pid, process, (DereferenceExpression) expression);
-			break;
-		case DERIVATIVE:
-			result = evaluateDerivativeCall(state, pid, (DerivativeCallExpression) expression);
 			break;
 		case DOMAIN_GUARD:
 			result = evaluateDomainGuard(state, pid, (DomainGuardExpression) expression);

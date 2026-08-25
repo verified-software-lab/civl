@@ -167,14 +167,14 @@ public class Pthread2CIVLWorker extends BaseWorker {
 		if (isMain)
 			pthread_pool_create_function = PTHREAD_POOL_CREATE_MAIN;
 		pthreadPoolType = nodeFactory.newTypedefNameNode(nodeFactory.newIdentifierNode(
-				this.newSource("$phtread_pool_t type", CivlcTokenConstant.IDENTIFIER), PTHREAD_POOL_TYPE), null);
+				this.newSource("$phtread_pool_t type", CivlcTokenConstant.IDENTIFIER), PTHREAD_POOL_TYPE));
 		if (wtInitializer) {
 			pthreadPoolCreateArgs = new ArrayList<>(2);
 			pthreadPoolCreateArgs.add(this.hereNode());
 			pthreadPoolCreateArgs.add(this.identifierExpression(PTHREAD_GPOOL));
 			pthreadPoolCreate = nodeFactory.newFunctionCallNode(
 					this.newSource("function call " + pthread_pool_create_function, CivlcTokenConstant.CALL),
-					this.identifierExpression(pthread_pool_create_function), pthreadPoolCreateArgs, null);
+					this.identifierExpression(pthread_pool_create_function), pthreadPoolCreateArgs);
 			return this.variableDeclaration(PTHREAD_POOL, pthreadPoolType, pthreadPoolCreate);
 		} else
 			return this.variableDeclaration(PTHREAD_POOL, pthreadPoolType);
@@ -561,13 +561,10 @@ public class Pthread2CIVLWorker extends BaseWorker {
 					nodeFactory.newPointerTypeNode(this.newSource("type void *", CivlcTokenConstant.TYPE),
 							this.voidType()),
 					this.integerConstant(0));
-			FunctionCallNode newPthreadExit = nodeFactory
-					.newFunctionCallNode(this.newSource("function call " + pthread_exit_name, CivlcTokenConstant.CALL),
-							this.identifierExpression(pthread_exit_name),
-							Arrays.asList(nullNode,
-									this.identifierExpression(
-											this.newSource(PTHREAD_POOL, CivlcTokenConstant.IDENTIFIER), PTHREAD_POOL)),
-							null);
+			FunctionCallNode newPthreadExit = nodeFactory.newFunctionCallNode(
+					this.newSource("function call " + pthread_exit_name, CivlcTokenConstant.CALL),
+					this.identifierExpression(pthread_exit_name), Arrays.asList(nullNode, this.identifierExpression(
+							this.newSource(PTHREAD_POOL, CivlcTokenConstant.IDENTIFIER), PTHREAD_POOL)));
 			StatementNode pthreadExit = nodeFactory.newExpressionStatementNode(newPthreadExit);
 			function.getBody().addSequenceChild(pthreadExit);
 			process_pthread_exit(function, isMain);
@@ -721,13 +718,10 @@ public class Pthread2CIVLWorker extends BaseWorker {
 
 				if (isMain)
 					exitMainDone = true;
-				FunctionCallNode newPthreadExit = nodeFactory
-						.newFunctionCallNode(
-								this.newSource("function call of " + pthread_exit_name, CivlcTokenConstant.CALL),
-								this.identifierExpression(pthread_exit_name),
-								Arrays.asList(newExpr, this.identifierExpression(
-										this.newSource(PTHREAD_POOL, CivlcTokenConstant.IDENTIFIER), PTHREAD_POOL)),
-								null);
+				FunctionCallNode newPthreadExit = nodeFactory.newFunctionCallNode(
+						this.newSource("function call of " + pthread_exit_name, CivlcTokenConstant.CALL),
+						this.identifierExpression(pthread_exit_name), Arrays.asList(newExpr, this.identifierExpression(
+								this.newSource(PTHREAD_POOL, CivlcTokenConstant.IDENTIFIER), PTHREAD_POOL)));
 				StatementNode pthreadExit = nodeFactory.newExpressionStatementNode(newPthreadExit);
 
 				child.parent().setChild(child.childIndex(), pthreadExit);

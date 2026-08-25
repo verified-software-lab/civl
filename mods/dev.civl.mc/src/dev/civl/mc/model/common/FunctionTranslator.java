@@ -46,7 +46,6 @@ import dev.civl.abc.ast.node.IF.expression.CastNode;
 import dev.civl.abc.ast.node.IF.expression.CompoundLiteralNode;
 import dev.civl.abc.ast.node.IF.expression.ConstantNode;
 import dev.civl.abc.ast.node.IF.expression.ConstantNode.ConstantKind;
-import dev.civl.abc.ast.node.IF.expression.DerivativeExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.DotNode;
 import dev.civl.abc.ast.node.IF.expression.EnumerationConstantNode;
 import dev.civl.abc.ast.node.IF.expression.ExpressionNode;
@@ -88,7 +87,6 @@ import dev.civl.abc.ast.node.IF.statement.ReturnNode;
 import dev.civl.abc.ast.node.IF.statement.RunNode;
 import dev.civl.abc.ast.node.IF.statement.StatementNode;
 import dev.civl.abc.ast.node.IF.statement.SwitchNode;
-import dev.civl.abc.ast.node.IF.statement.UpdateNode;
 import dev.civl.abc.ast.node.IF.statement.WhenNode;
 import dev.civl.abc.ast.node.IF.type.ArrayTypeNode;
 import dev.civl.abc.ast.node.IF.type.EnumerationTypeNode;
@@ -121,7 +119,6 @@ import dev.civl.abc.token.IF.StringLiteral;
 import dev.civl.gmc.CommandLineException;
 import dev.civl.mc.config.IF.CIVLConfiguration;
 import dev.civl.mc.model.IF.AbstractFunction;
-import dev.civl.mc.model.IF.AccuracyAssumptionBuilder;
 import dev.civl.mc.model.IF.CIVLException;
 import dev.civl.mc.model.IF.CIVLFunction;
 import dev.civl.mc.model.IF.CIVLInternalException;
@@ -144,7 +141,6 @@ import dev.civl.mc.model.IF.expression.CompoundLiteralExpression.CIVLCompoundLit
 import dev.civl.mc.model.IF.expression.CompoundLiteralExpression.CIVLLiteralObject;
 import dev.civl.mc.model.IF.expression.Expression;
 import dev.civl.mc.model.IF.expression.FunctionIdentifierExpression;
-import dev.civl.mc.model.IF.expression.IntegerLiteralExpression;
 import dev.civl.mc.model.IF.expression.LHSExpression;
 import dev.civl.mc.model.IF.expression.LambdaExpression;
 import dev.civl.mc.model.IF.expression.LiteralExpression;
@@ -161,7 +157,6 @@ import dev.civl.mc.model.IF.statement.MallocStatement;
 import dev.civl.mc.model.IF.statement.NoopStatement;
 import dev.civl.mc.model.IF.statement.ReturnStatement;
 import dev.civl.mc.model.IF.statement.Statement;
-import dev.civl.mc.model.IF.statement.UpdateStatement;
 import dev.civl.mc.model.IF.type.CIVLArrayType;
 import dev.civl.mc.model.IF.type.CIVLCompleteArrayType;
 import dev.civl.mc.model.IF.type.CIVLCompleteDomainType;
@@ -198,8 +193,6 @@ public class FunctionTranslator {
 	private static final String PAR_FUNC_NAME = "_par_proc";
 
 	private static final String RUN_FUNC_NAME = "_run_proc";
-
-	private static final String UPDATE_FUNC_NAME = "_update_proc";
 
 	/* ************************** Instance Fields ************************** */
 
@@ -240,13 +233,6 @@ public class FunctionTranslator {
 	 */
 	private CIVLFunction function;
 
-	/**
-	 * The accuracy assumption builder, which performs Taylor expansions after
-	 * assumptions involving abstract functions.
-	 */
-	@SuppressWarnings("unused")
-	private AccuracyAssumptionBuilder accuracyAssumptionBuilder;
-
 	private CIVLConfiguration civlConfig;
 
 	/* **************************** Constructors *************************** */
@@ -274,7 +260,6 @@ public class FunctionTranslator {
 		this.functionBodyNode = bodyNode;
 		this.setFunction(function);
 		this.functionInfo = new FunctionInfo(function);
-		this.accuracyAssumptionBuilder = new CommonAccuracyAssumptionBuilder(modelFactory);
 		this.civlConfig = civlConfig;
 	}
 
@@ -302,7 +287,6 @@ public class FunctionTranslator {
 		this.typeFactory = modelFactory.typeFactory();
 		this.setFunction(function);
 		this.functionInfo = new FunctionInfo(function);
-		this.accuracyAssumptionBuilder = new CommonAccuracyAssumptionBuilder(modelFactory);
 		this.civlConfig = civlConfig;
 	}
 
@@ -503,9 +487,6 @@ public class FunctionTranslator {
 		case SWITCH:
 			result = translateSwitchNode(scope, (SwitchNode) statementNode);
 			break;
-		case UPDATE:
-			result = translateUpdateNodeNew(scope, (UpdateNode) statementNode);
-			break;
 		case WHEN:
 			result = translateWhenNode(scope, (WhenNode) statementNode);
 			break;
@@ -519,79 +500,6 @@ public class FunctionTranslator {
 			modelFactory.clearAnonFragment();
 		}
 		return result;
-	}
-
-	private Fragment translateUpdateNodeNew(Scope scope, UpdateNode update) {
-		CIVLSource source = modelFactory.sourceOf(update);
-		Expression collator = this.translateExpressionNode(update.getCollator(), scope, true);
-		FunctionCallNode funcCall = update.getFunctionCall();
-		CIVLSource udpateFuncSource = modelFactory.sourceOf(funcCall);
-		CallOrSpawnStatement call = (CallOrSpawnStatement) this
-				.translateFunctionCallNodeAsExpressionWithnoLHS(scope, update.getFunctionCall(), udpateFuncSource)
-				.uniqueFinalStatement();
-		CIVLFunction updateFunc;
-		Location location = modelFactory.location(source, scope);
-		CIVLSource updateFuncStartSource = modelFactory.sourceOfBeginning(funcCall),
-				updateFuncEndSource = modelFactory.sourceOfEnd(funcCall);
-		UpdateStatement updateStatement;
-		CIVLFunction function = call.function();
-		Expression[] actualParameters;
-		String NAME = "_arg";
-		List<Expression> oldParameters = call.arguments();
-		int numParameters = oldParameters.size();
-
-		actualParameters = new Expression[numParameters];
-		for (int i = 0; i < numParameters; i++)
-			actualParameters[i] = oldParameters.get(i);
-		if (function == null || function.isSystemFunction()) {
-			// needs transformation
-			Scope parameterScope = this.modelFactory.scope(udpateFuncSource, scope, new ArrayList<>(0), null);
-			List<Variable> procFuncParameters = new ArrayList<>(0);
-			List<Expression> arguments = new ArrayList<>();
-			// if (function != null) {
-
-			procFuncParameters = new ArrayList<>(numParameters);
-			for (int i = 0; i < numParameters; i++) {
-				Expression oldParameter = oldParameters.get(i);
-				Variable parameter = modelFactory.variable(oldParameter.getSource(), oldParameter.getExpressionType(),
-						modelFactory.identifier(oldParameter.getSource(), NAME + i), i + 1);
-
-				procFuncParameters.add(parameter);
-				parameterScope.addVariable(parameter);
-				arguments.add(modelFactory.variableExpression(parameter.getSource(), parameter));
-			}
-			// }
-			updateFunc = modelFactory.function(udpateFuncSource, false,
-					modelFactory.identifier(updateFuncStartSource,
-							UPDATE_FUNC_NAME + modelBuilder.runProcFunctions.size()),
-					parameterScope, procFuncParameters, typeFactory.voidType(), scope, null);
-			scope.addFunction(updateFunc);
-			parameterScope.setFunction(updateFunc);
-
-			// complete function body
-			// modelBuilder.runProcFunctions.put(updateFunc, update.getBody());
-
-			Scope updateFuncBodyScope = modelFactory.scope(updateFuncStartSource, parameterScope, new ArrayList<>(0),
-					updateFunc);
-			Location updateFuncStart = modelFactory.location(updateFuncStartSource, parameterScope);
-			Location updateFuncReturn = modelFactory.location(updateFuncEndSource, updateFuncBodyScope);
-			Fragment returnFragment;
-
-			updateFunc.addLocation(updateFuncStart);
-			updateFunc.addLocation(updateFuncReturn);
-			updateFunc.setStartLocation(updateFuncStart);
-			call.setSource(updateFuncStart);
-			call.setArguments(arguments);
-			call.setTarget(updateFuncReturn);
-			returnFragment = modelFactory.returnFragment(updateFuncEndSource, updateFuncReturn, null, updateFunc);
-			updateFunc.addStatement(call);
-			updateFunc.addStatement(returnFragment.uniqueFinalStatement());
-			modelBuilder.runProcFunctions.put(updateFunc, null);
-			function = updateFunc;
-		}
-		updateStatement = modelFactory.updateStatement(updateFuncEndSource, location, null, collator, function,
-				actualParameters);
-		return new CommonFragment(updateStatement);
 	}
 
 	private Fragment translateParForNode(Scope scope, CivlForNode civlForNode) {
@@ -2284,7 +2192,7 @@ public class FunctionTranslator {
 						identifierSource);
 			result.setStateFunction(node.hasStatefFunctionSpecifier());
 			result.setPureFunction(node.hasPureFunctionSpecifier());
-			if (scope.getFunction(result.name()) == null)
+			if (scope.getFunction(result.name().name()) == null)
 				scope.addFunction(result);
 			parameterScope.setFunction(result);
 			modelBuilder.functionMap.put(entity, result);
@@ -2533,7 +2441,6 @@ public class FunctionTranslator {
 			Scope parameterScope, ArrayList<Variable> parameters, Identifier functionIdentifier,
 			FunctionType functionType, CIVLType returnType, CIVLSource functionSource) {
 		AbstractFunctionDefinitionNode absFunNode = (AbstractFunctionDefinitionNode) node;
-		int continuity = absFunNode.continuity();
 		String attr = null;
 
 		if (absFunNode.getAttribute() != null) {
@@ -2548,7 +2455,7 @@ public class FunctionTranslator {
 							+ "It can be declared as an unconstrained input variable instead, e.g.\n" + "$input int N;",
 					node.getSource());
 		return modelFactory.abstractFunction(functionSource, functionIdentifier, parameterScope, parameters, returnType,
-				scope, continuity, attr);
+				scope, attr);
 	}
 
 	/**
@@ -3035,7 +2942,8 @@ public class FunctionTranslator {
 			if (typeNode.isConstQualified())
 				variable.setConst(true);
 
-			Variable searchVar = scope.contains(variable);
+			// the following looks in scope only (not ancestors):
+			Variable searchVar = scope.getMatch(variable);
 			if (searchVar != null)
 				return new Pair<>(searchVar, Boolean.valueOf(true));
 
@@ -3631,9 +3539,6 @@ public class FunctionTranslator {
 		case CONSTANT:
 			result = translateConstantNode(scope, (ConstantNode) expressionNode);
 			break;
-		case DERIVATIVE_EXPRESSION:
-			result = translateDerivativeExpressionNode((DerivativeExpressionNode) expressionNode, scope);
-			break;
 		case DOT:
 			result = translateDotNode((DotNode) expressionNode, scope);
 			break;
@@ -3655,12 +3560,6 @@ public class FunctionTranslator {
 		case SCOPEOF:
 			result = translateScopeofNode((ScopeOfNode) expressionNode, scope);
 			break;
-		// TODO: check this, but this case does not exist, it is handled
-		// as a constant expression:
-		// case SELF:
-		// result = modelFactory.selfExpression(modelFactory
-		// .sourceOf(expressionNode));
-		// break;
 		case SIZEOF:
 			result = translateSizeofNode((SizeofNode) expressionNode, scope);
 			break;
@@ -4081,49 +3980,6 @@ public class FunctionTranslator {
 		return modelFactory.scopeofExpression(source, (LHSExpression) argument);
 	}
 
-	private Expression translateDerivativeExpressionNode(DerivativeExpressionNode node, Scope scope) {
-		Expression result;
-		ExpressionNode functionExpression = node.getFunction();
-		Function callee;
-		CIVLFunction abstractFunction;
-		List<Pair<Variable, IntegerLiteralExpression>> partials = new ArrayList<Pair<Variable, IntegerLiteralExpression>>();
-		List<Expression> arguments = new ArrayList<Expression>();
-
-		if (functionExpression instanceof IdentifierExpressionNode) {
-			callee = (Function) ((IdentifierExpressionNode) functionExpression).getIdentifier().getEntity();
-		} else
-			throw new CIVLUnimplementedFeatureException(
-					"Function call must use identifier for now: " + functionExpression.getSource());
-		abstractFunction = modelBuilder.functionMap.get(callee);
-		assert abstractFunction != null;
-		assert abstractFunction instanceof AbstractFunction;
-		for (int i = 0; i < node.getNumberOfPartials(); i++) {
-			PairNode<IdentifierExpressionNode, IntegerConstantNode> partialNode = node.getPartial(i);
-			Variable partialVariable = null;
-			IntegerLiteralExpression partialDegree;
-
-			for (Variable param : abstractFunction.parameters()) {
-				if (param.name().name().equals(partialNode.getLeft().getIdentifier().name())) {
-					partialVariable = param;
-					break;
-				}
-			}
-			assert partialVariable != null;
-			partialDegree = modelFactory.integerLiteralExpression(modelFactory.sourceOf(partialNode.getRight()),
-					partialNode.getRight().getConstantValue().getIntegerValue());
-			partials.add(new Pair<Variable, IntegerLiteralExpression>(partialVariable, partialDegree));
-		}
-		for (int i = 0; i < node.getNumberOfArguments(); i++) {
-			Expression actual = translateExpressionNode(node.getArgument(i), scope, true);
-
-			actual = arrayToPointer(actual);
-			arguments.add(actual);
-		}
-		result = modelFactory.derivativeCallExpression(modelFactory.sourceOf(node), (AbstractFunction) abstractFunction,
-				partials, arguments);
-		return result;
-	}
-
 	/**
 	 * A function call used as an expression. At present, this should only happen
 	 * when the function is an abstract function.
@@ -4188,12 +4044,12 @@ public class FunctionTranslator {
 
 		if (boundVariable != null) {
 			result = modelFactory.boundVariableExpression(source, name, boundVariable.type());
-		} else if (scope.variable(name) != null) {
-			VariableExpression varExpression = modelFactory.variableExpression(source, scope.variable(name));
+		} else if (scope.seekVariable(name) != null) {
+			VariableExpression varExpression = modelFactory.variableExpression(source, scope.seekVariable(name));
 
 			result = varExpression;
-		} else if (scope.getFunction(name) != null) {
-			result = modelFactory.functionIdentifierExpression(source, scope.getFunction(name));
+		} else if (scope.seekFunction(name) != null) {
+			result = modelFactory.functionIdentifierExpression(source, scope.seekFunction(name));
 		} else {
 			throw new CIVLInternalException("Can't find declaration of variable " + name, source);
 		}
@@ -4555,9 +4411,6 @@ public class FunctionTranslator {
 			break;
 		case FORALL:
 			quantifier = Quantifier.FORALL;
-			break;
-		case UNIFORM:
-			quantifier = Quantifier.UNIFORM;
 			break;
 		default:
 			throw new CIVLUnimplementedFeatureException("quantifier " + quantifiedNode.quantifier(), source);

@@ -20,25 +20,24 @@ public interface FunctionCallNode extends ExpressionNode {
 	/**
 	 * The function being called.
 	 * 
-	 * @return the expression of function type which evaluates to the function
-	 *         being called; the most common case is an identifier expression
-	 *         giving the name of a function
+	 * @return the expression of function type which evaluates to the function being
+	 *         called; the most common case is an identifier expression giving the
+	 *         name of a function
 	 */
 	ExpressionNode getFunction();
 
 	/**
 	 * Sets the value returned by {@link #getFunction()}.
 	 * 
-	 * @param function
-	 *            the expression of function type which evaluates to the
-	 *            function being called; the most common case is an identifier
-	 *            expression giving the name of a function
+	 * @param function the expression of function type which evaluates to the
+	 *                 function being called; the most common case is an identifier
+	 *                 expression giving the name of a function
 	 */
 	void setFunction(ExpressionNode function);
 
 	/**
-	 * Returns the number of actual execution context arguments occurring in
-	 * this function call.
+	 * Returns the number of actual execution context arguments occurring in this
+	 * function call.
 	 * 
 	 * @return the number of actual execution context arguments
 	 */
@@ -59,8 +58,8 @@ public interface FunctionCallNode extends ExpressionNode {
 	ExpressionNode getContextArgument(int index);
 
 	/**
-	 * Returns the arguments of this function call node, which is a sequence
-	 * node of expressions.
+	 * Returns the arguments of this function call node, which is a sequence node of
+	 * expressions.
 	 * 
 	 * @return the arguments of this function call node
 	 */
@@ -76,21 +75,17 @@ public interface FunctionCallNode extends ExpressionNode {
 	/**
 	 * Sets the index-th execution context argument.
 	 * 
-	 * @param index
-	 *            nonnegative integer
-	 * @param value
-	 *            expression node to use as index-th actual execution context
-	 *            argument
+	 * @param index nonnegative integer
+	 * @param value expression node to use as index-th actual execution context
+	 *              argument
 	 */
 	void setContextArgument(int index, ExpressionNode value);
 
 	/**
 	 * Sets the index-th argument.
 	 * 
-	 * @param index
-	 *            nonnegative integer
-	 * @param value
-	 *            expression node to use as index-th actual argument
+	 * @param index nonnegative integer
+	 * @param value expression node to use as index-th actual argument
 	 */
 	void setArgument(int index, ExpressionNode value);
 
@@ -98,35 +93,18 @@ public interface FunctionCallNode extends ExpressionNode {
 	FunctionCallNode copy();
 
 	/**
-	 * Returns the actual scope parameter names used when instantiating a
-	 * scope-generic functions, as in
+	 * Updates the actual execution context parameters of the function call node.
 	 * 
-	 * <code>
-	 * f<s1,s2>(...)
-	 * </code>
-	 * 
-	 * This will be deprecated soon.
-	 * 
-	 * @return the scope parameters
-	 */
-	SequenceNode<ExpressionNode> getScopeList();
-
-	/**
-	 * Updates the actual execution context parameters of the function call
-	 * node.
-	 * 
-	 * @param arguments
-	 *            The actual execution context parameters to be used to update
-	 *            the function call node.
+	 * @param arguments The actual execution context parameters to be used to update
+	 *                  the function call node.
 	 */
 	void setContextArguments(SequenceNode<ExpressionNode> arguments);
 
 	/**
 	 * Updates the actual parameters of the function call node.
 	 * 
-	 * @param arguments
-	 *            The actual parameters to be used to update the function call
-	 *            node.
+	 * @param arguments The actual parameters to be used to update the function call
+	 *                  node.
 	 */
 	void setArguments(SequenceNode<ExpressionNode> arguments);
 

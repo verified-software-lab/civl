@@ -281,12 +281,21 @@ public interface ASTNode {
 	Iterable<ASTNode> children();
 
 	/**
-	 * Returns a deep copy of this AST node. The node and all of its descendants
+	 * Constructs a deep copy of this AST node. The node and all of its descendants
 	 * will be cloned. The cloning does not copy analysis or attribute information.
 	 * 
 	 * @return deep copy of this node
 	 */
 	ASTNode copy();
+
+	/**
+	 * Constructs a deep copy of this AST node, similar to {@link #copy()}, but also
+	 * copies the type information on expression node, i.e., the initial type and
+	 * the conversion sequence.
+	 * 
+	 * @return deep copy of this node with type information
+	 */
+	ASTNode copyWithTypes();
 
 	/**
 	 * Returns the attribute value associated to the given key, or <code>null</code>

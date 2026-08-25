@@ -14,17 +14,22 @@ import dev.civl.abc.ast.node.IF.compound.LiteralObject;
 import dev.civl.abc.ast.node.IF.compound.ScalarLiteralObject;
 import dev.civl.abc.ast.node.IF.declaration.InitializerNode;
 import dev.civl.abc.ast.node.IF.declaration.VariableDeclarationNode;
+import dev.civl.abc.ast.node.IF.expression.CharacterConstantNode;
 import dev.civl.abc.ast.node.IF.expression.ConstantNode;
 import dev.civl.abc.ast.node.IF.expression.ExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.ExpressionNode.ExpressionKind;
+import dev.civl.abc.ast.node.IF.expression.IntegerConstantNode;
+import dev.civl.abc.ast.node.IF.expression.OperatorNode;
 import dev.civl.abc.ast.node.IF.expression.OperatorNode.Operator;
 import dev.civl.abc.ast.node.IF.expression.StringLiteralNode;
 import dev.civl.abc.ast.node.IF.statement.BlockItemNode;
 import dev.civl.abc.ast.node.IF.statement.DeclarationListNode;
 import dev.civl.abc.ast.node.IF.statement.StatementNode;
+import dev.civl.abc.ast.node.IF.type.BasicTypeNode;
 import dev.civl.abc.ast.node.IF.type.TypeNode;
 import dev.civl.abc.ast.type.IF.ArrayType;
 import dev.civl.abc.ast.type.IF.Field;
+import dev.civl.abc.ast.type.IF.IntegerType;
 import dev.civl.abc.ast.type.IF.QualifiedObjectType;
 import dev.civl.abc.ast.type.IF.StandardBasicType.BasicTypeKind;
 import dev.civl.abc.ast.type.IF.StandardSignedIntegerType.SignedIntKind;
@@ -105,6 +110,10 @@ public class StringOrCompoundInitializerTranslateWorker {
 
 	private NodeFactory nodeFactory;
 
+	private TypeFactory typeFactory;
+
+	private IntegerType intType;
+
 	private BiFunction<Source, Type, VariableDeclarationNode> tmpVarCreator;
 
 	private BiFunction<Source, Type, TypeNode> typeNodeCreator;
@@ -114,9 +123,10 @@ public class StringOrCompoundInitializerTranslateWorker {
 	// constructor
 	StringOrCompoundInitializerTranslateWorker(NodeFactory nodeFactory,
 			BiFunction<Source, Type, VariableDeclarationNode> tmpVarCreator,
-			BiFunction<Source, Type, TypeNode> typeNodeCreator,
-			Language language) {
+			BiFunction<Source, Type, TypeNode> typeNodeCreator, Language language) {
 		this.nodeFactory = nodeFactory;
+		this.typeFactory = nodeFactory.typeFactory();
+		this.intType = typeFactory.signedIntegerType(SignedIntKind.INT);
 		this.tmpVarCreator = tmpVarCreator;
 		this.typeNodeCreator = typeNodeCreator;
 		this.language = language;
@@ -125,21 +135,18 @@ public class StringOrCompoundInitializerTranslateWorker {
 	/**
 	 * <p>
 	 * translates a {@link CompoundInitializerNode} and an expression, which
-	 * represents the object that is associated to the compound initializer, to
-	 * a sequence of assignments. Note that the assignments are NOT guaranteed
+	 * represents the object that is associated to the compound initializer, to a
+	 * sequence of assignments. Note that the assignments are NOT guaranteed
 	 * side-effect free.
 	 * </p>
 	 * 
-	 * @param compound
-	 *                     a compound initializer
-	 * @param objExpr
-	 *                     an expression that represents the object that will be
-	 *                     initialized by the compound initializer
+	 * @param compound a compound initializer
+	 * @param objExpr  an expression that represents the object that will be
+	 *                 initialized by the compound initializer
 	 * @return a list of assignments which deliver the same functionality as the
 	 *         compound initializer
 	 */
-	List<BlockItemNode> translateCompoundInitializer(
-			CompoundInitializerNode compound, ExpressionNode objExpr) {
+	List<BlockItemNode> translateCompoundInitializer(CompoundInitializerNode compound, ExpressionNode objExpr) {
 		LiteralObject lt = compound.getLiteralObject();
 
 		return translateInitializerWorker(objExpr, lt);
@@ -147,42 +154,36 @@ public class StringOrCompoundInitializerTranslateWorker {
 
 	/**
 	 * <p>
-	 * Given an char array expression and a string literal, translates the
-	 * string literal to a sequence of assignments to the array. Note that the
-	 * assignments are NOT guaranteed side-effect free.
+	 * Given an char array expression and a string literal, translates the string
+	 * literal to a sequence of assignments to the array. Note that the assignments
+	 * are NOT guaranteed side-effect free.
 	 * </p>
 	 * 
 	 * <p>
 	 * Assuming the array has assigned default value '0's
 	 * </p>
 	 * 
-	 * @param stringLit
-	 *                      a string literal node
-	 * @param lhs
-	 *                      an expression node of array of char type
+	 * @param stringLit a string literal node
+	 * @param lhs       an expression node of array of char type
 	 * @return a list of assignment expressions
 	 */
-	List<BlockItemNode> translateStringLiteralInitializer(
-			StringLiteralNode stringLitNode, ExpressionNode lhs) {
+	List<BlockItemNode> translateStringLiteralInitializer(StringLiteralNode stringLitNode, ExpressionNode lhs) {
 		StringValue strVal = stringLitNode.getConstantValue();
 		StringLiteral strLit = strVal.getLiteral();
 
-		return translateStringLiteralInitializerWorker(lhs,
-				stringLitNode.getType(), strLit, stringLitNode.getSource());
+		return translateStringLiteralInitializerWorker(lhs, stringLitNode.getType(), strLit, stringLitNode.getSource());
 	}
 
 	/**
 	 * Translates the initialization 'lhs = litObj' to a sequence of scalar-level
-	 * assignments,
-	 * breaking CompoundInitializers down to scalar-level.
+	 * assignments, breaking CompoundInitializers down to scalar-level.
 	 * 
 	 * @param lhs    the left-hand side of the initialization
 	 * @param litObj the {@link LiteralObject} representing the initializer value
 	 * @return a sequence of scalar-level assignments that is equivalent to the
 	 *         original initialization.
 	 */
-	private List<BlockItemNode> translateInitializerWorker(ExpressionNode lhs,
-			LiteralObject litObj) {
+	private List<BlockItemNode> translateInitializerWorker(ExpressionNode lhs, LiteralObject litObj) {
 		ArrayList<Pair<ArrayList<AccessPathNode>, ExpressionNode>> pairs = getAsAccessPathExpressionPairs(litObj);
 		List<BlockItemNode> result = new ArrayList<>(pairs.size());
 
@@ -194,7 +195,6 @@ public class StringOrCompoundInitializerTranslateWorker {
 
 			for (AccessPathNode apNode : accessPath) {
 				Pair<ExpressionNode, Type> lhsSubObjAndType = applyAccessPathNode(lhsSubObj, lhsSubObjType, apNode);
-
 				// Note that applyAccessPathNode-returned ExpressionNodes may have getType() be
 				// null.
 				lhsSubObj = lhsSubObjAndType.left;
@@ -205,7 +205,6 @@ public class StringOrCompoundInitializerTranslateWorker {
 
 			if (init.expressionKind() == ExpressionKind.CONSTANT) {
 				Value val = ((ConstantNode) init).getConstantValue();
-
 				// if (val != null && val.getType().kind() == TypeKind.BASIC)
 				// if (val.isZero() == Answer.YES)
 				// return results; [disagree --sfs]
@@ -213,13 +212,14 @@ public class StringOrCompoundInitializerTranslateWorker {
 					initAsStringLiteral = ((StringValue) val).getLiteral();
 			}
 			if (initAsStringLiteral != null)
-				result.addAll(translateStringLiteralInitializerWorker(lhsSubObj.copy(),
-						lhsSubObjType, initAsStringLiteral,
-						init.getSource()));
-			else
-				result.add(nodeFactory.newExpressionStatementNode(
-						nodeFactory.newOperatorNode(init.getSource(),
-								Operator.ASSIGN, lhsSubObj.copy(), init.copy())));
+				result.addAll(translateStringLiteralInitializerWorker(lhsSubObj.copyWithTypes(), lhsSubObjType,
+						initAsStringLiteral, init.getSource()));
+			else {
+				OperatorNode assignNode = nodeFactory.newOperatorNode(init.getSource(), Operator.ASSIGN,
+						lhsSubObj.copyWithTypes(), init.copyWithTypes());
+				assignNode.setInitialType(lhsSubObjType);
+				result.add(nodeFactory.newExpressionStatementNode(assignNode));
+			}
 		}
 		return result;
 	}
@@ -241,9 +241,8 @@ public class StringOrCompoundInitializerTranslateWorker {
 		return result;
 	}
 
-	static private void getAsAccessPathExpressionPairsWorker(
-			LiteralObject litObj, ArrayList<Pair<ArrayList<AccessPathNode>, ExpressionNode>> result,
-			ArrayList<AccessPathNode> currentAP) {
+	static private void getAsAccessPathExpressionPairsWorker(LiteralObject litObj,
+			ArrayList<Pair<ArrayList<AccessPathNode>, ExpressionNode>> result, ArrayList<AccessPathNode> currentAP) {
 		if (litObj instanceof CompoundLiteralObject) {
 			// compound:
 			CompoundLiteralObject cLitObj = (CompoundLiteralObject) litObj;
@@ -255,8 +254,7 @@ public class StringOrCompoundInitializerTranslateWorker {
 					var ap = new ArrayList<>(currentAP);
 
 					ap.add(new AccessPathNode(i));
-					getAsAccessPathExpressionPairsWorker(cLitObj.get(i), result,
-							ap);
+					getAsAccessPathExpressionPairsWorker(cLitObj.get(i), result, ap);
 				}
 			} else if (type.kind() == TypeKind.STRUCTURE_OR_UNION) {
 				StructureOrUnionType sType = (StructureOrUnionType) type;
@@ -279,42 +277,39 @@ public class StringOrCompoundInitializerTranslateWorker {
 			}
 		} else {
 			// scalar (including $domain type):
-			result.add(new Pair<>(currentAP, ((ScalarLiteralObject) litObj)
-					.getExpression()));
+			result.add(new Pair<>(currentAP, ((ScalarLiteralObject) litObj).getExpression()));
 		}
 	}
 
 	/**
 	 * Applies an {@link AccessPathNode} to a base expression and generates a new
-	 * AST node represening a sub-object of the base referred by the AccessPathNode.
+	 * AST node representing a sub-object of the base referred by the
+	 * AccessPathNode.
 	 * 
-	 * @param base     the ASTNode represening the base expression
+	 * @param base     the ASTNode representing the base expression
 	 * @param baseType the Type of the base expression (since the base expression is
 	 *                 not required to be an original node in AST, the node itself
 	 *                 may not carry the type)
-	 * @param apNode  the {@link AccessPathNode}
+	 * @param apNode   the {@link AccessPathNode}
 	 */
-	private Pair<ExpressionNode, Type> applyAccessPathNode(ExpressionNode base, Type baseType,
-			AccessPathNode apNode) {
+	private Pair<ExpressionNode, Type> applyAccessPathNode(ExpressionNode base, Type baseType, AccessPathNode apNode) {
 		Source source = base.getSource();
-
 		if (apNode.operator() == AccessPathNode.Operator.DOT) {
 			Field field = apNode.field();
-
 			baseType = field.getType();
 			if (field.isAnonymous())
 				return new Pair<>(base, baseType);
-			base = nodeFactory.newDotNode(source, base.copy(),
-					nodeFactory.newIdentifierNode(source,
-							field.getName()));
+			base = nodeFactory.newDotNode(source, base.copyWithTypes(),
+					nodeFactory.newIdentifierNode(source, field.getName()));
 		} else {
-			base = nodeFactory.newOperatorNode(source,
-					Operator.SUBSCRIPT, base.copy(),
-					nodeFactory.newIntConstantNode(source, apNode.arrayIndex()));
+			IntegerConstantNode idxNode = nodeFactory.newIntConstantNode(source, apNode.arrayIndex());
+			idxNode.setInitialType(intType);
+			base = nodeFactory.newOperatorNode(source, Operator.SUBSCRIPT, base.copyWithTypes(), idxNode);
 			baseType = baseType.ignoreQualifiersAtomic();
 			assert baseType.kind() == TypeKind.ARRAY;
 			baseType = ((ArrayType) baseType).getElementType();
 		}
+		base.setInitialType(baseType);
 		return new Pair<>(base, baseType);
 	}
 
@@ -323,46 +318,38 @@ public class StringOrCompoundInitializerTranslateWorker {
 	 * Translates a string literal initialization. There are two cases:
 	 * <ul>
 	 * <li>If the initialization has the form:
-	 * <code>char * obj = string-literal</code>, the translation will be as
-	 * follows: <code>
+	 * <code>char * obj = string-literal</code>, the translation will be as follows:
+	 * <code>
 	 * char tmp[size(string-literal)];
 	 * 
 	 * // replacing "obj" with tmp then recursively call this method ...
 	 * obj = tmp;
 	 * </code></li>
 	 * <li>If the initialization has the form:
-	 * <code>char obj[c] = string-literal</code>, where <code>c</code> is either
-	 * a fixed length or absent, the translation will be as follows: <code>
+	 * <code>char obj[c] = string-literal</code>, where <code>c</code> is either a
+	 * fixed length or absent, the translation will be as follows: <code>
 	 * obj[0] = string-literal[0];
 	 * obj[1] = string-literal[1];
 	 * ...
-	 * </code>, where <code>string-literal[i]</code> means the i-th character in
-	 * the given string literal.</li>
+	 * </code>, where <code>string-literal[i]</code> means the i-th character in the
+	 * given string literal.</li>
 	 * </ul>
 	 * 
 	 * </p>
 	 * 
-	 * @param obj
-	 *                              the object that will be initialized, suppose
-	 *                              to either have array-of-char type or
-	 *                              pointer-to-char type but this node may not
-	 *                              have been assigned type
-	 * @param stringLiteralType
-	 *                              the type of the string literal expression
-	 *                              node. The type of this expression after
-	 *                              applying all conversions reflects the type
-	 *                              of the "obj"
-	 * @param strlit
-	 *                              the {@link StringLiteral} value of the
-	 *                              string literal expression
-	 * @param strLitSource
-	 *                              the {@link Source} of the string literal
-	 *                              expression
+	 * @param obj               the object that will be initialized, suppose to
+	 *                          either have array-of-char type or pointer-to-char
+	 *                          type but this node may not have been assigned type
+	 * @param stringLiteralType the type of the string literal expression node. The
+	 *                          type of this expression after applying all
+	 *                          conversions reflects the type of the "obj"
+	 * @param strlit            the {@link StringLiteral} value of the string
+	 *                          literal expression
+	 * @param strLitSource      the {@link Source} of the string literal expression
 	 * @return a list of translated statements
 	 */
-	private List<BlockItemNode> translateStringLiteralInitializerWorker(
-			ExpressionNode obj, Type stringLiteralType, StringLiteral strlit,
-			Source strLitSource) {
+	private List<BlockItemNode> translateStringLiteralInitializerWorker(ExpressionNode obj, Type stringLiteralType,
+			StringLiteral strlit, Source strLitSource) {
 		List<BlockItemNode> results = new LinkedList<>();
 		ExpressionNode newInit;
 
@@ -370,39 +357,39 @@ public class StringOrCompoundInitializerTranslateWorker {
 		// object reflects whether the object has array-of-char type or
 		// pointer-to-char type:
 		if (stringLiteralType.isScalar()) {
-			TypeFactory tf = nodeFactory.typeFactory();
-			ArrayType charArrayType = tf.arrayType(
-					tf.basicType(BasicTypeKind.CHAR),
-					nodeFactory.getValueFactory().integerValue(
-							tf.signedIntegerType(SignedIntKind.INT),
-							strlit.getNumCharacters()));
+			ArrayType charArrayType = typeFactory.arrayType(typeFactory.basicType(BasicTypeKind.CHAR),
+					nodeFactory.getValueFactory().integerValue(intType, strlit.getNumCharacters()));
 			// TODO: this temp var needs to go global!
-			VariableDeclarationNode tmpVarDecl = tmpVarCreator
-					.apply(strLitSource, charArrayType);
-
+			VariableDeclarationNode tmpVarDecl = tmpVarCreator.apply(strLitSource, charArrayType);
 			results.add(tmpVarDecl);
-			newInit = nodeFactory.newIdentifierExpressionNode(strLitSource,
-					tmpVarDecl.getIdentifier().copy());
-			results.addAll(translateStringLiteralInitializerWorker(newInit,
-					charArrayType, strlit, strLitSource));
-			results.add(nodeFactory.newExpressionStatementNode(
-					nodeFactory.newOperatorNode(newInit.getSource(),
-							Operator.ASSIGN, obj.copy(), newInit.copy())));
+			newInit = nodeFactory.newIdentifierExpressionNode(strLitSource, tmpVarDecl.getIdentifier().copy());
+			newInit.setInitialType(charArrayType);
+			results.addAll(translateStringLiteralInitializerWorker(newInit, charArrayType, strlit, strLitSource));
+			OperatorNode assignNode = nodeFactory.newOperatorNode(newInit.getSource(), Operator.ASSIGN,
+					obj.copyWithTypes(), newInit.copyWithTypes());
+
+			assignNode.setInitialType(obj.getType());
+			results.add(nodeFactory.newExpressionStatementNode(assignNode));
 		} else {
+
+			// TODO: LEFT OFF HERE FILLING IN TYPES
+
 			assert stringLiteralType.kind() == TypeKind.ARRAY;
+			Type charType = ((ArrayType) stringLiteralType).getElementType();
 			StringLiteral strLit = strlit;
 			int size = strLit.getNumCharacters();
 
 			for (int i = 0; i < size; i++) {
-				ExpressionNode subObj = nodeFactory.newOperatorNode(
-						strLitSource, Operator.SUBSCRIPT, obj.copy(),
-						nodeFactory.newIntConstantNode(strLitSource, i));
-
-				newInit = nodeFactory.newOperatorNode(strLitSource,
-						Operator.ASSIGN, subObj,
-						nodeFactory.newCharacterConstantNode(strLitSource,
-								strLit.getCharacter(i).rawString(),
-								strLit.getCharacter(i)));
+				IntegerConstantNode idxNode = nodeFactory.newIntConstantNode(strLitSource, i);
+				idxNode.setInitialType(intType);
+				ExpressionNode subObj = nodeFactory.newOperatorNode(strLitSource, Operator.SUBSCRIPT,
+						obj.copyWithTypes(), idxNode);
+				subObj.setInitialType(charType);
+				CharacterConstantNode charNode = nodeFactory.newCharacterConstantNode(strLitSource,
+						strLit.getCharacter(i).rawString(), strLit.getCharacter(i));
+				charNode.setInitialType(charType);
+				newInit = nodeFactory.newOperatorNode(strLitSource, Operator.ASSIGN, subObj, charNode);
+				newInit.setInitialType(charType);
 				results.add(nodeFactory.newExpressionStatementNode(newInit));
 			}
 		}
@@ -415,13 +402,11 @@ public class StringOrCompoundInitializerTranslateWorker {
 	 * Assigns a default value to an object as if the object has static storage
 	 * </p>
 	 * 
-	 * @param obj
-	 *                    the object that will be assigned
-	 * @param objType
-	 *                    the type of the object
+	 * @param obj     the object that will be assigned
+	 * @param objType the type of the object
 	 * @return a triple that either 1) only contains "after" statements (i.e. no
-	 *         expression, no before statements); 2) before statements,
-	 *         translated initializer and after statements.
+	 *         expression, no before statements); 2) before statements, translated
+	 *         initializer and after statements.
 	 */
 	ExprTriple defaultValues(ExpressionNode obj, Type objType) {
 		Source source = obj.getSource();
@@ -433,50 +418,43 @@ public class StringOrCompoundInitializerTranslateWorker {
 			return new ExprTriple(defaultValueOfScalarType(objType, source));
 		else {
 			if (objType.kind() == TypeKind.ARRAY)
-				return defaultValuesToArray(obj, (ArrayType) objType,
-						obj.getSource());
+				return defaultValuesToArray(obj, (ArrayType) objType, obj.getSource());
 			else if (objType.kind() == TypeKind.STRUCTURE_OR_UNION) {
 				ExprTriple result = new ExprTriple(null);
-
-				result.addAllAfter(defaultValuesToStructOrUnion(obj,
-						(StructureOrUnionType) objType));
+				result.addAllAfter(defaultValuesToStructOrUnion(obj, (StructureOrUnionType) objType));
 				return result;
 			} else {
 				TypeKind kind = objType.kind();
 
 				if (kind == TypeKind.DOMAIN || kind == TypeKind.RANGE) {
-					ConstantNode zero = nodeFactory.newIntConstantNode(source,
-							0);
-					ExpressionNode r = nodeFactory.newRegularRangeNode(source,
-							zero, zero.copy());
+					ConstantNode zero = nodeFactory.newIntConstantNode(source, 0);
+					zero.setInitialType(intType);
+					ExpressionNode r = nodeFactory.newRegularRangeNode(source, zero, zero.copyWithTypes());
+					r.setInitialType(typeFactory.rangeType());
 
 					if (kind == TypeKind.DOMAIN) {
 						List<PairNode<DesignationNode, InitializerNode>> initList = new LinkedList<>();
-						TypeNode domainTypeNode = nodeFactory
-								.newDomainTypeNode(source);
-
+						TypeNode domainTypeNode = nodeFactory.newDomainTypeNode(source);
 						initList.add(nodeFactory.newPairNode(source, null, r));
-						r = nodeFactory.newCompoundLiteralNode(source,
-								domainTypeNode,
-								nodeFactory.newCompoundInitializerNode(source,
-										initList));
+						r = nodeFactory.newCompoundLiteralNode(source, domainTypeNode,
+								nodeFactory.newCompoundInitializerNode(source, initList));
+						r.setInitialType(objType);
 					}
 					return new ExprTriple(r);
 				}
-				throw new ABCRuntimeException(
-						"Unexpected aggregate type kind: " + kind);
+				throw new ABCRuntimeException("Unexpected aggregate type kind: " + kind);
 			}
 		}
 	}
 
 	/**
 	 * <p>
-	 * This method returns two kinds of default values for arrays (as if the
-	 * arrays have static storage):
+	 * This method returns two kinds of default values for arrays (as if the arrays
+	 * have static storage):
 	 * <ul>
-	 * <li>If the current language is CIVL-C language, default values of arrays
-	 * are array lambdas, which can be used to initialize array with either
-	 * constant or variable length.</li>
+	 * <li>If the current language is CIVL-C language, default values of arrays are
+	 * array lambdas, which can be used to initialize array with either constant or
+	 * variable length.</li>
 	 * <li>Otherwise, to conform C11 standard, no initializer expression but a
 	 * sequence of assignments will be given for initialization of arrays with
 	 * constant length. Attempts to initialize variable size array will be
@@ -484,16 +462,13 @@ public class StringOrCompoundInitializerTranslateWorker {
 	 * </ul>
 	 * </p>
 	 *
-	 * @param array
-	 *                    an array object
-	 * @param arrType
-	 *                    the array type of the object
-	 * @return triple that contains an array lambda expression that is
-	 *         representing the default value with a sequence of "before"
-	 *         statements; no "after" statement.
+	 * @param array   an array object
+	 * @param arrType the array type of the object
+	 * @return triple that contains an array lambda expression that is representing
+	 *         the default value with a sequence of "before" statements; no "after"
+	 *         statement.
 	 */
-	private ExprTriple defaultValuesToArray(ExpressionNode arr,
-			ArrayType arrType, Source source) {
+	private ExprTriple defaultValuesToArray(ExpressionNode arr, ArrayType arrType, Source source) {
 		if (language == Language.CIVL_C)
 			return defaultValuesToArrayLambda(arrType, source);
 		else
@@ -504,8 +479,7 @@ public class StringOrCompoundInitializerTranslateWorker {
 	 * worker method of {@link #defaultValuesToArray(ArrayType, Source)} for
 	 * creating array lambda kind default value
 	 */
-	private ExprTriple defaultValuesToArrayLambda(ArrayType arrType,
-			Source source) {
+	private ExprTriple defaultValuesToArrayLambda(ArrayType arrType, Source source) {
 		ExprTriple result;
 		Type baseType = arrType;
 		ExpressionNode elementDefaultVal;
@@ -515,17 +489,17 @@ public class StringOrCompoundInitializerTranslateWorker {
 
 		for (int i = 0; i < dims; i++) {
 			baseType = ((ArrayType) baseType).getElementType();
-			varDecls.add(nodeFactory.newVariableDeclarationNode(source,
-					nodeFactory.newIdentifierNode(source, "i" + i),
-					nodeFactory.newBasicTypeNode(source, BasicTypeKind.INT)));
+			BasicTypeNode intTypeNode = nodeFactory.newBasicTypeNode(source, BasicTypeKind.INT);
+			intTypeNode.setType(intType);
+			varDecls.add(nodeFactory.newVariableDeclarationNode(source, nodeFactory.newIdentifierNode(source, "i" + i),
+					intTypeNode));
 		}
 		if (!baseType.isScalar()) {
-			VariableDeclarationNode tmpVar = tmpVarCreator.apply(source,
-					baseType);
+			VariableDeclarationNode tmpVar = tmpVarCreator.apply(source, baseType);
+			// tmpVarCreator sets the Type of the new type node
 			ExprTriple subResult;
-
-			elementDefaultVal = nodeFactory.newIdentifierExpressionNode(source,
-					tmpVar.getIdentifier().copy());
+			elementDefaultVal = nodeFactory.newIdentifierExpressionNode(source, tmpVar.getIdentifier().copy());
+			elementDefaultVal.setInitialType(baseType);
 			subResult = defaultValues(elementDefaultVal, baseType);
 			if (subResult != null) {
 				before.addAll(subResult.getBefore());
@@ -536,13 +510,11 @@ public class StringOrCompoundInitializerTranslateWorker {
 			} else
 				before.add(tmpVar);
 		} else
-			elementDefaultVal = defaultValueOfScalarType(
-					(UnqualifiedObjectType) baseType, source);
+			elementDefaultVal = defaultValueOfScalarType((UnqualifiedObjectType) baseType, source);
 
-		ExpressionNode arrLambda = nodeFactory.newArrayLambdaNode(source,
-				typeNodeCreator.apply(source, arrType), varDecls, null,
-				elementDefaultVal.copy());
-
+		ExpressionNode arrLambda = nodeFactory.newArrayLambdaNode(source, typeNodeCreator.apply(source, arrType),
+				varDecls, null, elementDefaultVal.copyWithTypes());
+		arrLambda.setInitialType(arrType);
 		result = new ExprTriple(arrLambda);
 		result.addAllBefore(before);
 		return result;
@@ -552,12 +524,10 @@ public class StringOrCompoundInitializerTranslateWorker {
 	 * worker method of {@link #defaultValuesToArray(ArrayType, Source)} for
 	 * creating default value strictly conforming C11 standard
 	 */
-	private ExprTriple defaultValuesToArrayStrict(ExpressionNode arr,
-			ArrayType arrType, Source source) {
-		assert !arrType.isVariableLengthArrayType()
-				: "Initializer cannot be used to initialize variable "
-						+ "length array in C language.\nNote that CIVL-C programs, "
-						+ "whose source files end with suffix \".cvl\", support such feature.";
+	private ExprTriple defaultValuesToArrayStrict(ExpressionNode arr, ArrayType arrType, Source source) {
+		assert !arrType.isVariableLengthArrayType() : "Initializer cannot be used to initialize variable "
+				+ "length array in C language.\nNote that CIVL-C programs, "
+				+ "whose source files end with suffix \".cvl\", support such feature.";
 		assert arrType.isComplete();
 
 		Type elementType = arrType.getElementType();
@@ -565,12 +535,11 @@ public class StringOrCompoundInitializerTranslateWorker {
 		List<BlockItemNode> result = new LinkedList<>();
 
 		if (!elementType.isScalar()) {
-			VariableDeclarationNode tmpVar = tmpVarCreator.apply(source,
-					elementType);
+			VariableDeclarationNode tmpVar = tmpVarCreator.apply(source, elementType);
 			ExprTriple subResult;
 
-			elementDefaultVal = nodeFactory.newIdentifierExpressionNode(source,
-					tmpVar.getIdentifier().copy());
+			elementDefaultVal = nodeFactory.newIdentifierExpressionNode(source, tmpVar.getIdentifier().copy());
+			elementDefaultVal.setInitialType(elementType);
 			subResult = defaultValues(elementDefaultVal, elementType);
 			assert subResult.getNode() == null;
 			assert subResult.getBefore().isEmpty();
@@ -578,40 +547,47 @@ public class StringOrCompoundInitializerTranslateWorker {
 			result.addAll(subResult.getAfter());
 		} else {
 			elementDefaultVal = nodeFactory.newIntConstantNode(source, 0);
+			elementDefaultVal.setInitialType(intType);
 		}
 
 		// make a for-loop to initialize the array:
 		int size = arrType.getConstantSize().getIntegerValue().intValueExact();
 		ExpressionNode sizeNode = nodeFactory.newIntConstantNode(source, size);
-		VariableDeclarationNode decl = tmpVarCreator.apply(source,
-				nodeFactory.typeFactory().basicType(BasicTypeKind.INT));
+		sizeNode.setInitialType(intType);
+		// TODO: should sizeNode have type size_t?
+		VariableDeclarationNode decl = tmpVarCreator.apply(source, intType);
 		List<VariableDeclarationNode> loopVarDecls = new LinkedList<>();
 		DeclarationListNode forLoopInit;
 		ExpressionNode forLoopCond, forLoopId, forLoopInc;
 		StatementNode forLoopBody;
 
-		decl.setInitializer(nodeFactory.newIntConstantNode(source, 0));
+		IntegerConstantNode zeroNode = nodeFactory.newIntConstantNode(source, 0);
+		zeroNode.setInitialType(intType);
+		decl.setInitializer(zeroNode);
 		loopVarDecls.add(decl);
-		forLoopId = nodeFactory.newIdentifierExpressionNode(source,
-				decl.getIdentifier().copy());
-		forLoopInit = nodeFactory.newForLoopInitializerNode(source,
-				loopVarDecls);
-		forLoopCond = nodeFactory.newOperatorNode(source, Operator.LT,
-				forLoopId, sizeNode);
-		forLoopInc = nodeFactory.newOperatorNode(source, Operator.PLUS,
-				forLoopId.copy(), nodeFactory.newIntConstantNode(source, 1));
-		forLoopInc = nodeFactory.newOperatorNode(source, Operator.ASSIGN,
-				forLoopId.copy(), forLoopInc);
-		forLoopBody = nodeFactory.newExpressionStatementNode(
-				nodeFactory.newOperatorNode(source, Operator.ASSIGN,
-						nodeFactory.newOperatorNode(source, Operator.SUBSCRIPT,
-								arr.copy(), forLoopId.copy()),
-						elementDefaultVal.copy()));
-		result.add(nodeFactory.newForLoopNode(source, forLoopInit, forLoopCond,
-				forLoopInc, forLoopBody, null));
+		forLoopId = nodeFactory.newIdentifierExpressionNode(source, decl.getIdentifier().copy());
+		forLoopId.setInitialType(intType);
+		forLoopInit = nodeFactory.newForLoopInitializerNode(source, loopVarDecls);
+		forLoopCond = nodeFactory.newOperatorNode(source, Operator.LT, forLoopId, sizeNode);
+		forLoopCond.setInitialType(intType);
+
+		IntegerConstantNode oneNode = nodeFactory.newIntConstantNode(source, 1);
+		oneNode.setInitialType(intType);
+		forLoopInc = nodeFactory.newOperatorNode(source, Operator.PLUS, forLoopId.copyWithTypes(), oneNode);
+		forLoopInc.setInitialType(intType);
+		forLoopInc = nodeFactory.newOperatorNode(source, Operator.ASSIGN, forLoopId.copyWithTypes(), forLoopInc);
+		forLoopInc.setInitialType(intType);
+
+		OperatorNode subscriptNode = nodeFactory.newOperatorNode(source, Operator.SUBSCRIPT, arr.copyWithTypes(),
+				forLoopId.copyWithTypes());
+		subscriptNode.setInitialType(elementType);
+		OperatorNode assignNode = nodeFactory.newOperatorNode(source, Operator.ASSIGN, subscriptNode,
+				elementDefaultVal.copyWithTypes());
+		assignNode.setInitialType(elementType);
+		forLoopBody = nodeFactory.newExpressionStatementNode(assignNode);
+		result.add(nodeFactory.newForLoopNode(source, forLoopInit, forLoopCond, forLoopInc, forLoopBody, null));
 
 		ExprTriple ret = new ExprTriple(null);
-
 		ret.setAfter(result);
 		return ret;
 	}
@@ -622,15 +598,12 @@ public class StringOrCompoundInitializerTranslateWorker {
 	 * static storage.
 	 * </p>
 	 * 
-	 * @param obj
-	 *                    a struct or union object
-	 * @param objType
-	 *                    the type of the struct or union object
+	 * @param obj     a struct or union object
+	 * @param objType the type of the struct or union object
 	 * @return a list of assignment statements that goes "after" the first
 	 *         appearance of the given object
 	 */
-	private List<BlockItemNode> defaultValuesToStructOrUnion(ExpressionNode obj,
-			StructureOrUnionType objType) {
+	private List<BlockItemNode> defaultValuesToStructOrUnion(ExpressionNode obj, StructureOrUnionType objType) {
 		int numFields = objType.getNumFields();
 		Source source = obj.getSource();
 		List<BlockItemNode> results = new LinkedList<>();
@@ -643,27 +616,29 @@ public class StringOrCompoundInitializerTranslateWorker {
 			String fieldName = field.getName();
 
 			/*
-			 * C11 sec 6.7.9 semantics 9: Except where explicitly stated
-			 * otherwise, for the purposes of this subclause unnamed members of
-			 * objects of structure and union type do not participate in
-			 * initialization. Unnamed members of structure objects have
-			 * indeterminate value even after initialization.
+			 * C11 Section 6.7.9 semantics 9: Except where explicitly stated otherwise, for
+			 * the purposes of this subclause unnamed members of objects of structure and
+			 * union type do not participate in initialization. Unnamed members of structure
+			 * objects have indeterminate value even after initialization.
 			 */
 			if (fieldName == null)
 				continue;
-			fieldObj = nodeFactory.newDotNode(source, obj.copy(),
+			fieldObj = nodeFactory.newDotNode(source, obj.copyWithTypes(),
 					nodeFactory.newIdentifierNode(source, fieldName));
 
 			Type fieldType = objType.getField(i).getType();
+			fieldObj.setInitialType(fieldType);
 			ExprTriple subResult = defaultValues(fieldObj, fieldType);
 
 			if (subResult != null) {
 				results.addAll(subResult.getBefore());
 				results.addAll(subResult.getAfter());
-				if (subResult.getNode() != null)
-					results.add(nodeFactory.newExpressionStatementNode(
-							nodeFactory.newOperatorNode(source, Operator.ASSIGN,
-									fieldObj.copy(), subResult.getNode())));
+				if (subResult.getNode() != null) {
+					OperatorNode assignNode = nodeFactory.newOperatorNode(source, Operator.ASSIGN,
+							fieldObj.copyWithTypes(), subResult.getNode());
+					assignNode.setInitialType(fieldType);
+					results.add(nodeFactory.newExpressionStatementNode(assignNode));
+				}
 			}
 		}
 		return results;
@@ -671,38 +646,40 @@ public class StringOrCompoundInitializerTranslateWorker {
 
 	/**
 	 * <p>
-	 * returns an expression that represents default value of a scalar type
-	 * object as if the object has static storage
+	 * returns an expression that represents default value of a scalar type object
+	 * as if the object has static storage
 	 * </p>
 	 * 
-	 * @param scalarType
-	 *                       the scalar type
-	 * @param source
-	 *                       the {@link Source} that is associated to the
-	 *                       returned expression
-	 * @return an expression that represents default value of a scalar type
-	 *         object as if the object has static storage
+	 * @param scalarType the scalar type
+	 * @param source     the {@link Source} that is associated to the returned
+	 *                   expression
+	 * @return an expression that represents default value of a scalar type object
+	 *         as if the object has static storage
 	 */
-	private ExpressionNode defaultValueOfScalarType(Type scalarType,
-			Source source) {
+	private ExpressionNode defaultValueOfScalarType(Type scalarType, Source source) {
+		ExpressionNode result;
 		switch (scalarType.kind()) {
-			case BASIC :
-			case ENUMERATION :
-			case OTHER_INTEGER :
-				return nodeFactory.newIntConstantNode(source, 0);
-			case POINTER :
-			case RANGE :
-			case SCOPE : {
-				return nodeFactory.newCastNode(source,
-						typeNodeCreator.apply(source, scalarType),
-						nodeFactory.newIntConstantNode(source, 0));
-			}
-			case PROCESS :
-				return nodeFactory.newProcnullNode(source);
-			default :
-				throw new ABCRuntimeException(
-						"unexpected scalar type kind for inferring its default value : "
-								+ scalarType.kind());
+		case BASIC:
+		case ENUMERATION:
+		case OTHER_INTEGER:
+			result = nodeFactory.newIntConstantNode(source, 0);
+			break;
+		case POINTER:
+		case RANGE:
+		case SCOPE: {
+			IntegerConstantNode zeroNode = nodeFactory.newIntConstantNode(source, 0);
+			zeroNode.setInitialType(intType);
+			result = nodeFactory.newCastNode(source, typeNodeCreator.apply(source, scalarType), zeroNode);
+			break;
 		}
+		case PROCESS:
+			result = nodeFactory.newProcnullNode(source);
+			break;
+		default:
+			throw new ABCRuntimeException(
+					"unexpected scalar type kind for inferring its default value : " + scalarType.kind());
+		}
+		result.setInitialType(scalarType);
+		return result;
 	}
 }

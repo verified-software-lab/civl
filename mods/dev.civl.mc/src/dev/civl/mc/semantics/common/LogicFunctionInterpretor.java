@@ -102,7 +102,7 @@ public class LogicFunctionInterpretor {
 		for (Variable var : logicFunc.parameters()) {
 			if (var.type().isPointerType()) {
 				int heapVid = logicFunc.pointerToHeapVidMap()[i];
-				Variable heapVar = lexScope.variable(heapVid);
+				Variable heapVar = lexScope.getVariable(heapVid);
 				SymbolicConstant heapVal = su.symbolicConstant(
 						su.stringObject(heapVar.name().name()),
 						heapVar.type().getDynamicType(su));

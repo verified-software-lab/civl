@@ -82,8 +82,8 @@ public class LoopContractTransformerWorker extends BaseWorker {
 	/* ************** primitives for error reporting **************** */
 
 	/**
-	 * The token used to construct a {@link StringLiteral} which is used to
-	 * report assertion violation.
+	 * The token used to construct a {@link StringLiteral} which is used to report
+	 * assertion violation.
 	 */
 	private final CivlcToken loopInvariantsViolationMessageToken;
 
@@ -93,8 +93,8 @@ public class LoopContractTransformerWorker extends BaseWorker {
 	private static final String violationMessage = "\"loop invariants violation\"";
 
 	/**
-	 * The token used to construct a {@link StringLiteral} which is used to
-	 * report frame condition violation.
+	 * The token used to construct a {@link StringLiteral} which is used to report
+	 * frame condition violation.
 	 */
 	private final CivlcToken frameConditionViolationMessageToken;
 
@@ -104,8 +104,8 @@ public class LoopContractTransformerWorker extends BaseWorker {
 	private static final String frameConditionViolationMessage = "\"loop assigns violation\"";
 
 	/**
-	 * The token used to construct a {@link StringLiteral} which is used to
-	 * report assertion establish violation.
+	 * The token used to construct a {@link StringLiteral} which is used to report
+	 * assertion establish violation.
 	 */
 	private final CivlcToken loopInvariantsEstablishViolationMessageToken;
 
@@ -116,18 +116,15 @@ public class LoopContractTransformerWorker extends BaseWorker {
 
 	/* ******************** static methods ********************** */
 	/**
-	 * @param node
-	 *            An {@link ASTNode}.
-	 * @return true iff the given {@link ASTNode} represents a function
-	 *         definition.
+	 * @param node An {@link ASTNode}.
+	 * @return true iff the given {@link ASTNode} represents a function definition.
 	 */
 	static private boolean isFunctionDefinition(ASTNode node) {
 		return node.nodeKind() == NodeKind.FUNCTION_DEFINITION;
 	}
 
 	/**
-	 * @param node
-	 *            An {@link ASTNode}.
+	 * @param node An {@link ASTNode}.
 	 * @return true iff the given {@link ASTNode} represents a loop.
 	 */
 	static private boolean isLoopNode(ASTNode node) {
@@ -137,18 +134,15 @@ public class LoopContractTransformerWorker extends BaseWorker {
 	}
 
 	/**
-	 * @param node
-	 *            An {@link LoopNode}.
+	 * @param node An {@link LoopNode}.
 	 * @return true iff the given {@link LoopNode} represents a loop.
 	 */
 	static private boolean isContractedLoop(LoopNode loop) {
-		return loop.loopContracts() != null
-				&& loop.loopContracts().numChildren() > 0;
+		return loop.loopContracts() != null && loop.loopContracts().numChildren() > 0;
 	}
 
 	/**
-	 * @param loop
-	 *            An {@link LoopNode}.
+	 * @param loop An {@link LoopNode}.
 	 * @return true iff the given {@link LoopNode} represents a for-loop.
 	 */
 	static private boolean isForLoop(LoopNode loop) {
@@ -158,8 +152,8 @@ public class LoopContractTransformerWorker extends BaseWorker {
 	/* ******************* Constructor ********************** */
 
 	/**
-	 * @return A unique identifier name for miscellaneous variables which are
-	 *         only used by within one Java method.
+	 * @return A unique identifier name for miscellaneous variables which are only
+	 *         used by within one Java method.
 	 */
 	private String nextLoopTmpIdentifier() {
 		return LOOP_TMP_VAR_PREFIX + loopTmpCounter++;
@@ -167,26 +161,19 @@ public class LoopContractTransformerWorker extends BaseWorker {
 
 	/* ******************* Constructor ********************** */
 
-	public LoopContractTransformerWorker(String transformerName,
-			ASTFactory astFactory, CIVLConfiguration config)
+	public LoopContractTransformerWorker(String transformerName, ASTFactory astFactory, CIVLConfiguration config)
 			throws SyntaxException {
 		super(transformerName, astFactory);
 		this.nodeFactory = astFactory.getNodeFactory();
 		this.config = config;
-		Formation feedBackformation = tokenFactory
-				.newTransformFormation(transformerName, "violation report");
+		Formation feedBackformation = tokenFactory.newTransformFormation(transformerName, "violation report");
 
-		frameConditionViolationMessageToken = tokenFactory.newCivlcToken(
-				CivlcTokenConstant.STRING_LITERAL,
-				frameConditionViolationMessage, feedBackformation,
-				TokenVocabulary.DUMMY);
-		loopInvariantsViolationMessageToken = tokenFactory.newCivlcToken(
-				CivlcTokenConstant.STRING_LITERAL, violationMessage,
-				feedBackformation, TokenVocabulary.DUMMY);
-		loopInvariantsEstablishViolationMessageToken = tokenFactory
-				.newCivlcToken(CivlcTokenConstant.STRING_LITERAL,
-						establishViolationMessage, feedBackformation,
-						TokenVocabulary.DUMMY);
+		frameConditionViolationMessageToken = tokenFactory.newCivlcToken(CivlcTokenConstant.STRING_LITERAL,
+				frameConditionViolationMessage, feedBackformation, TokenVocabulary.DUMMY);
+		loopInvariantsViolationMessageToken = tokenFactory.newCivlcToken(CivlcTokenConstant.STRING_LITERAL,
+				violationMessage, feedBackformation, TokenVocabulary.DUMMY);
+		loopInvariantsEstablishViolationMessageToken = tokenFactory.newCivlcToken(CivlcTokenConstant.STRING_LITERAL,
+				establishViolationMessage, feedBackformation, TokenVocabulary.DUMMY);
 	}
 
 	/* **************** Main transformation logic methods ****************** */
@@ -206,11 +193,10 @@ public class LoopContractTransformerWorker extends BaseWorker {
 		}
 
 		if (!hasContractedLoop)
-			return astFactory.newAST(root, ast.getSourceFiles(),
-					ast.isWholeProgram());;
+			return astFactory.newAST(root, ast.getSourceFiles(), ast.isWholeProgram());
+		;
 
-		ast = astFactory.newAST(root, ast.getSourceFiles(),
-				ast.isWholeProgram());
+		ast = astFactory.newAST(root, ast.getSourceFiles(), ast.isWholeProgram());
 		// ast.prettyPrint(System.out, true);
 		return ast;
 	}
@@ -219,13 +205,11 @@ public class LoopContractTransformerWorker extends BaseWorker {
 	 * Given a function body, transform all contracted loops in it into CIVL-C
 	 * codes.
 	 * 
-	 * @param body
-	 *            The root node of a sub-ASTree representing a function body
+	 * @param body The root node of a sub-ASTree representing a function body
 	 * @return true iff at least one loop in this function has been annotated
 	 * @throws SyntaxException
 	 */
-	private boolean transformLoopInFunction(BlockItemNode body)
-			throws SyntaxException {
+	private boolean transformLoopInFunction(BlockItemNode body) throws SyntaxException {
 		ASTNode node = body;
 		LoopContractBlock annotatedLoop;
 		ASTNode parent = body.parent();
@@ -238,8 +222,7 @@ public class LoopContractTransformerWorker extends BaseWorker {
 		do {
 			// transform nested function definitions:
 			if (isFunctionDefinition(node)) {
-				boolean innerHasContractedLoop = transformLoopInFunction(
-						((FunctionDefinitionNode) node).getBody());
+				boolean innerHasContractedLoop = transformLoopInFunction(((FunctionDefinitionNode) node).getBody());
 
 				if (innerHasContractedLoop)
 					hasContractedLoop = true;
@@ -272,8 +255,7 @@ public class LoopContractTransformerWorker extends BaseWorker {
 	 * @param loop
 	 * @throws SyntaxException
 	 */
-	private void transformLoopWorker(LoopContractBlock loop)
-			throws SyntaxException {
+	private void transformLoopWorker(LoopContractBlock loop) throws SyntaxException {
 		// transform inner loops
 		transformLoopInFunction(loop.getLoopNode().getBody());
 
@@ -284,20 +266,17 @@ public class LoopContractTransformerWorker extends BaseWorker {
 
 		if (!loop.getLoopAssignSet().isEmpty()) {
 			// transforms loop body with [loop-assigns]:
-			LISEComponents
-					.add(toNDBranch(loop, inductionStepWithAssigns(loop)));
+			LISEComponents.add(toNDBranch(loop, inductionStepWithAssigns(loop)));
 		} else {
 			// transforms loop body by inferring [loop-assigns] automatically:
 			String writeSetName = nextLoopTmpIdentifier();
 			LISEComponents.add(memTypeVariableDeclaration(writeSetName));
-			LISEComponents
-					.addAll(inductionStepInferringAssigns(loop, writeSetName));
+			LISEComponents.addAll(inductionStepInferringAssigns(loop, writeSetName));
 			LISEComponents.addAll(createConclusion(loop, writeSetName));
 		}
 
 		Source source = loop.getLoopNode().getSource();
-		BlockItemNode LISEBlock = nodeFactory.newCompoundStatementNode(source,
-				LISEComponents);
+		BlockItemNode LISEBlock = nodeFactory.newCompoundStatementNode(source, LISEComponents);
 
 		loopParent.setChild(childIdx, LISEBlock);
 	}
@@ -305,9 +284,8 @@ public class LoopContractTransformerWorker extends BaseWorker {
 	/* **************** Loop transformation helper methods ****************** */
 	/**
 	 * <p>
-	 * Transform the loop body to the form that proves the induction step w.r.t
-	 * the given invariants through computing the write set until a fixed-point
-	 * reached.
+	 * Transform the loop body to the form that proves the induction step w.r.t the
+	 * given invariants through computing the write set until a fixed-point reached.
 	 * </p>
 	 * 
 	 * <code>
@@ -327,23 +305,20 @@ public class LoopContractTransformerWorker extends BaseWorker {
 	 *   }
 	 * </code>
 	 */
-	private List<BlockItemNode> inductionStepInferringAssigns(
-			LoopContractBlock loop, String collectedWriteSetName)
+	private List<BlockItemNode> inductionStepInferringAssigns(LoopContractBlock loop, String collectedWriteSetName)
 			throws SyntaxException {
 		List<BlockItemNode> result = new LinkedList<>();
 
 		result.addAll(getForLoopInitializers(loop));
 		result.add(createAssertion(loop.getLoopInvariants(nodeFactory), 0));
-		result.add(createAssignment(identifierExpression(collectedWriteSetName),
-				createMemEmptyCall()));
+		result.add(createAssignment(identifierExpression(collectedWriteSetName), createMemEmptyCall()));
 
 		List<BlockItemNode> whileLoopBody = new LinkedList<>();
 		ExpressionNode inv = loop.getLoopInvariants(nodeFactory);
 		ExpressionNode loopCond = loop.getLoopNode().getCondition();
-		Source invAndCondSource = tokenFactory.join(inv.getSource(),
-				loopCond.getSource());
-		ExpressionNode invAndCond = nodeFactory.newOperatorNode(
-				invAndCondSource, Operator.LAND, inv.copy(), loopCond.copy());
+		Source invAndCondSource = tokenFactory.join(inv.getSource(), loopCond.getSource());
+		ExpressionNode invAndCond = nodeFactory.newOperatorNode(invAndCondSource, Operator.LAND, inv.copy(),
+				loopCond.copy());
 
 		whileLoopBody.addAll(createMemHavoc(collectedWriteSetName));
 		whileLoopBody.add(createAssumptionPush(invAndCond));
@@ -357,17 +332,14 @@ public class LoopContractTransformerWorker extends BaseWorker {
 		whileLoopBody.add(memTypeVariableDeclaration(tmpWsName));
 		// pop write set
 		whileLoopBody.add(createWriteSetPop(tmpWsName));
-		whileLoopBody.add(createMemUnionWidening(collectedWriteSetName,
-				tmpWsName, collectedWriteSetName));
+		whileLoopBody.add(createMemUnionWidening(collectedWriteSetName, tmpWsName, collectedWriteSetName));
 		whileLoopBody.add(createAssumptionPop());
 
 		ExpressionNode choiceAsCond = createNDBinaryChoice();
 		Source whileLoopSource = joinSource(whileLoopBody);
 
 		result.add(nodeFactory.newWhileLoopNode(whileLoopSource, choiceAsCond,
-				nodeFactory.newCompoundStatementNode(whileLoopSource,
-						whileLoopBody),
-				null));
+				nodeFactory.newCompoundStatementNode(whileLoopSource, whileLoopBody), null));
 		return result;
 	}
 
@@ -397,17 +369,15 @@ public class LoopContractTransformerWorker extends BaseWorker {
 	 * 
 	 * @throws SyntaxException
 	 */
-	private List<BlockItemNode> inductionStepWithAssigns(LoopContractBlock loop)
-			throws SyntaxException {
+	private List<BlockItemNode> inductionStepWithAssigns(LoopContractBlock loop) throws SyntaxException {
 		assert !loop.getLoopAssignSet().isEmpty();
 
 		List<BlockItemNode> results = new LinkedList<>();
 		ExpressionNode inv = loop.getLoopInvariants(nodeFactory);
 		ExpressionNode loopCond = loop.getLoopNode().getCondition();
-		Source invAndCondSource = tokenFactory.join(inv.getSource(),
-				loopCond.getSource());
-		ExpressionNode invAndCond = nodeFactory.newOperatorNode(
-				invAndCondSource, Operator.LAND, inv.copy(), loopCond.copy());
+		Source invAndCondSource = tokenFactory.join(inv.getSource(), loopCond.getSource());
+		ExpressionNode invAndCond = nodeFactory.newOperatorNode(invAndCondSource, Operator.LAND, inv.copy(),
+				loopCond.copy());
 		String writeSetName = nextLoopTmpIdentifier();
 
 		results.addAll(getForLoopInitializers(loop));
@@ -442,8 +412,8 @@ public class LoopContractTransformerWorker extends BaseWorker {
 	}
 
 	/**
-	 * Wraps the original loop body (and the incrementor if it is a for-loop) in
-	 * a pair of curly-braces.
+	 * Wraps the original loop body (and the incrementor if it is a for-loop) in a
+	 * pair of curly-braces.
 	 */
 	private BlockItemNode wrapLoopBody(LoopContractBlock loop) {
 		// original body ...
@@ -456,14 +426,13 @@ public class LoopContractTransformerWorker extends BaseWorker {
 		bodyAndIncrementor.addAll(getForLoopIncrementors(loop));
 		// wrap the original body with a pair of curly braces so that loop-body
 		// local variables won't be saved in the write set:
-		return nodeFactory.newCompoundStatementNode(originalBody.getSource(),
-				bodyAndIncrementor);
+		return nodeFactory.newCompoundStatementNode(originalBody.getSource(), bodyAndIncrementor);
 	}
 
 	/**
 	 * 
-	 * @return the loop initializers of the <code>loop</code>, if it is a
-	 *         for-loop; empty list otherwise.
+	 * @return the loop initializers of the <code>loop</code>, if it is a for-loop;
+	 *         empty list otherwise.
 	 */
 	private List<BlockItemNode> getForLoopInitializers(LoopContractBlock loop) {
 		List<BlockItemNode> result = new LinkedList<>();
@@ -475,8 +444,7 @@ public class LoopContractTransformerWorker extends BaseWorker {
 
 			if (initializer != null) {
 				if (initializer instanceof ExpressionNode)
-					result.add(nodeFactory.newExpressionStatementNode(
-							(ExpressionNode) initializer.copy()));
+					result.add(nodeFactory.newExpressionStatementNode((ExpressionNode) initializer.copy()));
 				else {
 					DeclarationListNode declList = (DeclarationListNode) initializer;
 
@@ -500,39 +468,34 @@ public class LoopContractTransformerWorker extends BaseWorker {
 			ForLoopNode forLoop = (ForLoopNode) loop.getLoopNode();
 
 			if (forLoop.getIncrementer() != null)
-				result.add(nodeFactory.newExpressionStatementNode(
-						forLoop.getIncrementer().copy()));
+				result.add(nodeFactory.newExpressionStatementNode(forLoop.getIncrementer().copy()));
 		}
 		return result;
 	}
 
 	/**
 	 * The non-deterministic branch: one branch goes to the endless while loop
-	 * completing the induction step and the other branch goes to the
-	 * conclusion, i.e., havoc write set nicely, assume invariants hold, etc.
+	 * completing the induction step and the other branch goes to the conclusion,
+	 * i.e., havoc write set nicely, assume invariants hold, etc.
 	 * 
 	 * @throws SyntaxException
 	 */
-	private BlockItemNode toNDBranch(LoopContractBlock loop,
-			List<BlockItemNode> inductionStep) throws SyntaxException {
+	private BlockItemNode toNDBranch(LoopContractBlock loop, List<BlockItemNode> inductionStep) throws SyntaxException {
 		ExpressionNode bnd = createNDBinaryChoice();
 		StatementNode inductionBranch, concludeBranch;
 		Source inductionStepSource = joinSource(inductionStep);
 
-		inductionBranch = nodeFactory
-				.newCompoundStatementNode(inductionStepSource, inductionStep);
+		inductionBranch = nodeFactory.newCompoundStatementNode(inductionStepSource, inductionStep);
 		// build conclusion branch ...
 		List<BlockItemNode> concludeBranchComponents = new LinkedList<>();
 		concludeBranchComponents.addAll(getForLoopInitializers(loop));
 		concludeBranchComponents.addAll(createConclusion(loop, null));
-		concludeBranch = nodeFactory.newCompoundStatementNode(
-				joinSource(concludeBranchComponents), concludeBranchComponents);
+		concludeBranch = nodeFactory.newCompoundStatementNode(joinSource(concludeBranchComponents),
+				concludeBranchComponents);
 
-		Source source = joinSource(
-				Arrays.asList(bnd, inductionBranch, concludeBranch));
+		Source source = joinSource(Arrays.asList(bnd, inductionBranch, concludeBranch));
 
-		return nodeFactory.newIfNode(source, bnd, inductionBranch,
-				concludeBranch);
+		return nodeFactory.newIfNode(source, bnd, inductionBranch, concludeBranch);
 	}
 
 	/**
@@ -542,8 +505,8 @@ public class LoopContractTransformerWorker extends BaseWorker {
 	 * </p>
 	 * 
 	 * <p>
-	 * If<code>writeSetName</code> is <code>null</code>,<code>loop</code> must
-	 * have non-empty loop-assigns. Returning <code>
+	 * If<code>writeSetName</code> is <code>null</code>,<code>loop</code> must have
+	 * non-empty loop-assigns. Returning <code>
 	 * 
 	 *  $mem_havoc([loop-assigns]);
 	 *  $assume([loop-inv] && ![loop-cond]);
@@ -560,8 +523,7 @@ public class LoopContractTransformerWorker extends BaseWorker {
 	 * </code>
 	 * </p>
 	 */
-	private List<BlockItemNode> createConclusion(LoopContractBlock loop,
-			String writeSetName) {
+	private List<BlockItemNode> createConclusion(LoopContractBlock loop, String writeSetName) {
 		List<BlockItemNode> result = new LinkedList<>();
 
 		if (writeSetName == null) {
@@ -576,12 +538,10 @@ public class LoopContractTransformerWorker extends BaseWorker {
 		// assuming (loop-inv && !loop-cond && sidecond) holds:
 		ExpressionNode loopInv = loop.getLoopInvariants(nodeFactory);
 		ExpressionNode loopCond = loop.getLoopNode().getCondition();
-		ExpressionNode notLoopCond = nodeFactory.newOperatorNode(
-				loopCond.getSource(), Operator.NOT, loopCond.copy());
-		Source finalAssumeSource = joinSource(
-				Arrays.asList(loopInv, notLoopCond));
-		ExpressionNode assumption = nodeFactory.newOperatorNode(
-				finalAssumeSource, Operator.LAND, loopInv.copy(), notLoopCond);
+		ExpressionNode notLoopCond = nodeFactory.newOperatorNode(loopCond.getSource(), Operator.NOT, loopCond.copy());
+		Source finalAssumeSource = joinSource(Arrays.asList(loopInv, notLoopCond));
+		ExpressionNode assumption = nodeFactory.newOperatorNode(finalAssumeSource, Operator.LAND, loopInv.copy(),
+				notLoopCond);
 
 		result.add(assumeNode(assumption));
 		return result;
@@ -594,8 +554,7 @@ public class LoopContractTransformerWorker extends BaseWorker {
 		Source source = this.newSource("while(1);", CivlcTokenConstant.WHILE);
 		Source trueSource = this.newSource("1", CivlcTokenConstant.CONST);
 
-		return Arrays.asList(nodeFactory.newWhileLoopNode(source,
-				nodeFactory.newIntegerConstantNode(trueSource, "1"),
+		return Arrays.asList(nodeFactory.newWhileLoopNode(source, nodeFactory.newIntegerConstantNode(trueSource, "1"),
 				nodeFactory.newNullStatementNode(source), null));
 	}
 
@@ -616,28 +575,22 @@ public class LoopContractTransformerWorker extends BaseWorker {
 
 		funcName = MEM_HAVOC;
 		args = Arrays.asList(m);
-		call = nodeFactory.newFunctionCallNode(m.getSource(),
-				identifierExpression(funcName), args, null);
+		call = nodeFactory.newFunctionCallNode(m.getSource(), identifierExpression(funcName), args);
 		results.add(nodeFactory.newExpressionStatementNode(call));
 		return results;
 	}
 
 	private BlockItemNode memTypeVariableDeclaration(String name) {
-		Source source = newSource("$mem " + name,
-				CivlcTokenConstant.DECLARATION);
+		Source source = newSource("$mem " + name, CivlcTokenConstant.DECLARATION);
 
-		return nodeFactory.newVariableDeclarationNode(source, identifier(name),
-				nodeFactory.newMemTypeNode(source));
+		return nodeFactory.newVariableDeclarationNode(source, identifier(name), nodeFactory.newMemTypeNode(source));
 	}
 
-	private StatementNode createAssignment(ExpressionNode lhs,
-			ExpressionNode rhs) {
-		Source source = newSource(
-				lhs.prettyRepresentation() + " = " + rhs.prettyRepresentation(),
+	private StatementNode createAssignment(ExpressionNode lhs, ExpressionNode rhs) {
+		Source source = newSource(lhs.prettyRepresentation() + " = " + rhs.prettyRepresentation(),
 				CivlcTokenConstant.ASSIGN);
 
-		return nodeFactory.newExpressionStatementNode(
-				nodeFactory.newOperatorNode(source, Operator.ASSIGN, lhs, rhs));
+		return nodeFactory.newExpressionStatementNode(nodeFactory.newOperatorNode(source, Operator.ASSIGN, lhs, rhs));
 	}
 
 	/**
@@ -648,16 +601,13 @@ public class LoopContractTransformerWorker extends BaseWorker {
 	 * @throws SyntaxException
 	 * 
 	 */
-	private List<BlockItemNode> checkFrameCondition(String writeSetName,
-			String loopAssignsUnionName) throws SyntaxException {
+	private List<BlockItemNode> checkFrameCondition(String writeSetName, String loopAssignsUnionName)
+			throws SyntaxException {
 		Source mcSource = newSource(MEM_CONTAINS, CivlcTokenConstant.CALL);
 		List<BlockItemNode> results = new LinkedList<>();
 		// assert
-		ExpressionNode call = nodeFactory.newFunctionCallNode(mcSource,
-				identifierExpression(MEM_CONTAINS),
-				Arrays.asList(identifierExpression(loopAssignsUnionName),
-						identifierExpression(writeSetName)),
-				null);
+		ExpressionNode call = nodeFactory.newFunctionCallNode(mcSource, identifierExpression(MEM_CONTAINS),
+				Arrays.asList(identifierExpression(loopAssignsUnionName), identifierExpression(writeSetName)));
 
 		results.add(createAssertion(call, 1));
 		return results;
@@ -671,29 +621,22 @@ public class LoopContractTransformerWorker extends BaseWorker {
 	 *                          loopAssigns<sub>n-1</sub>);
 	 * </code>
 	 */
-	private List<BlockItemNode> unionLoopAssigns(
-			List<ExpressionNode> loopAssigns, String writeSetName) {
+	private List<BlockItemNode> unionLoopAssigns(List<ExpressionNode> loopAssigns, String writeSetName) {
 		Source muSource = newSource(MEM_UNION, CivlcTokenConstant.CALL);
 		Source meSource = newSource(MEM_EMPTY, CivlcTokenConstant.CALL);
 		List<BlockItemNode> results = new LinkedList<>();
 
 		// init to empty
 		results.add(createAssignment(identifierExpression(writeSetName),
-				nodeFactory.newFunctionCallNode(meSource,
-						identifierExpression(MEM_EMPTY), Arrays.asList(),
-						null)));
+				nodeFactory.newFunctionCallNode(meSource, identifierExpression(MEM_EMPTY), Arrays.asList())));
 		// executes union:
 		for (ExpressionNode loopAssignsArg : loopAssigns) {
-			ExpressionNode addrOf = nodeFactory.newOperatorNode(
-					loopAssignsArg.getSource(), Operator.ADDRESSOF,
+			ExpressionNode addrOf = nodeFactory.newOperatorNode(loopAssignsArg.getSource(), Operator.ADDRESSOF,
 					loopAssignsArg.copy());
-			ExpressionNode unionCall = nodeFactory.newFunctionCallNode(muSource,
-					identifierExpression(MEM_UNION),
-					Arrays.asList(identifierExpression(writeSetName), addrOf),
-					null);
+			ExpressionNode unionCall = nodeFactory.newFunctionCallNode(muSource, identifierExpression(MEM_UNION),
+					Arrays.asList(identifierExpression(writeSetName), addrOf));
 
-			results.add(createAssignment(identifierExpression(writeSetName),
-					unionCall));
+			results.add(createAssignment(identifierExpression(writeSetName), unionCall));
 		}
 		return results;
 	}
@@ -705,35 +648,27 @@ public class LoopContractTransformerWorker extends BaseWorker {
 	private BlockItemNode createMemWidening(String lhs, String operand) {
 		Source source = newSource(MEM_UNARY_WIDENING, CivlcTokenConstant.CALL);
 		return createAssignment(identifierExpression(lhs),
-				functionCall(source, MEM_UNARY_WIDENING,
-						Arrays.asList(this.identifierExpression(operand))));
+				functionCall(source, MEM_UNARY_WIDENING, Arrays.asList(this.identifierExpression(operand))));
 	}
 
 	/**
 	 * <code>lhs = $mem_unary_widening($mem_union(operand1, operand2))</code>
 	 */
-	private BlockItemNode createMemUnionWidening(String lhs, String operand1,
-			String operand2) {
-		Source wideningsource = newSource(MEM_UNARY_WIDENING,
-				CivlcTokenConstant.CALL);
+	private BlockItemNode createMemUnionWidening(String lhs, String operand1, String operand2) {
+		Source wideningsource = newSource(MEM_UNARY_WIDENING, CivlcTokenConstant.CALL);
 		Source unionSource = newSource(MEM_UNION, CivlcTokenConstant.CALL);
 		ExpressionNode unionNode = functionCall(unionSource, MEM_UNION,
-				Arrays.asList(identifierExpression(operand1),
-						identifierExpression(operand2)));
-		ExpressionNode wideningNode = functionCall(wideningsource,
-				MEM_UNARY_WIDENING, Arrays.asList(unionNode));
+				Arrays.asList(identifierExpression(operand1), identifierExpression(operand2)));
+		ExpressionNode wideningNode = functionCall(wideningsource, MEM_UNARY_WIDENING, Arrays.asList(unionNode));
 
 		return createAssignment(identifierExpression(lhs), wideningNode);
 	}
 
 	@SuppressWarnings("unused")
-	private BlockItemNode createMemUnionWidening2(String lhs, String operand1,
-			String operand2) {
-		Source unionSource = newSource(MEM_UNION_WIDENING,
-				CivlcTokenConstant.CALL);
+	private BlockItemNode createMemUnionWidening2(String lhs, String operand1, String operand2) {
+		Source unionSource = newSource(MEM_UNION_WIDENING, CivlcTokenConstant.CALL);
 		ExpressionNode unionNode = functionCall(unionSource, MEM_UNION_WIDENING,
-				Arrays.asList(identifierExpression(operand1),
-						identifierExpression(operand2)));
+				Arrays.asList(identifierExpression(operand1), identifierExpression(operand2)));
 
 		return createAssignment(identifierExpression(lhs), unionNode);
 	}
@@ -743,8 +678,7 @@ public class LoopContractTransformerWorker extends BaseWorker {
 	 */
 	private ExpressionNode createMemEmptyCall() {
 		Source source = newSource(MEM_EMPTY, CivlcTokenConstant.CALL);
-		ExpressionNode callNode = functionCall(source, MEM_EMPTY,
-				Arrays.asList());
+		ExpressionNode callNode = functionCall(source, MEM_EMPTY, Arrays.asList());
 
 		return callNode;
 	}
@@ -754,8 +688,7 @@ public class LoopContractTransformerWorker extends BaseWorker {
 	 */
 	@SuppressWarnings("unused")
 	@Deprecated
-	private BlockItemNode createMemHavocSidecond(String lhs,
-			String writeSetName) {
+	private BlockItemNode createMemHavocSidecond(String lhs, String writeSetName) {
 		Source source = newSource(MEM_HAVOC_SIDECOND, CivlcTokenConstant.CALL);
 		ExpressionNode callNode = functionCall(source, MEM_HAVOC_SIDECOND,
 				Arrays.asList(identifierExpression(writeSetName)));
@@ -766,36 +699,26 @@ public class LoopContractTransformerWorker extends BaseWorker {
 	/**
 	 * Creates an assertion function call with an argument "predicate".
 	 * 
-	 * @param predicate
-	 *            The {@link ExpressionNode} which represents a predicate. It is
-	 *            the only argument of an assertion call.
-	 * @param kind
-	 *            an integer indicating the kind of error message, there are 3
-	 *            options: 0: establishment violation; 1: frame-condition
-	 *            violation; 2: loop invariant preservation violation
+	 * @param predicate The {@link ExpressionNode} which represents a predicate. It
+	 *                  is the only argument of an assertion call.
+	 * @param kind      an integer indicating the kind of error message, there are 3
+	 *                  options: 0: establishment violation; 1: frame-condition
+	 *                  violation; 2: loop invariant preservation violation
 	 * @return A created assert call statement node;
 	 * @throws SyntaxException
 	 */
-	private StatementNode createAssertion(ExpressionNode predicate, int kind)
-			throws SyntaxException {
-		ExpressionNode assertIdentifier = identifierExpression(
-				BaseWorker.ASSERT);
+	private StatementNode createAssertion(ExpressionNode predicate, int kind) throws SyntaxException {
+		ExpressionNode assertIdentifier = identifierExpression(BaseWorker.ASSERT);
 		Source source = newSource("$assert", CivlcTokenConstant.CALL);
-		String errMsg = kind == 0
-				? establishViolationMessage
+		String errMsg = kind == 0 ? establishViolationMessage
 				: kind == 1 ? frameConditionViolationMessage : violationMessage;
-		CivlcToken errMsgToken = kind == 0
-				? loopInvariantsEstablishViolationMessageToken
-				: kind == 1
-						? frameConditionViolationMessageToken
-						: loopInvariantsViolationMessageToken;
+		CivlcToken errMsgToken = kind == 0 ? loopInvariantsEstablishViolationMessageToken
+				: kind == 1 ? frameConditionViolationMessageToken : loopInvariantsViolationMessageToken;
 
-		StringLiteralNode messageNode = nodeFactory.newStringLiteralNode(source,
-				errMsg, astFactory.getTokenFactory().newStringToken(errMsgToken)
-						.getStringLiteral());
-		FunctionCallNode assertCall = nodeFactory.newFunctionCallNode(source,
-				assertIdentifier, Arrays.asList(predicate.copy(), messageNode),
-				null);
+		StringLiteralNode messageNode = nodeFactory.newStringLiteralNode(source, errMsg,
+				astFactory.getTokenFactory().newStringToken(errMsgToken).getStringLiteral());
+		FunctionCallNode assertCall = nodeFactory.newFunctionCallNode(source, assertIdentifier,
+				Arrays.asList(predicate.copy(), messageNode));
 
 		return nodeFactory.newExpressionStatementNode(assertCall);
 	}
@@ -803,16 +726,14 @@ public class LoopContractTransformerWorker extends BaseWorker {
 	/**
 	 * Creates an assume_push function call with an argument "predicate".
 	 * 
-	 * @param predicate
-	 *            The {@link ExpressionNode} which represents a predicate. It is
-	 *            the only argument of an assumption call.
+	 * @param predicate The {@link ExpressionNode} which represents a predicate. It
+	 *                  is the only argument of an assumption call.
 	 * @return A created assumption call statement node;
 	 */
 	private StatementNode createAssumptionPush(ExpressionNode predicate) {
 		ExpressionNode assumeIdentifier = identifierExpression(ASSUME_PUSH);
-		FunctionCallNode assumeCall = nodeFactory.newFunctionCallNode(
-				predicate.getSource(), assumeIdentifier,
-				Arrays.asList(predicate.copy()), null);
+		FunctionCallNode assumeCall = nodeFactory.newFunctionCallNode(predicate.getSource(), assumeIdentifier,
+				Arrays.asList(predicate.copy()));
 
 		return nodeFactory.newExpressionStatementNode(assumeCall);
 	}
@@ -826,8 +747,7 @@ public class LoopContractTransformerWorker extends BaseWorker {
 		Source source = newSource(ASSUME_POP, CivlcTokenConstant.CALL);
 		ExpressionNode assumeIdentifier = identifierExpression(ASSUME_POP);
 
-		FunctionCallNode assumeCall = nodeFactory.newFunctionCallNode(source,
-				assumeIdentifier, Arrays.asList(), null);
+		FunctionCallNode assumeCall = nodeFactory.newFunctionCallNode(source, assumeIdentifier, Arrays.asList());
 		return nodeFactory.newExpressionStatementNode(assumeCall);
 	}
 
@@ -836,11 +756,9 @@ public class LoopContractTransformerWorker extends BaseWorker {
 	 * @return a <code>$write_set_push()</code> statement node;
 	 */
 	private StatementNode createWriteSetPush() {
-		Source source = this.newSource("$write_set_push",
-				CivlcTokenConstant.CALL);
+		Source source = this.newSource("$write_set_push", CivlcTokenConstant.CALL);
 		ExpressionNode wsPushIdentifier = identifierExpression(WRITE_SET_PUSH);
-		FunctionCallNode wsPushCall = nodeFactory.newFunctionCallNode(source,
-				wsPushIdentifier, Arrays.asList(), null);
+		FunctionCallNode wsPushCall = nodeFactory.newFunctionCallNode(source, wsPushIdentifier, Arrays.asList());
 		return nodeFactory.newExpressionStatementNode(wsPushCall);
 	}
 
@@ -853,9 +771,7 @@ public class LoopContractTransformerWorker extends BaseWorker {
 		Source writeSetPop = newSource(WRITE_SET_POP, CivlcTokenConstant.CALL);
 
 		return createAssignment(identifierExpression(lhs),
-				nodeFactory.newFunctionCallNode(writeSetPop,
-						identifierExpression(WRITE_SET_POP), Arrays.asList(),
-						null));
+				nodeFactory.newFunctionCallNode(writeSetPop, identifierExpression(WRITE_SET_POP), Arrays.asList()));
 	}
 
 	/**
@@ -864,10 +780,8 @@ public class LoopContractTransformerWorker extends BaseWorker {
 	 */
 	private ExpressionNode createNDBinaryChoice() throws SyntaxException {
 		Source source = newSource("$choose_int(2)", CivlcTokenConstant.CALL);
-		return nodeFactory.newFunctionCallNode(source,
-				identifierExpression(CHOOSE_INT),
-				Arrays.asList(nodeFactory.newIntegerConstantNode(source, "2")),
-				null);
+		return nodeFactory.newFunctionCallNode(source, identifierExpression(CHOOSE_INT),
+				Arrays.asList(nodeFactory.newIntegerConstantNode(source, "2")));
 	}
 
 	/**
@@ -877,9 +791,7 @@ public class LoopContractTransformerWorker extends BaseWorker {
 		Source result = null;
 
 		for (ASTNode node : nodes) {
-			result = result == null
-					? node.getSource()
-					: tokenFactory.join(result, node.getSource());
+			result = result == null ? node.getSource() : tokenFactory.join(result, node.getSource());
 		}
 		if (result == null)
 			result = newSource("", CivlcTokenConstant.ABSENT);

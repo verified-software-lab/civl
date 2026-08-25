@@ -157,6 +157,7 @@ void * $mpi_malloc($scope scope, int count, MPI_Datatype datatype) {
 }
 
 void * $mpi_pointer_add(const void * ptr, int offset, MPI_Datatype datatype) {
+  if (offset == 0) return (void*)ptr;
   int type_size = sizeofDatatype(datatype);
   return $pointer_add(ptr, offset, type_size);
 }
@@ -248,6 +249,7 @@ void $mpi_unpack_convert($message msg, void * buf, int count,
 
 void $mpi_memcpy(void * p, const void * q, int count,
 		 MPI_Datatype datatype) {
+  if (count == 0) return;
   switch (datatype) {
   case MPI_2INT:
   case MPI_2INTEGER:

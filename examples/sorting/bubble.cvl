@@ -1,0 +1,45 @@
+/* Bubble sort from https://www.programiz.com/dsa/bubble-sort
+ */
+#include <stdio.h>
+$input int B=3, N, A[N];
+$assume (1<=N && N<=B);
+void bubbleSort(int array[], int size) {
+  // loop to access each array element
+  for (int step = 0; step < size - 1; ++step) {
+    // loop to compare array elements
+    for (int i = 0; i < size - step - 1; ++i) {
+      // compare two adjacent elements
+      // change > to < to sort in descending order
+      if (array[i] > array[i + 1]) {
+        // swapping occurs if elements
+        // are not in the intended order
+        int temp = array[i];
+        array[i] = array[i + 1];
+        array[i + 1] = temp;
+      }
+    }
+  }
+}
+
+int count(int val, int array[], int size) {
+  int c=0;
+  for (int i=0; i<size; i++)
+    if (array[i] == val)
+      c++;
+  return c;
+}
+
+int main(void) {
+  int a[N];
+  for (int i=0; i<N; i++) a[i] = A[i];
+  bubbleSort(a, N);
+  if (N <= 3) $pathCondition();
+  printf("N = %d,  a = { ", N);
+  for (int i=0; i<N; i++) printf("%d ", a[i]);
+  printf("}\n\n");
+  $assert($forall (int i | 0<=i && i<N-1) a[i]<=a[i+1]);
+  for (int i=0; i<N; i++) {
+    int val = A[i];
+    $assert(count(val, A, N) == count(val, a, N));
+  }
+}

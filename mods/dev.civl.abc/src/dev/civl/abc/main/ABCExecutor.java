@@ -630,7 +630,11 @@ public class ABCExecutor {
 				Transformer transformer = record.create(frontEnd.getASTFactory());
 
 				if (verbose) {
-					printProgram();
+					//printProgram();
+					
+					program.getAST().print(out);
+
+					
 					out.println();
 					out.println(bar + " Program after " + transformer + " " + bar);
 					out.flush();
@@ -638,8 +642,18 @@ public class ABCExecutor {
 				program.apply(transformer);
 				timer.markTime("apply transformer " + transformer.getShortDescription());
 			}
-			if (!showTime && !task.isSilent())
-				printProgram();
+			if (!showTime && !task.isSilent()) {
+				
+				// TODO print either in tree format or source code format
+				
+				//out.println("**** ABOUT TO PRINT ****");
+				
+				
+				//program.getAST().print(out);
+				 printProgram();
+				
+				
+			}
 			if (task.getShowUndefinedFunctions())
 				printUnknownFunctions(out, program);
 			if (!task.isSilent())

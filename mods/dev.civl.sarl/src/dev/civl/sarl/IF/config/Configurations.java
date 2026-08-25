@@ -107,7 +107,7 @@ public class Configurations {
 				// TODO: Shouldn't have to hardcode what provers we support in
 				// this warning message.
 				System.err.println("Warning: using SARL with no theorem provers. "
-						+ "Consider putting Z3, CVC4, CVC5, or Alt-Ergo in your PATH.");
+						+ "Consider putting Z3, CVC4, CVC5, Alt-Ergo, or Vampire in your PATH.");
 				System.err.flush();
 			}
 		} catch (Exception e) {

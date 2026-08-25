@@ -147,6 +147,11 @@ public class CommonScope extends CommonSourceable implements Scope {
 	}
 
 	@Override
+	public CIVLFunction getFunction(String name) {
+		return functions.get(name);
+	}
+
+	@Override
 	public void addFunction(CIVLFunction function) {
 		String[] oldFunctionNames = this.functionNames;
 
@@ -176,22 +181,14 @@ public class CommonScope extends CommonSourceable implements Scope {
 		variable.setScope(this);
 	}
 
-	/**
-	 * Get the variable associated with an identifier. If this scope does not
-	 * contain such a variable, parent scopes will be recursively checked.
-	 * 
-	 * @param name The identifier for the variable.
-	 * @return The model representation of the variable in this scope hierarchy, or
-	 *         null if not found.
-	 */
-	public Variable variable(Identifier name) {
+	public Variable seekVariable(Identifier name) {
 		for (Variable v : variables) {
 			if (v.name().equals(name)) {
 				return v;
 			}
 		}
 		if (parent != null) {
-			return parent.variable(name);
+			return parent.seekVariable(name);
 		}
 		return null;
 	}
@@ -213,7 +210,7 @@ public class CommonScope extends CommonSourceable implements Scope {
 	 *            [0,numVariable()-1].
 	 * @return The variable at the index.
 	 */
-	public Variable variable(int vid) {
+	public Variable getVariable(int vid) {
 		return variables[vid];
 	}
 
@@ -482,22 +479,22 @@ public class CommonScope extends CommonSourceable implements Scope {
 	}
 
 	@Override
-	public CIVLFunction getFunction(Identifier name) {
+	public CIVLFunction seekFunction(Identifier name) {
 		String functionName = name.name();
 
 		if (this.functions.containsKey(functionName))
 			return functions.get(functionName);
 		if (this.parent != null)
-			return this.parent.getFunction(name);
+			return this.parent.seekFunction(name);
 		return null;
 	}
 
 	@Override
-	public CIVLFunction getFunction(String name) {
+	public CIVLFunction seekFunction(String name) {
 		if (this.functions.containsKey(name))
 			return functions.get(name);
 		if (this.parent != null)
-			return this.parent.getFunction(name);
+			return this.parent.seekFunction(name);
 		return null;
 	}
 
@@ -510,7 +507,6 @@ public class CommonScope extends CommonSourceable implements Scope {
 				break;
 			}
 		}
-		// TODO If not found, either throw error here or catch higher up
 		return result;
 	}
 
@@ -532,7 +528,7 @@ public class CommonScope extends CommonSourceable implements Scope {
 	}
 
 	@Override
-	public Variable variable(String name) {
+	public Variable getVariable(String name) {
 		for (Variable v : variables) {
 			if (v.name().name().equals(name)) {
 				return v;
@@ -580,7 +576,7 @@ public class CommonScope extends CommonSourceable implements Scope {
 	}
 
 	@Override
-	public Variable contains(Variable variable) {
+	public Variable getMatch(Variable variable) {
 		for (Variable v : variables) {
 			if (v.name().name().equals(variable.name().name())) {
 				return v;

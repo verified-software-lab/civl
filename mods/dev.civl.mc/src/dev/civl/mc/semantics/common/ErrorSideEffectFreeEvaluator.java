@@ -37,24 +37,18 @@ import dev.civl.sarl.IF.type.SymbolicType;
  * @author ziqingluo
  *
  */
-public class ErrorSideEffectFreeEvaluator extends CommonEvaluator
-		implements
-			Evaluator {
+public class ErrorSideEffectFreeEvaluator extends CommonEvaluator implements Evaluator {
 
 	/**
 	 * The {@link Exception} that will be thrown only by
-	 * {@link ErrorSideEffectFreeEvaluator} when an erroneous side effect
-	 * happens.
+	 * {@link ErrorSideEffectFreeEvaluator} when an erroneous side effect happens.
 	 * 
 	 * @author ziqing
 	 */
-	static public class ErroneousSideEffectException
-			extends
-				UnsatisfiablePathConditionException {
+	static public class ErroneousSideEffectException extends UnsatisfiablePathConditionException {
 		/**
-		 * The {@link SymbolicExpression} that really causes the side effect
-		 * error, which will be used to as a key for generating a unique
-		 * undefined value
+		 * The {@link SymbolicExpression} that really causes the side effect error,
+		 * which will be used to as a key for generating a unique undefined value
 		 */
 		public final SymbolicExpression keyValue;
 		/**
@@ -63,10 +57,9 @@ public class ErrorSideEffectFreeEvaluator extends CommonEvaluator
 		private static final long serialVersionUID = -1237052183722755533L;
 
 		/**
-		 * @param keyValue
-		 *            The {@link SymbolicExpression} that really causes the side
-		 *            effect error, which will be used to as a key for
-		 *            generating a unique undefined value
+		 * @param keyValue The {@link SymbolicExpression} that really causes the side
+		 *                 effect error, which will be used to as a key for generating a
+		 *                 unique undefined value
 		 */
 		public ErroneousSideEffectException(SymbolicExpression keyValue) {
 			this.keyValue = keyValue;
@@ -80,87 +73,70 @@ public class ErrorSideEffectFreeEvaluator extends CommonEvaluator
 	 */
 	private static String SEError_ABSTRACT_FUNCTION_NAME = "SEError_undefined";
 
-	public ErrorSideEffectFreeEvaluator(ModelFactory modelFactory,
-			StateFactory stateFactory, LibraryEvaluatorLoader loader,
-			LibraryExecutorLoader loaderExec, SymbolicUtility symbolicUtil,
-			SymbolicAnalyzer symbolicAnalyzer, MemoryUnitFactory memUnitFactory,
-			CIVLErrorLogger errorLogger, CIVLConfiguration config) {
-		super(modelFactory, stateFactory, loader, loaderExec, symbolicUtil,
-				symbolicAnalyzer, memUnitFactory, errorLogger, config);
+	public ErrorSideEffectFreeEvaluator(ModelFactory modelFactory, StateFactory stateFactory,
+			LibraryEvaluatorLoader loader, LibraryExecutorLoader loaderExec, SymbolicUtility symbolicUtil,
+			SymbolicAnalyzer symbolicAnalyzer, MemoryUnitFactory memUnitFactory, CIVLErrorLogger errorLogger,
+			CIVLConfiguration config) {
+		super(modelFactory, stateFactory, loader, loaderExec, symbolicUtil, symbolicAnalyzer, memUnitFactory,
+				errorLogger, config);
 	}
 
 	@Override
-	public Evaluation evaluate(State state, int pid, Expression expression)
-			throws UnsatisfiablePathConditionException {
+	public Evaluation evaluate(State state, int pid, Expression expression) throws UnsatisfiablePathConditionException {
 		try {
 			return super.evaluate(state, pid, expression);
 		} catch (ErroneousSideEffectException e) {
-			SymbolicType exprType = expression.getExpressionType()
-					.getDynamicType(universe);
-			SymbolicFunctionType funcType = universe
-					.functionType(Arrays.asList(e.keyValue.type()), exprType);
+			SymbolicType exprType = expression.getExpressionType().getDynamicType(universe);
+			SymbolicFunctionType funcType = universe.functionType(Arrays.asList(e.keyValue.type()), exprType);
 
-			return new Evaluation(state, universe.apply(
-					universe.symbolicConstant(universe.stringObject(
-							SEError_ABSTRACT_FUNCTION_NAME), funcType),
-					Arrays.asList(e.keyValue)));
+			return new Evaluation(state,
+					universe.apply(
+							universe.symbolicConstant(universe.stringObject(SEError_ABSTRACT_FUNCTION_NAME), funcType),
+							Arrays.asList(e.keyValue)));
 		}
 	}
 
 	@Override
-	public Evaluation dereference(CIVLSource source, State state, int pid,
-			String process, SymbolicExpression pointer, boolean checkOutput,
-			boolean strict) throws UnsatisfiablePathConditionException {
+	public Evaluation dereference(CIVLSource source, State state, int pid, String process, SymbolicExpression pointer,
+			boolean checkOutput, boolean strict) throws UnsatisfiablePathConditionException {
 		boolean muteErrorSideEffects = true; // mute error side effects
 
-		return dereferenceWorker(source, state, pid, process, pointer, checkOutput,
-				false, strict, muteErrorSideEffects);
+		return dereferenceWorker(source, state, pid, process, pointer, checkOutput, false, strict,
+				muteErrorSideEffects);
 	}
 
 	@Override
-	protected Evaluation evaluateSubscript(State state, int pid, String process,
-			SubscriptExpression expression)
+	protected Evaluation evaluateSubscript(State state, int pid, String process, SubscriptExpression expression)
 			throws UnsatisfiablePathConditionException {
 		return evaluateSubscriptWorker(state, pid, process, expression, true);
 	}
 
 	@Override
-	protected Evaluation evaluateDivide(State state, int pid,
-			BinaryExpression expression, NumericExpression numerator,
-			NumericExpression denominator)
-			throws UnsatisfiablePathConditionException {
-		return evaluateDivideWorker(state, pid, expression, numerator,
-				denominator, true);
+	protected Evaluation evaluateDivide(State state, int pid, BinaryExpression expression, NumericExpression numerator,
+			NumericExpression denominator) throws UnsatisfiablePathConditionException {
+		return evaluateDivideWorker(state, pid, expression, numerator, denominator, true);
 	}
 
 	@Override
-	protected Evaluation evaluateModulo(State state, int pid,
-			BinaryExpression expression, NumericExpression numerator,
-			NumericExpression denominator)
-			throws UnsatisfiablePathConditionException {
-		return evaluateModuloWorker(state, pid, expression, numerator,
-				denominator, true);
+	protected Evaluation evaluateModulo(State state, int pid, BinaryExpression expression, NumericExpression numerator,
+			NumericExpression denominator) throws UnsatisfiablePathConditionException {
+		return evaluateModuloWorker(state, pid, expression, numerator, denominator, true);
 	}
 
 	@Override
-	public Pair<Evaluation, NumericExpression[]> arrayElementReferenceAdd(
-			State state, int pid, SymbolicExpression ptr,
-			NumericExpression offset, CIVLSource source)
-			throws UnsatisfiablePathConditionException {
+	public Pair<Evaluation, NumericExpression[]> arrayElementReferenceAdd(State state, int pid, SymbolicExpression ptr,
+			NumericExpression offset, CIVLSource source) throws UnsatisfiablePathConditionException {
 		SymbolicExpression newPtr = symbolicUtil.makePointer(ptr,
 				symbolicAnalyzer.getLeafNodeReference(state, ptr, source));
 
-		return arrayElementReferenceAddWorker(state, pid, newPtr, offset, true,
-				source);
+		return arrayElementReferenceAddWorker(state, pid, newPtr, offset, true, source);
 	}
 
 	@Override
-	public Evaluation evaluatePointerAdd(State state, int pid,
-			BinaryExpression expression, SymbolicExpression pointer,
-			SymbolicExpression offset)
-			throws UnsatisfiablePathConditionException {
-		Pair<BooleanExpression, ResultType> checkPointer = symbolicAnalyzer
-				.isDefinedPointer(state, pointer, expression.getSource());
+	public Evaluation evaluatePointerAdd(State state, int pid, BinaryExpression expression, SymbolicExpression pointer,
+			SymbolicExpression offset) throws UnsatisfiablePathConditionException {
+		Pair<BooleanExpression, ResultType> checkPointer = symbolicAnalyzer.isDefinedPointer(state, pointer,
+				expression.getSource());
 
 		if (checkPointer.right != ResultType.YES)
 			return new Evaluation(state, symbolicUtil.undefinedPointer());
@@ -168,21 +144,17 @@ public class ErrorSideEffectFreeEvaluator extends CommonEvaluator
 			ReferenceExpression symRef = symbolicUtil.getSymRef(pointer);
 
 			if (symRef.isArrayElementReference()) {
-				return arrayElementReferenceAddWorker(state, pid, pointer,
-						(NumericExpression) offset, true,
+				return arrayElementReferenceAddWorker(state, pid, pointer, (NumericExpression) offset, true,
 						expression.left().getSource()).left;
 			} else if (symRef.isOffsetReference()) {
-				return offsetReferenceAddition(state, pid, pointer,
-						(NumericExpression) offset, true,
+				return offsetReferenceAddition(state, pid, pointer, (NumericExpression) offset, true,
 						expression.getSource());
 			} else if (symRef.isIdentityReference()) {
-				return identityReferenceAddition(state, pid, pointer,
-						(NumericExpression) offset, true,
+				return identityReferenceAddition(state, pid, pointer, (NumericExpression) offset, true,
 						expression.getSource());
 			} else
 				throw new CIVLUnimplementedFeatureException(
-						"Pointer addition for anything other than array elements or variables",
-						expression);
+						"Pointer addition for anything other than array elements or variables", expression);
 		}
 	}
 }

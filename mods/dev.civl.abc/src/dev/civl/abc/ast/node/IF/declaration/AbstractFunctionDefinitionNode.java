@@ -1,8 +1,5 @@
 package dev.civl.abc.ast.node.IF.declaration;
 
-import dev.civl.abc.ast.node.IF.PairNode;
-import dev.civl.abc.ast.node.IF.SequenceNode;
-import dev.civl.abc.ast.node.IF.expression.ExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.StringLiteralNode;
 
 /**
@@ -13,39 +10,21 @@ import dev.civl.abc.ast.node.IF.expression.StringLiteralNode;
  * </p>
  * 
  * <p>
- * An abstract function has an identifier, return type, parameters, and an
- * integer specifying the number of partial derivatives that may be taken.
+ * An abstract function has an identifier, return type, and parameters.
  * </p>
  * 
  * @author zirkel
  * 
  */
-public interface AbstractFunctionDefinitionNode
-		extends FunctionDeclarationNode {
-
-	/**
-	 * Returns the number of partial derivatives that exist and are continuous.
-	 * 
-	 * @return The total number of partial derivatives (of any parameter) that
-	 *         may be taken.
-	 */
-	int continuity();
-
-	/**
-	 * Returns the sequence of interval whose Cartesian product defines the
-	 * domain on which the function is differentiable.
-	 * 
-	 * @return the interval sequence or <code>null</code> if absent
-	 */
-	SequenceNode<PairNode<ExpressionNode, ExpressionNode>> getIntervals();
+public interface AbstractFunctionDefinitionNode extends FunctionDeclarationNode {
 
 	@Override
 	AbstractFunctionDefinitionNode copy();
-	
+
 	/**
-	 * @return the StringLiteralNode representing an optional attribute attached
-	 *         to the abstract function, if there is an attribute.
-	 *         <code>null</code>, otherwise.
+	 * @return the StringLiteralNode representing an optional attribute attached to
+	 *         the abstract function, if there is an attribute. <code>null</code>,
+	 *         otherwise.
 	 */
 	StringLiteralNode getAttribute();
 

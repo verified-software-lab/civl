@@ -26,6 +26,8 @@ import dev.civl.abc.ast.node.IF.PragmaNode;
 import dev.civl.abc.ast.node.IF.SequenceNode;
 import dev.civl.abc.ast.node.IF.StaticAssertionNode;
 import dev.civl.abc.ast.node.IF.acsl.ContractNode;
+import dev.civl.abc.ast.node.IF.acsl.ExtendedQuantifiedExpressionNode;
+import dev.civl.abc.ast.node.IF.acsl.ExtendedQuantifiedExpressionNode.ExtendedQuantifier;
 import dev.civl.abc.ast.node.IF.acsl.TransformNode;
 import dev.civl.abc.ast.node.IF.compound.CompoundInitializerNode;
 import dev.civl.abc.ast.node.IF.compound.DesignationNode;
@@ -36,19 +38,15 @@ import dev.civl.abc.ast.node.IF.declaration.FunctionDeclarationNode;
 import dev.civl.abc.ast.node.IF.declaration.FunctionDefinitionNode;
 import dev.civl.abc.ast.node.IF.declaration.InitializerNode;
 import dev.civl.abc.ast.node.IF.declaration.VariableDeclarationNode;
-import dev.civl.abc.ast.node.IF.acsl.ExtendedQuantifiedExpressionNode;
-import dev.civl.abc.ast.node.IF.acsl.ExtendedQuantifiedExpressionNode.ExtendedQuantifier;
 import dev.civl.abc.ast.node.IF.expression.ArrayLambdaNode;
-import dev.civl.abc.ast.node.IF.expression.LambdaNode;
 import dev.civl.abc.ast.node.IF.expression.CharacterConstantNode;
 import dev.civl.abc.ast.node.IF.expression.CompoundLiteralNode;
-import dev.civl.abc.ast.node.IF.expression.DerivativeExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.ExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.FloatingConstantNode;
 import dev.civl.abc.ast.node.IF.expression.FunctionCallNode;
 import dev.civl.abc.ast.node.IF.expression.GenericSelectionNode;
-import dev.civl.abc.ast.node.IF.expression.IdentifierExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.IntegerConstantNode;
+import dev.civl.abc.ast.node.IF.expression.LambdaNode;
 import dev.civl.abc.ast.node.IF.expression.OperatorNode;
 import dev.civl.abc.ast.node.IF.expression.OperatorNode.Operator;
 import dev.civl.abc.ast.node.IF.expression.QuantifiedExpressionNode;
@@ -285,64 +283,6 @@ public class CASTBuilderWorker extends ASTBuilderWorker {
 		return nodeFactory.newIdentifierNode(source, token.getText());
 	}
 
-	// private SequenceNode<VariableDeclarationNode> translateScopeListDef(
-	// CommonTree list) {
-	// int kind = list.getType();
-	//
-	// if (kind == ABSENT) {
-	// return null;
-	// } else {
-	// int numChildren = list.getChildCount();
-	// LinkedList<VariableDeclarationNode> nodeList = new
-	// LinkedList<VariableDeclarationNode>();
-	// SequenceNode<VariableDeclarationNode> result;
-	// Source source = newSource(list);
-	//
-	// for (int i = 0; i < numChildren; i++) {
-	// CommonTree child = (CommonTree) list.getChild(i);
-	// IdentifierNode identifierNode = translateIdentifier(child);
-	// Source childSource = identifierNode.getSource();
-	// TypeNode typeNode = nodeFactory.newScopeTypeNode(childSource);
-	// VariableDeclarationNode declNode = nodeFactory
-	// .newVariableDeclarationNode(childSource,
-	// identifierNode, typeNode);
-	//
-	// nodeList.add(declNode);
-	// }
-	// result = nodeFactory.newSequenceNode(source, "scope list def",
-	// nodeList);
-	// return result;
-	// }
-	// }
-
-	// private SequenceNode<ExpressionNode> translateScopeListUse(CommonTree
-	// list) {
-	// int kind = list.getType();
-	//
-	// if (kind == ABSENT) {
-	// return null;
-	// } else {
-	// int numChildren = list.getChildCount();
-	// LinkedList<ExpressionNode> nodeList = new LinkedList<ExpressionNode>();
-	// SequenceNode<ExpressionNode> result;
-	// Source source = newSource(list);
-	//
-	// for (int i = 0; i < numChildren; i++) {
-	// CommonTree child = (CommonTree) list.getChild(i);
-	// IdentifierNode identifierNode = translateIdentifier(child);
-	// Source childSource = identifierNode.getSource();
-	// IdentifierExpressionNode exprNode = nodeFactory
-	// .newIdentifierExpressionNode(childSource,
-	// identifierNode);
-	//
-	// nodeList.add(exprNode);
-	// }
-	// result = nodeFactory.newSequenceNode(source, "scope list use",
-	// nodeList);
-	// return result;
-	// }
-	// }
-
 	// Translation of Expressions...
 
 	private IntegerConstantNode translateIntegerConstant(Source source, CommonTree integerConstant)
@@ -362,30 +302,10 @@ public class CASTBuilderWorker extends ASTBuilderWorker {
 		return nodeFactory.newCharacterConstantNode(source, characterConstant.getText(), token.getExecutionCharacter());
 	}
 
-	// removed from grammar, using macros instead:
-	// private ConstantNode translateTrue(Source source) {
-	// return nodeFactory.newBooleanConstantNode(source, true);
-	// }
-	//
-	// private ConstantNode translateFalse(Source source) {
-	// return nodeFactory.newBooleanConstantNode(source, false);
-	// }
-
 	private StringLiteralNode translateStringLiteral(Source source, CommonTree stringLiteral) throws SyntaxException {
 		StringToken token = (StringToken) stringLiteral.getToken();
 
 		return nodeFactory.newStringLiteralNode(source, stringLiteral.getText(), token.getStringLiteral());
-	}
-
-	private ExpressionNode translateAt(Source source, CommonTree expressionTree, SimpleScope scope)
-			throws SyntaxException {
-		CommonTree procExprTree = (CommonTree) expressionTree.getChild(0);
-		CommonTree identifierTree = (CommonTree) expressionTree.getChild(1);
-		ExpressionNode procExpr = translateExpression(procExprTree, scope);
-		IdentifierNode identifierNode = translateIdentifier(identifierTree);
-
-		return nodeFactory.newRemoteOnExpressionNode(source, procExpr,
-				nodeFactory.newIdentifierExpressionNode(newSource(identifierTree), identifierNode));
 	}
 
 	private ExpressionNode translateRegularRange(Source source, CommonTree expressionTree, SimpleScope scope)
@@ -411,50 +331,6 @@ public class CASTBuilderWorker extends ASTBuilderWorker {
 		ExpressionNode expression = this.translateExpression((CommonTree) expressionTree.getChild(0), scope);
 
 		return nodeFactory.newScopeOfNode(source, expression);
-	}
-
-	/**
-	 * Translates a derivative expression
-	 * 
-	 * @param source         The source information.
-	 * @param expressionTree CommonTree of type DERIV, representing a derivative
-	 *                       expression.
-	 * @param scope          The scope containing this expression.
-	 * @return A DerivativeExpressionNode corresponding to the ANTLR tree.
-	 * @throws SyntaxException
-	 */
-	private DerivativeExpressionNode translateDeriv(Source source, CommonTree derivTree, SimpleScope scope)
-			throws SyntaxException {
-		CommonTree functionTree = (CommonTree) derivTree.getChild(0);
-		CommonTree partialListTree = (CommonTree) derivTree.getChild(1);
-		CommonTree argumentListTree = (CommonTree) derivTree.getChild(2);
-		int numPartials = partialListTree.getChildCount();
-		int numArgs = argumentListTree.getChildCount();
-		ExpressionNode function = translateExpression(functionTree, scope);
-		List<PairNode<IdentifierExpressionNode, IntegerConstantNode>> partials;
-		List<ExpressionNode> arguments;
-
-		partials = new LinkedList<PairNode<IdentifierExpressionNode, IntegerConstantNode>>();
-		arguments = new LinkedList<ExpressionNode>();
-		for (int i = 0; i < numPartials; i++) {
-			CommonTree partialTree = (CommonTree) partialListTree.getChild(i);
-			ExpressionNode partialIdentifier = translateExpression((CommonTree) partialTree.getChild(0), scope);
-			ExpressionNode partialDegree = translateExpression((CommonTree) partialTree.getChild(1), scope);
-
-			assert partialIdentifier instanceof IdentifierExpressionNode;
-			assert partialDegree instanceof IntegerConstantNode;
-			partials.add(nodeFactory.newPairNode(newSource(partialTree), (IdentifierExpressionNode) partialIdentifier,
-					(IntegerConstantNode) partialDegree));
-		}
-		for (int i = 0; i < numArgs; i++) {
-			CommonTree argumentTree = (CommonTree) argumentListTree.getChild(i);
-			ExpressionNode argumentNode = translateExpression(argumentTree, scope);
-
-			arguments.add(argumentNode);
-		}
-		return nodeFactory.newDerivativeExpressionNode(source, function,
-				nodeFactory.newSequenceNode(newSource(partialListTree), "partials", partials),
-				nodeFactory.newSequenceNode(newSource(argumentListTree), "arguments", arguments));
 	}
 
 	private GenericSelectionNode translateGenericSelection(Source source, CommonTree genericSelectionTree,
@@ -505,9 +381,6 @@ public class CASTBuilderWorker extends ASTBuilderWorker {
 		int numArgs = argumentListTree.getChildCount();
 		List<ExpressionNode> contextArgumentList = new LinkedList<ExpressionNode>();
 		List<ExpressionNode> argumentList = new LinkedList<ExpressionNode>();
-		// SequenceNode<ExpressionNode> scopeList =
-		// translateScopeListUse((CommonTree) callTree
-		// .getChild(4));
 
 		for (int i = 0; i < numContextArgs; i++) {
 			CommonTree argumentTree = (CommonTree) contextArgumentListTree.getChild(i);
@@ -515,14 +388,13 @@ public class CASTBuilderWorker extends ASTBuilderWorker {
 
 			contextArgumentList.add(contextArgumentNode);
 		}
-
 		for (int i = 0; i < numArgs; i++) {
 			CommonTree argumentTree = (CommonTree) argumentListTree.getChild(i);
 			ExpressionNode argumentNode = translateExpression(argumentTree, scope);
 
 			argumentList.add(argumentNode);
 		}
-		return nodeFactory.newFunctionCallNode(source, functionNode, contextArgumentList, argumentList, null);
+		return nodeFactory.newContextFunctionCallNode(source, functionNode, contextArgumentList, argumentList);
 	}
 
 	/**
@@ -811,24 +683,10 @@ public class CASTBuilderWorker extends ASTBuilderWorker {
 			return nodeFactory.newHereNode(source);
 		case SPAWN:
 			return nodeFactory.newSpawnNode(source, translateCall(source, expressionTree, scope));
-		// case TRUE:
-		// return translateTrue(source);
-		// case FALSE:
-		// return translateFalse(source);
 		case RESULT:
 			return nodeFactory.newResultNode(source);
-		case AT:
-			return translateAt(source, expressionTree, scope);
-		// case FORALL:
-		// return translateForall(source, expressionTree, scope);
-		// case UNIFORM:
-		// return translateUniform(source, expressionTree, scope);
-		// case EXISTS:
-		// return translateExists(source, expressionTree, scope);
 		case QUANTIFIED:
 			return translateQuantifiedExpressionNew(source, expressionTree, scope);
-		case DERIVATIVE_EXPRESSION:
-			return translateDeriv(source, expressionTree, scope);
 		case DOTDOT:
 			return translateRegularRange(source, expressionTree, scope);
 		case ELLIPSIS:
@@ -903,50 +761,6 @@ public class CASTBuilderWorker extends ASTBuilderWorker {
 	}
 
 	/**
-	 * Translates an interval of real numbers expressed as [a,b], where a and b are
-	 * expressions.
-	 * 
-	 * @param intervalTree the ANTLR tree node for the interval, which has 2
-	 *                     children, one for a and one for b
-	 * @param scope        the scope in which this interval occurs
-	 * @return a new {@link PairNode} consisting of an expression node for the left
-	 *         endpoint and an expression node for the right end point of the
-	 *         interval
-	 * @throws SyntaxException if either or both expressions contain syntax errors
-	 */
-	private PairNode<ExpressionNode, ExpressionNode> translateInterval(CommonTree intervalTree, SimpleScope scope)
-			throws SyntaxException {
-		ExpressionNode left = translateExpression((CommonTree) intervalTree.getChild(0), scope);
-		ExpressionNode right = translateExpression((CommonTree) intervalTree.getChild(1), scope);
-
-		return nodeFactory.newPairNode(newSource(intervalTree), left, right);
-	}
-
-	/**
-	 * Translates an ANTLR tree representing a sequence of real intervals: [a1,b1]
-	 * [a2,b2] ... [an,bn]. These are used in the $uniform expression.
-	 * 
-	 * @param intervalSequenceTree ANTLR tree representing interval sequence
-	 * @param scope                the scope in which the $uniform expression occurs
-	 * @return a new sequence node consisting of the result of translating the
-	 *         intervals
-	 * @throws SyntaxException if any interval contains a syntax error
-	 */
-	private SequenceNode<PairNode<ExpressionNode, ExpressionNode>> translateIntervalSequence(
-			CommonTree intervalSequenceTree, SimpleScope scope) throws SyntaxException {
-		int n = intervalSequenceTree.getChildCount();
-		List<PairNode<ExpressionNode, ExpressionNode>> intervalList = new LinkedList<>();
-
-		for (int i = 0; i < n; i++) {
-			CommonTree intervalTree = (CommonTree) intervalSequenceTree.getChild(i);
-			PairNode<ExpressionNode, ExpressionNode> interval = translateInterval(intervalTree, scope);
-
-			intervalList.add(interval);
-		}
-		return nodeFactory.newSequenceNode(newSource(intervalSequenceTree), "IntervalSequence", intervalList);
-	}
-
-	/**
 	 * Translates an ANTLR tree representing a quantified expression, i.e., an
 	 * expression beginning with one of $exists, $forall, or $uniform.
 	 * 
@@ -964,25 +778,15 @@ public class CASTBuilderWorker extends ASTBuilderWorker {
 		CommonTree boundVariableDeclListTree = (CommonTree) quantifiedTree.getChild(1);
 		CommonTree bodyTree = (CommonTree) quantifiedTree.getChild(2);
 		CommonTree restrictionTree = (CommonTree) quantifiedTree.getChild(3);
-		CommonTree intervalSequenceTree = (CommonTree) quantifiedTree.getChild(4);
 		Quantifier quantifier = translateQuantifier(quantifierTree);
 		ExpressionNode restrict = null, body;
 		SequenceNode<PairNode<SequenceNode<VariableDeclarationNode>, ExpressionNode>> boundVariableDeclListNode = this
 				.translateBoundVariableDeclarationList(source, boundVariableDeclListTree, newScope);
-		SequenceNode<PairNode<ExpressionNode, ExpressionNode>> intervalSequence = null;
 
 		if (restrictionTree != null && restrictionTree.getToken().getType() != ABSENT)
 			restrict = this.translateExpression(source, restrictionTree, newScope);
 		body = this.translateExpression(bodyTree, newScope);
-		if (intervalSequenceTree != null && intervalSequenceTree.getToken().getType() != ABSENT) {
-			if (quantifier != Quantifier.UNIFORM)
-				error("Interval sequence can only be used with $uniform", quantifiedTree);
-			intervalSequence = translateIntervalSequence(intervalSequenceTree, scope);
-			// TODO: check the number of intervals = the number of bound
-			// variables
-		}
-		return nodeFactory.newQuantifiedExpressionNode(source, quantifier, boundVariableDeclListNode, restrict, body,
-				intervalSequence);
+		return nodeFactory.newQuantifiedExpressionNode(source, quantifier, boundVariableDeclListNode, restrict, body);
 	}
 
 	private PairNode<SequenceNode<VariableDeclarationNode>, ExpressionNode> translateBoundVariableDeclarationSubList(
@@ -1012,8 +816,6 @@ public class CASTBuilderWorker extends ASTBuilderWorker {
 			return Quantifier.FORALL;
 		case EXISTS:
 			return Quantifier.EXISTS;
-		case UNIFORM:
-			return Quantifier.UNIFORM;
 		default:
 			throw this.error("unknown quantifier", quantifierTree);
 		}
@@ -1132,30 +934,17 @@ public class CASTBuilderWorker extends ASTBuilderWorker {
 				FunctionDeclarationNode declaration;
 
 				if (analysis.abstractSpecifier) {
-					int degree;
-					SequenceNode<PairNode<ExpressionNode, ExpressionNode>> intervals;
 					StringLiteralNode attr = null;
 
-					if (analysis.differentiableNode != null) {
-						degree = analysis.differentiableDegree;
-						intervals = translateIntervalSequence((CommonTree) analysis.differentiableNode.getChild(1),
-								scope);
-					} else {
-						degree = 0;
-						intervals = null;
-					}
 					if (analysis.abstractAttributeNode != null)
 						attr = translateStringLiteral(newSource(analysis.abstractAttributeNode),
 								analysis.abstractAttributeNode);
 					declaration = nodeFactory.newAbstractFunctionDefinitionNode(source, data.identifier, typeNode,
-							getContract(), degree, intervals, attr);
+							getContract(), attr);
 
 				} else {
 					declaration = nodeFactory.newFunctionDeclarationNode(source, data.identifier, typeNode,
 							getContract());
-					if (analysis.differentiableNode != null)
-						throw error("$differentiable specifier used with non-abstract function",
-								analysis.differentiableNode);
 				}
 				if (debug)
 					System.out.println("processing function " + data.identifier.name());
@@ -1223,7 +1012,7 @@ public class CASTBuilderWorker extends ASTBuilderWorker {
 			CommonTree identifierTree = (CommonTree) typedefNameTree.getChild(0);
 			IdentifierNode identifierNode = translateIdentifier(identifierTree);
 
-			result = nodeFactory.newTypedefNameNode(identifierNode, null);
+			result = nodeFactory.newTypedefNameNode(identifierNode);
 			// special handling for CIVL-C built-in types that are defined
 			// using typedefs, i.e. $state, $mem:
 			if (((TypedefNameNode) result).getName().name().equals(CIVLC_MEM_TYPEDEF_NAME))
@@ -2071,16 +1860,6 @@ public class CASTBuilderWorker extends ASTBuilderWorker {
 				translateStatement((CommonTree) statementTree.getChild(1), new SimpleScope(loopScope)), getContract());
 	}
 
-	private StatementNode translateUpdate(CommonTree statementTree, SimpleScope scope) throws SyntaxException {
-		Source source = this.newSource(statementTree);
-		CommonTree operandTree = (CommonTree) statementTree.getChild(0);
-		CommonTree callTree = (CommonTree) statementTree.getChild(1);
-
-		return this.nodeFactory.newUpdateNode(source,
-				this.translateExpression(newSource(operandTree), operandTree, scope),
-				translateCall(newSource(callTree), callTree, scope));
-	}
-
 	private StatementNode translateSwitch(CommonTree statementTree, SimpleScope scope) throws SyntaxException {
 		Source statementSource = newSource(statementTree);
 		CommonTree expressionTree = (CommonTree) statementTree.getChild(0);
@@ -2427,8 +2206,6 @@ public class CASTBuilderWorker extends ASTBuilderWorker {
 					translateStatement((CommonTree) statementTree.getChild(1), scope));
 		case WHILE:
 			return translateWhile(statementTree, scope);
-		case UPDATE:
-			return translateUpdate(statementTree, scope);
 		default:
 			throw error("Unknown statement type " + kind, statementTree);
 		}

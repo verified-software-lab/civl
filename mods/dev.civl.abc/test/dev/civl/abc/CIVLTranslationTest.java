@@ -160,18 +160,8 @@ public class CIVLTranslationTest {
 	}
 
 	@Test
-	public void with() throws ABCException {
-		check("with");
-	}
-
-	@Test
 	public void update() throws ABCException {
 		check("update");
-	}
-
-	@Test
-	public void valueat() throws ABCException {
-		check("valueat");
 	}
 
 	@Test

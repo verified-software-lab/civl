@@ -34,7 +34,9 @@ public interface ProverInfo extends Comparable<ProverInfo> {
 		/**
 		 * CVC4 using CVC4's presentation language through its command line interface.
 		 */
-		CVC4
+		CVC4,
+		/** Vampire theorem prover, using its smtlib2 format. */
+		VAMPIRE
 	};
 
 	/**

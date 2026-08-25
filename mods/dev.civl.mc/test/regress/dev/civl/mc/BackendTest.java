@@ -76,11 +76,6 @@ public class BackendTest {
 	}
 
 	@Test
-	public void mpiSumArray() {
-		assertTrue(ui.run("show", "-input_mpi_nprocs=3", QUIET, NO_PRINTF, filename("mpiSumarray.cvl")));
-	}
-
-	@Test
 	public void symbols() {
 		assertTrue(ui.run(VERIFY, QUIET, filename("symbols.cvl")));
 	}

@@ -204,13 +204,13 @@ public class CompareCombiner implements Combiner {
 						nodeFactory.newIdentifierExpressionNode(specSource,
 								nodeFactory.newIdentifierNode(specSource,
 										SYSTEM_SPEC)),
-						new ArrayList<ExpressionNode>(), null)));
+						new ArrayList<ExpressionNode>())));
 		newMainBodyNodes.add(nodeFactory.newExpressionStatementNode(
 				nodeFactory.newFunctionCallNode(implSource,
 						nodeFactory.newIdentifierExpressionNode(implSource,
 								nodeFactory.newIdentifierNode(implSource,
 										SYSTEM_IMPL)),
-						new ArrayList<ExpressionNode>(), null)));
+						new ArrayList<ExpressionNode>())));
 		// TODO: spawn and join (but calls ok until joint assertions
 		// implemented)
 		newMainBodyNodes.addAll(outputAssertions(specOutputs, implOutputs));
@@ -795,7 +795,7 @@ public class CompareCombiner implements Combiner {
 						functionDefinition.getIdentifier().copy());
 
 		return nodeFactory.newFunctionCallNode(source, functionExpression,
-				new LinkedList<>(), null);
+				new LinkedList<>());
 	}
 
 	/**
@@ -879,7 +879,7 @@ public class CompareCombiner implements Combiner {
 									implOutput.getIdentifier().copy()))));
 			args.add(this.createStringLiteral(message));
 			assertEqualCall = nodeFactory.newFunctionCallNode(source,
-					assertEqualFunction.copy(), args, null);
+					assertEqualFunction.copy(), args);
 			result.add(nodeFactory.newExpressionStatementNode(assertEqualCall));
 		}
 		return result;

@@ -1,0 +1,6 @@
+
+struct S { double x; };
+
+int main(void) {
+  (struct S) {(double)($pow(1.0, 0.5))};
+}

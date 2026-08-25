@@ -344,7 +344,7 @@ public class CommonMemoryUnitEvaluator
 								vid = this.symbolicUtil.getVariableId(null,
 										value);
 						Variable object = state.getDyscope(dyscopeID)
-								.lexicalScope().variable(vid);
+								.lexicalScope().getVariable(vid);
 
 						if (!(object.isInput() || object.isConst()))
 							result.add(this.pointer2MemoryUnit(value));

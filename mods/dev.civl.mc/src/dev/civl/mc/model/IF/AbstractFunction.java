@@ -14,11 +14,6 @@ package dev.civl.mc.model.IF;
 public interface AbstractFunction extends CIVLFunction {
 
 	/**
-	 * @return The total number of partial derivatives that may be taken.
-	 */
-	int continuity();
-
-	/**
 	 * The kind of a special relation represented by this abstract function
 	 * 
 	 * @author ziqingluo

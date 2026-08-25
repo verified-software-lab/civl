@@ -6,3 +6,8 @@ arity
 preprocessing
 datatypes
 struct
+dyscope
+atomicity
+sqrt
+unsequenced
+int

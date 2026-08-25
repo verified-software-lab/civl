@@ -12,29 +12,32 @@
 #define _Complex_I 1.0if
 #define I _Complex_I
 
-// These are described as macros in the C23 Standard:
-double complex CMPLX(double x, double y);
-float complex CMPLXF(float x, float y);
-long double complex CMPLXL(long double x, long double y);
+// These are described as macros in the C23 Standard, but we use
+// abstract functions that will be replaced with expressions...
+$abstract double complex       CMPLX(double x, double y);
+$abstract float complex        CMPLXF(float x, float y);
+$abstract long double complex  CMPLXL(long double x, long double y);
 
-/* Functions */
+/* Functions.  Note all are $abstract so can be used in quantified
+   expressions. */
 
-// These functions will be given concrete definitions...
+// These functions will be replaced with expressions with the precise
+// semantics...
 
-double               cabs(double complex);
-float                cabsf(float complex);
-long double          cabsl(long double complex);
-double               cimag(double complex);
-float                cimagf(float complex);
-long double          cimagl(long double complex);
-double complex       conj(double complex);
-float complex        conjf(float complex);
-long double complex  conjl(long double complex);
-double               creal(double complex);
-float                crealf(float complex);
-long double          creall(long double complex);
+$abstract double               cabs(double complex);
+$abstract float                cabsf(float complex);
+$abstract long double          cabsl(long double complex);
+$abstract double               cimag(double complex);
+$abstract float                cimagf(float complex);
+$abstract long double          cimagl(long double complex);
+$abstract double complex       conj(double complex);
+$abstract float complex        conjf(float complex);
+$abstract long double complex  conjl(long double complex);
+$abstract double               creal(double complex);
+$abstract float                crealf(float complex);
+$abstract long double          creall(long double complex);
 
-// These will be kept abstract...
+// These will be kept uninterpreted...
 
 $abstract double complex       cacos(double complex);
 $abstract float complex        cacosf(float complex);

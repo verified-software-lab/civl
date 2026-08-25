@@ -38,15 +38,11 @@ public class CommonVariable extends CommonSourceable implements Variable {
 	/**
 	 * A variable.
 	 * 
-	 * @param type
-	 *            The type of the variable.
-	 * @param name
-	 *            The name of this variable.
-	 * @param vid
-	 *            The index of this variable in its scope.
+	 * @param type The type of the variable.
+	 * @param name The name of this variable.
+	 * @param vid  The index of this variable in its scope.
 	 */
-	public CommonVariable(CIVLSource source, CIVLType type, Identifier name,
-			int vid, boolean isParameter) {
+	public CommonVariable(CIVLSource source, CIVLType type, Identifier name, int vid, boolean isParameter) {
 		super(source);
 		this.type = type;
 		this.name = name;
@@ -91,8 +87,7 @@ public class CommonVariable extends CommonSourceable implements Variable {
 	}
 
 	/**
-	 * @param type
-	 *            The type of this variable.
+	 * @param type The type of this variable.
 	 */
 	public void setType(CIVLType type) {
 		this.type = type;
@@ -100,8 +95,7 @@ public class CommonVariable extends CommonSourceable implements Variable {
 	}
 
 	/**
-	 * @param isConst
-	 *            Whether this variable is a const.
+	 * @param isConst Whether this variable is a const.
 	 */
 	public void setConst(boolean isConst) {
 		this.isConst = isConst;
@@ -109,16 +103,14 @@ public class CommonVariable extends CommonSourceable implements Variable {
 	}
 
 	/**
-	 * @param value
-	 *            Whether this variable is an input.
+	 * @param value Whether this variable is an input.
 	 */
 	public void setIsInput(boolean value) {
 		this.isInput = value;
 	}
 
 	/**
-	 * @param value
-	 *            Whether this variable is an output.
+	 * @param value Whether this variable is an output.
 	 */
 	public void setIsOutput(boolean value) {
 		this.isOutput = value;
@@ -132,16 +124,14 @@ public class CommonVariable extends CommonSourceable implements Variable {
 	}
 
 	/**
-	 * @param name
-	 *            The name of this variable.
+	 * @param name The name of this variable.
 	 */
 	public void setName(Identifier name) {
 		this.name = name;
 	}
 
 	/**
-	 * @param scope
-	 *            The scope to which this variable belongs.
+	 * @param scope The scope to which this variable belongs.
 	 */
 	public void setScope(Scope scope) {
 		this.scope = scope;
@@ -227,11 +217,6 @@ public class CommonVariable extends CommonSourceable implements Variable {
 		this.vid = vid;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof Variable) {

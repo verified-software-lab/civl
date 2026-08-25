@@ -59,6 +59,7 @@ public class ConfigFactory {
 		executableMap.put("cvc5", ProverKind.CVC5);
 		executableMap.put("cvc4", ProverKind.CVC4);
 		executableMap.put("alt-ergo", ProverKind.ALT_ERGO);
+		executableMap.put("vampire", ProverKind.VAMPIRE);
 	}
 
 	// Private methods...
@@ -92,6 +93,8 @@ public class ConfigFactory {
 			return ProverKind.Z3;
 		case "ALT_ERGO":
 			return ProverKind.ALT_ERGO;
+		case "VAMPIRE":
+			return ProverKind.VAMPIRE;
 		default:
 			return null;
 		}
@@ -112,6 +115,7 @@ public class ConfigFactory {
 		case CVC5:
 		case Z3:
 		case ALT_ERGO:
+		case VAMPIRE:
 			return "--version";
 		default:
 			throw new SARLException("Unknown executable prover kind: " + kind);
@@ -236,19 +240,28 @@ public class ConfigFactory {
 			out.println("Failed to execute " + fullPath);
 			return null;
 		}
-
-		// try to find version string following usual conventions...
+		// try to find version string following usual conventions.
+		// Vampire just prints "Vampire 5.0.1 ..."
 		String version = null;
-		int pos = line.lastIndexOf("version ");
+		int pos = line.indexOf("Vampire ");
 		if (pos >= 0) {
-			version = line.substring(pos + "version ".length());
+			int pos1 = pos + "Vampire ".length();
+			int pos2 = line.indexOf(' ', pos1);
+			if (pos2 < 0)
+				pos2 = line.length();
+			version = line.substring(pos1, pos2);
 		} else {
-			pos = line.indexOf('v');
+			pos = line.lastIndexOf("version ");
 			if (pos >= 0) {
-				version = line.substring(pos + 1);
+				version = line.substring(pos + "version ".length());
 			} else {
-				out.println("Unexpected output from " + fullPath);
-				return null;
+				pos = line.indexOf('v');
+				if (pos >= 0) {
+					version = line.substring(pos + 1);
+				} else {
+					out.println("Unexpected output from " + fullPath);
+					return null;
+				}
 			}
 		}
 
@@ -273,6 +286,11 @@ public class ConfigFactory {
 			info.addOption("smtlib2"); // input language is SMT-LIB2
 			info.addOption("-o");
 			info.addOption("smtlib2"); // output language is SMT-LIB2
+		} else if (kind == ProverKind.VAMPIRE) {
+			info.addOption("--input_syntax");
+			info.addOption("smtlib2");
+			info.addOption("--output_mode");
+			info.addOption("smtcomp");
 		}
 		return info;
 	}
@@ -654,7 +672,7 @@ public class ConfigFactory {
 		if (provers.isEmpty()) {
 			err.println("No appropriate theorem provers were found in your PATH.");
 			err.println("SARL's theorem proving capability will be very limited.");
-			err.println("Consider installing at least one of Alt-Ergo, CVC4, CVC5, or Z3.");
+			err.println("Consider installing at least one of Alt-Ergo, CVC4, CVC5, Vampire, or Z3.");
 			err.flush();
 		}
 		out.println("SARL configuration file created successfully in " + configFile.getAbsolutePath());

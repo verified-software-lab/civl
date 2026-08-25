@@ -21,34 +21,22 @@ import dev.civl.abc.token.IF.Source;
  * @author zirkel
  * 
  */
-public class CommonQuantifiedExpressionNode extends CommonExpressionNode
-		implements
-			QuantifiedExpressionNode {
+public class CommonQuantifiedExpressionNode extends CommonExpressionNode implements QuantifiedExpressionNode {
 
 	private Quantifier quantifier;
 
 	/**
-	 * @param source
-	 *            The source code information for this expression.
-	 * @param quantifier
-	 *            The quantifier for this expression. One of {FORALL, EXISTS,
-	 *            UNIFORM}.
-	 * @param variableList
-	 *            The list of bound variable declarations.
-	 * @param restriction
-	 *            Boolean-valued expression
-	 * @param expression
-	 *            the expression that is quantified
-	 * @param intervalSequence
-	 *            optional sequence of intervals used to specify domain of
-	 *            uniform convergence for a $uniform expression; may be
-	 *            <code>null</code>
+	 * @param source       The source code information for this expression.
+	 * @param quantifier   The quantifier for this expression. One of {FORALL,
+	 *                     EXISTS, UNIFORM}.
+	 * @param variableList The list of bound variable declarations.
+	 * @param restriction  Boolean-valued expression
+	 * @param expression   the expression that is quantified
 	 */
 	public CommonQuantifiedExpressionNode(Source source, Quantifier quantifier,
 			SequenceNode<PairNode<SequenceNode<VariableDeclarationNode>, ExpressionNode>> variableList,
-			ExpressionNode restriction, ExpressionNode expression,
-			SequenceNode<PairNode<ExpressionNode, ExpressionNode>> intervalSequence) {
-		super(source, variableList, restriction, expression, intervalSequence);
+			ExpressionNode restriction, ExpressionNode expression) {
+		super(source, variableList, restriction, expression);
 		this.quantifier = quantifier;
 	}
 
@@ -59,9 +47,8 @@ public class CommonQuantifiedExpressionNode extends CommonExpressionNode
 
 	@Override
 	public ExpressionNode copy() {
-		return new CommonQuantifiedExpressionNode(this.getSource(), quantifier,
-				duplicate(boundVariableList()), duplicate(restriction()),
-				duplicate(expression()), duplicate(intervalSequence()));
+		return new CommonQuantifiedExpressionNode(this.getSource(), quantifier, duplicate(boundVariableList()),
+				duplicate(restriction()), duplicate(expression()));
 	}
 
 	@Override
@@ -72,8 +59,7 @@ public class CommonQuantifiedExpressionNode extends CommonExpressionNode
 	@SuppressWarnings("unchecked")
 	@Override
 	public SequenceNode<PairNode<SequenceNode<VariableDeclarationNode>, ExpressionNode>> boundVariableList() {
-		return (SequenceNode<PairNode<SequenceNode<VariableDeclarationNode>, ExpressionNode>>) this
-				.child(0);
+		return (SequenceNode<PairNode<SequenceNode<VariableDeclarationNode>, ExpressionNode>>) this.child(0);
 	}
 
 	@Override
@@ -91,15 +77,12 @@ public class CommonQuantifiedExpressionNode extends CommonExpressionNode
 		String output = "";
 
 		switch (quantifier) {
-			case FORALL :
-				output = "forall";
-				break;
-			case EXISTS :
-				output = "exists";
-				break;
-			case UNIFORM :
-				output = "uniform";
-				break;
+		case FORALL:
+			output = "forall";
+			break;
+		case EXISTS:
+			output = "exists";
+			break;
 		}
 		out.print(output);
 	}
@@ -114,8 +97,7 @@ public class CommonQuantifiedExpressionNode extends CommonExpressionNode
 		boolean result = expression().isSideEffectFree(errorsAreSideEffects);
 
 		if (restriction() != null)
-			result = result && this.restriction()
-					.isSideEffectFree(errorsAreSideEffects);
+			result = result && this.restriction().isSideEffectFree(errorsAreSideEffects);
 		return result;
 	}
 
@@ -127,60 +109,33 @@ public class CommonQuantifiedExpressionNode extends CommonExpressionNode
 			if (this.quantifier == thatQuan.quantifier())
 				return null;
 			else
-				return new DifferenceObject(this, that, DiffKind.OTHER,
-						"different quantifier");
+				return new DifferenceObject(this, that, DiffKind.OTHER, "different quantifier");
 		}
 		return new DifferenceObject(this, that);
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public SequenceNode<PairNode<ExpressionNode, ExpressionNode>> intervalSequence() {
-		return (SequenceNode<PairNode<ExpressionNode, ExpressionNode>>) this
-				.child(3);
 	}
 
 	@Override
 	public ASTNode setChild(int index, ASTNode child) {
 		if (index >= 4)
-			throw new ASTException(
-					"CommonQuantifiedExpressionNode has four children, but saw index "
-							+ index);
+			throw new ASTException("CommonQuantifiedExpressionNode has four children, but saw index " + index);
 		switch (index) {
-			case 0 :
-				if (!(child == null || child instanceof SequenceNode))
-					throw new ASTException(
-							"Child of CommonQuantifiedExpressionNode at index "
-									+ index
-									+ " must be a SequenceNode, but saw "
-									+ child + " with type " + child.nodeKind());
-				break;
-			case 1 :
-				if (!(child == null || child instanceof ExpressionNode))
-					throw new ASTException(
-							"Child of CommonQuantifiedExpressionNode at index "
-									+ index
-									+ " must be a ExpressionNode, but saw "
-									+ child + " with type " + child.nodeKind());
-				break;
-			case 2 :
-				if (!(child == null || child instanceof ExpressionNode))
-					throw new ASTException(
-							"Child of CommonQuantifiedExpressionNode at index "
-									+ index
-									+ " must be a ExpressionNode, but saw "
-									+ child + " with type " + child.nodeKind());
-				break;
-			case 3 :
-				if (!(child == null || child instanceof SequenceNode))
-					throw new ASTException(
-							"Child of CommonQuantifiedExpressionNode at index "
-									+ index
-									+ " must be a SequenceNode, but saw "
-									+ child + " with type " + child.nodeKind());
-				break;
-			default :
-				break;
+		case 0:
+			if (!(child == null || child instanceof SequenceNode))
+				throw new ASTException("Child of CommonQuantifiedExpressionNode at index " + index
+						+ " must be a SequenceNode, but saw " + child + " with type " + child.nodeKind());
+			break;
+		case 1:
+			if (!(child == null || child instanceof ExpressionNode))
+				throw new ASTException("Child of CommonQuantifiedExpressionNode at index " + index
+						+ " must be a ExpressionNode, but saw " + child + " with type " + child.nodeKind());
+			break;
+		case 2:
+			if (!(child == null || child instanceof ExpressionNode))
+				throw new ASTException("Child of CommonQuantifiedExpressionNode at index " + index
+						+ " must be a ExpressionNode, but saw " + child + " with type " + child.nodeKind());
+			break;
+		default:
+			break;
 		}
 		return super.setChild(index, child);
 	}

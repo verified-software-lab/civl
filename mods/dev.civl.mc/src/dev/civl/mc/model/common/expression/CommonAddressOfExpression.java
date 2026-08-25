@@ -15,9 +15,7 @@ import dev.civl.mc.model.IF.type.CIVLSetType;
 import dev.civl.mc.model.IF.type.CIVLType;
 import dev.civl.mc.model.IF.variable.Variable;
 
-public class CommonAddressOfExpression extends CommonExpression
-		implements
-			AddressOfExpression {
+public class CommonAddressOfExpression extends CommonExpression implements AddressOfExpression {
 
 	/* ************************** Private Fields *************************** */
 
@@ -27,8 +25,8 @@ public class CommonAddressOfExpression extends CommonExpression
 	private LHSExpression operand;
 
 	/**
-	 * Is this expression evaluating the offset of a field of some struct, which
-	 * has the form <code>&(((T*)0)->f)</code>?
+	 * Is this expression evaluating the offset of a field of some struct, which has
+	 * the form <code>&(((T*)0)->f)</code>?
 	 */
 	private boolean isOffset = false;
 
@@ -41,19 +39,14 @@ public class CommonAddressOfExpression extends CommonExpression
 	/**
 	 * Creates a new instance of AddressOfExpression.
 	 * 
-	 * @param source
-	 *            The source code information of the expression.
-	 * @param type
-	 *            The type of the expression, which is always a (set-of) pointer
-	 *            type.
-	 * @param operand
-	 *            The operand of the address-of operator (<code>&</code>).
+	 * @param source  The source code information of the expression.
+	 * @param type    The type of the expression, which is always a (set-of) pointer
+	 *                type.
+	 * @param operand The operand of the address-of operator (<code>&</code>).
 	 */
-	public CommonAddressOfExpression(CIVLSource source, CIVLType type,
-			LHSExpression operand) {
+	public CommonAddressOfExpression(CIVLSource source, CIVLType type, LHSExpression operand) {
 		super(source, operand.expressionScope(), operand.lowestScope(), type);
-		assert type.isPointerType() || (type.isSetType()
-				&& ((CIVLSetType) type).elementType().isPointerType());
+		assert type.isPointerType() || (type.isSetType() && ((CIVLSetType) type).elementType().isPointerType());
 		this.operand = operand;
 	}
 
@@ -93,8 +86,7 @@ public class CommonAddressOfExpression extends CommonExpression
 	}
 
 	@Override
-	public void replaceWith(ConditionalExpression oldExpression,
-			VariableExpression newExpression) {
+	public void replaceWith(ConditionalExpression oldExpression, VariableExpression newExpression) {
 		if (operand == oldExpression) {
 			operand = newExpression;
 			return;
@@ -103,15 +95,12 @@ public class CommonAddressOfExpression extends CommonExpression
 	}
 
 	@Override
-	public Expression replaceWith(ConditionalExpression oldExpression,
-			Expression newExpression) {
-		Expression newOperand = operand.replaceWith(oldExpression,
-				newExpression);
+	public Expression replaceWith(ConditionalExpression oldExpression, Expression newExpression) {
+		Expression newOperand = operand.replaceWith(oldExpression, newExpression);
 		CommonAddressOfExpression result = null;
 
 		if (newOperand != null) {
-			result = new CommonAddressOfExpression(this.getSource(),
-					(CIVLPointerType) this.expressionType,
+			result = new CommonAddressOfExpression(this.getSource(), (CIVLPointerType) this.expressionType,
 					(LHSExpression) newOperand);
 		}
 		return result;

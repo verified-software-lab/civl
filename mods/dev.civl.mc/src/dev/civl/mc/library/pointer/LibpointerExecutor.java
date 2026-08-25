@@ -19,6 +19,7 @@ import dev.civl.mc.semantics.IF.LibraryEvaluatorLoader;
 import dev.civl.mc.semantics.IF.LibraryExecutor;
 import dev.civl.mc.semantics.IF.LibraryExecutorLoader;
 import dev.civl.mc.semantics.IF.SymbolicAnalyzer;
+import dev.civl.mc.semantics.IF.TypeEvaluation;
 import dev.civl.mc.state.IF.State;
 import dev.civl.mc.state.IF.UnsatisfiablePathConditionException;
 import dev.civl.mc.util.IF.Pair;
@@ -652,14 +653,20 @@ public class LibpointerExecutor extends BaseLibraryExecutor implements LibraryEx
 
 	/**
 	 * Executes the
-	 * <code>void * $pointer_add(const void *ptr, int offset, int type_size);</code>
+	 * 
+	 * <pre>
+	     void * $pointer_add(const void * ptr, int offset, int type_size);
+	 * </pre>
+	 * 
 	 * system function. The resulting pointer should point to the byte that is
 	 * {@code offset*type_size} to the right of {@code ptr}, i.e.,
 	 * {@code (char*)ptr + (offset*typesize)}.
 	 * 
-	 * The current implementation is very limited. It requires that ptr points to
-	 * some element in a (possibly multidimensional) array. I.e. an element of type
-	 * T in an array of type T[n1]...[nk].
+	 * The current implementation is very limited. It requires that {@code ptr}
+	 * points to some element in a (possibly multidimensional) array. I.e. an
+	 * element of type {@code T} in an array of type {@code T[n1]...[nk]}.
+	 * 
+	 * TODO: make this work for struct members.
 	 * 
 	 * @param state          The current state
 	 * @param pid            The PID of the process
@@ -684,13 +691,16 @@ public class LibpointerExecutor extends BaseLibraryExecutor implements LibraryEx
 							+ symbolicAnalyzer.symbolicExpressionToString(source, state, null, ptr));
 			throw new UnsatisfiablePathConditionException();
 		}
-		// the following gets the "primitive" type T and its size:
-		CIVLType primitiveTypePointedStatic = symbolicAnalyzer.getArrayBaseType(state, arguments[0].getSource(), ptr);
-		SymbolicType primitiveTypePointed = primitiveTypePointedStatic.getDynamicType(universe);
-		NumericExpression ptr_primType_size = typeFactory.sizeofDynamicType(primitiveTypePointed);
 
-		// check that offsetBytes is divisible by sizeof(T):
-		BooleanExpression claim = universe.divides(ptr_primType_size, offsetBytes);
+		// Compute the dynamic type T of the base array elements pointed to by ptr:
+		CIVLType staticBaseType = symbolicAnalyzer.getArrayBaseType(state, arguments[0].getSource(), ptr);
+		TypeEvaluation te = evaluator.getDynamicType(state, pid, staticBaseType, source, false);
+		state = te.state;
+		SymbolicType dynamicBaseType = te.type;
+		NumericExpression baseSize = typeFactory.sizeofDynamicType(dynamicBaseType); // sizeof(T)
+
+		// check that offsetBytes is a multiple of sizeof(T):
+		BooleanExpression claim = universe.divides(baseSize, offsetBytes);
 		Reasoner reasoner = universe.reasoner(state.getPathCondition(universe));
 		if (universe.getShowProverQueries())
 			universe.setQueryExplanation("checking $pointer_add offset alignment at " + source.getLocation());
@@ -698,12 +708,12 @@ public class LibpointerExecutor extends BaseLibraryExecutor implements LibraryEx
 		if (civlConfig.isPropertyToggled(CIVLProperty.POINTER) && !resultType.equals(ResultType.YES)) {
 			state = this.errorLogger.logError(source, state, pid, this.symbolicAnalyzer.stateInformation(state), claim,
 					resultType, CIVLProperty.POINTER,
-					"the primitive type of the object pointed by input pointer:" + primitiveTypePointed + " must be"
-							+ " consistent with the size of the" + " primitive type specified at the third argument: "
-							+ type_size);
+					"Pointer addition requires that the number of bytes being added (offsetBytes) is a\n"
+							+ "multiple of the size of the base element type of the array (baseSize) into which\n"
+							+ "the pointer points.\n" + "  offsetBytes: " + offsetBytes + "\n  baseSize: " + baseSize);
 		}
 		// get the offset measured in units of T:
-		NumericExpression offsetPrim = universe.divide(offsetBytes, ptr_primType_size);
+		NumericExpression offsetPrim = universe.divide(offsetBytes, baseSize);
 		// compute the pointer to the new element of the array:
 		return evaluator.arrayElementReferenceAdd(state, pid, ptr, offsetPrim, source).left;
 	}

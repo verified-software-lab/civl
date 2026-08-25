@@ -284,7 +284,7 @@ class ContractClauseTransformer {
 		ExpressionNode assertIdentifier = nodeFactory.newIdentifierExpressionNode(predicate.getSource(),
 				nodeFactory.newIdentifierNode(predicate.getSource(), BaseWorker.ASSERT));
 		FunctionCallNode assumeCall = nodeFactory.newFunctionCallNode(predicate.getSource(), assertIdentifier,
-				Arrays.asList(predicate), null);
+				Arrays.asList(predicate));
 		return nodeFactory.newExpressionStatementNode(assumeCall);
 	}
 
@@ -301,7 +301,7 @@ class ContractClauseTransformer {
 	private StatementNode createAssumption(ExpressionNode predicate) {
 		ExpressionNode assumeIdentifier = identifierExpressionNode(predicate.getSource(), BaseWorker.ASSUME);
 		FunctionCallNode assumeCall = nodeFactory.newFunctionCallNode(predicate.getSource(), assumeIdentifier,
-				Arrays.asList(predicate), null);
+				Arrays.asList(predicate));
 		return nodeFactory.newExpressionStatementNode(assumeCall);
 	}
 
@@ -344,7 +344,7 @@ class ContractClauseTransformer {
 		Source source = expression.getSource();
 		ExpressionNode memHavocFuncIdent = identifierExpressionNode(source, MPIContractUtilities.MEM_HAVOC);
 		ExpressionNode addrof = nodeFactory.newOperatorNode(source, Operator.ADDRESSOF, expression.copy());
-		ExpressionNode tmp = nodeFactory.newFunctionCallNode(source, memHavocFuncIdent, Arrays.asList(addrof), null);
+		ExpressionNode tmp = nodeFactory.newFunctionCallNode(source, memHavocFuncIdent, Arrays.asList(addrof));
 
 		List<BlockItemNode> results = new LinkedList<>();
 

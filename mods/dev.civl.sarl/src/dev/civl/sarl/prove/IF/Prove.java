@@ -114,10 +114,9 @@ public class Prove {
 		case CVC4:
 			return new RobustCVCTheoremProverFactory(universe, prover, workingDirectory);
 		case CVC5:
-			return new SMTProverFactory(universe, prover, workingDirectory);
 		case Z3:
-			return new SMTProverFactory(universe, prover, workingDirectory);
 		case ALT_ERGO:
+		case VAMPIRE:
 			return new SMTProverFactory(universe, prover, workingDirectory);
 		default:
 			throw new SARLInternalException("Unknown kind of theorem prover: " + prover.getKind());

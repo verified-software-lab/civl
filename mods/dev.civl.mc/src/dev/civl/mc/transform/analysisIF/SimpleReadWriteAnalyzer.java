@@ -260,7 +260,6 @@ public class SimpleReadWriteAnalyzer {
 			case PRAGMA :
 			case RUN :
 			case SWITCH :
-			case UPDATE :
 			case WHEN :
 				RWSet result = rwFactory.newRWSet();
 

@@ -158,7 +158,7 @@ public class LibmpiExecutor extends BaseLibraryExecutor implements LibraryExecut
 				currDyscope = state.getDyscope(currDyscopeId);
 				if (currDyscope.lexicalScope().containsVariable(varName))
 					if (currDyscope.lexicalScope().function().name().name().equals(functionName))
-						return new Pair<>(currDyscopeId, currDyscope.lexicalScope().variable(varName));
+						return new Pair<>(currDyscopeId, currDyscope.lexicalScope().getVariable(varName));
 				currDyscopeId = currDyscope.getParent();
 			}
 		}
@@ -274,7 +274,7 @@ public class LibmpiExecutor extends BaseLibraryExecutor implements LibraryExecut
 		SymbolicExpression mpiRootScope = argumentValues[0];
 		SymbolicExpression newCMPIGcomm = argumentValues[1];
 		int sid = stateFactory.getDyscopeId(mpiRootScope);
-		Variable gcommsVar = state.getDyscope(sid).lexicalScope().variable("_mpi_gcomms");
+		Variable gcommsVar = state.getDyscope(sid).lexicalScope().getVariable("_mpi_gcomms");
 		SymbolicExpression gcomms;
 		NumericExpression idx;
 
@@ -291,7 +291,7 @@ public class LibmpiExecutor extends BaseLibraryExecutor implements LibraryExecut
 		SymbolicExpression scope = argumentValues[0];
 		SymbolicExpression gcomms, gcomm;
 		int sid = stateFactory.getDyscopeId(scope);
-		Variable gcommsVar = state.getDyscope(sid).lexicalScope().variable("_mpi_gcomms");
+		Variable gcommsVar = state.getDyscope(sid).lexicalScope().getVariable("_mpi_gcomms");
 
 		gcomms = state.getVariableValue(sid, gcommsVar.vid());
 		gcomm = universe.arrayRead(gcomms, index);

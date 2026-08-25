@@ -35,7 +35,6 @@ import dev.civl.abc.ast.node.IF.expression.CastNode;
 import dev.civl.abc.ast.node.IF.expression.CharacterConstantNode;
 import dev.civl.abc.ast.node.IF.expression.CompoundLiteralNode;
 import dev.civl.abc.ast.node.IF.expression.ConstantNode;
-import dev.civl.abc.ast.node.IF.expression.DerivativeExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.DotNode;
 import dev.civl.abc.ast.node.IF.expression.EnumerationConstantNode;
 import dev.civl.abc.ast.node.IF.expression.ExpressionNode;
@@ -52,7 +51,6 @@ import dev.civl.abc.ast.node.IF.expression.OperatorNode.Operator;
 import dev.civl.abc.ast.node.IF.expression.ProcnullNode;
 import dev.civl.abc.ast.node.IF.expression.QuantifiedExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.RegularRangeNode;
-import dev.civl.abc.ast.node.IF.expression.RemoteOnExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.ResultNode;
 import dev.civl.abc.ast.node.IF.expression.ScopeOfNode;
 import dev.civl.abc.ast.node.IF.expression.SelfNode;
@@ -126,10 +124,6 @@ import dev.civl.abc.token.IF.UnsourcedException;
  *
  */
 public class ExpressionAnalyzer {
-	/**
-	 * The lexical name of a remote expression:
-	 */
-	static final String REMOTE_EXPR = "\\on";
 
 	/**
 	 * Function used for $print. Don't want to add array conversions to this
@@ -166,9 +160,6 @@ public class ExpressionAnalyzer {
 	private Language language;
 
 	private AttributeKey unknownIdentifier;
-
-	// private List<IdentifierExpressionNode> unknownIdentifiers = new
-	// LinkedList<>();
 
 	// ************************** Constructors ****************************
 
@@ -223,9 +214,6 @@ public class ExpressionAnalyzer {
 			case CONSTANT:
 				processConstant((ConstantNode) node);
 				break;
-			case DERIVATIVE_EXPRESSION:
-				processDerivativeExpression((DerivativeExpressionNode) node);
-				break;
 			case DOT:
 				processDot((DotNode) node);
 				break;
@@ -252,9 +240,6 @@ public class ExpressionAnalyzer {
 				break;
 			case REGULAR_RANGE:
 				processRegularRange((RegularRangeNode) node);
-				break;
-			case REMOTE_REFERENCE:
-				processRemoteExpression((RemoteOnExpressionNode) node);
 				break;
 			case RESULT:
 				processResult((ResultNode) node);
@@ -1065,12 +1050,6 @@ public class ExpressionAnalyzer {
 	}
 
 	private void processQuantifiedExpression(QuantifiedExpressionNode node) throws SyntaxException {
-		if (node.intervalSequence() != null) {
-			for (PairNode<ExpressionNode, ExpressionNode> interval : node.intervalSequence()) {
-				processExpression(interval.getLeft());
-				processExpression(interval.getRight());
-			}
-		}
 		for (PairNode<SequenceNode<VariableDeclarationNode>, ExpressionNode> variableSubList : node
 				.boundVariableList()) {
 			for (VariableDeclarationNode variable : variableSubList.getLeft())
@@ -1186,33 +1165,6 @@ public class ExpressionAnalyzer {
 			throw this.error("array lambdas are not allowed to have side effects.", node);
 	}
 
-	private void processDerivativeExpression(DerivativeExpressionNode node) throws SyntaxException {
-		ExpressionNode functionNode = node.getFunction();
-		Type tmpType;
-		TypeKind tmpKind;
-		FunctionType functionType;
-
-		processExpression(functionNode);
-		tmpType = functionNode.getType();
-		tmpKind = tmpType.kind();
-		for (int i = 0; i < node.getNumberOfPartials(); i++) {
-			processExpression(node.getPartial(i).getRight());
-		}
-		for (int i = 0; i < node.getNumberOfArguments(); i++) {
-			processExpression(node.getArgument(i));
-		}
-		if (tmpKind == TypeKind.POINTER) {
-			tmpType = ((PointerType) tmpType).referencedType();
-			tmpKind = tmpType.kind();
-		}
-		if (tmpKind == TypeKind.FUNCTION)
-			functionType = (FunctionType) tmpType;
-		else
-			throw error("Function expression in derivative expression does not have function "
-					+ "type or pointer to function type", functionNode);
-		node.setInitialType(functionType.getReturnType());
-	}
-
 	private void processSizeof(SizeofNode node) throws SyntaxException {
 		SizeableNode argument = node.getArgument();
 
@@ -1224,19 +1176,6 @@ public class ExpressionAnalyzer {
 			assert false;
 		}
 		node.setInitialType(typeFactory.size_t());
-	}
-
-	private void processRemoteExpression(RemoteOnExpressionNode node) throws SyntaxException {
-		ExpressionNode procExpr = node.getProcessExpression();
-		ExpressionNode foreignExpr = node.getForeignExpressionNode();
-
-		processExpression(procExpr);
-		processExpression(foreignExpr);
-		if (!procExpr.getConvertedType().equivalentTo(intType)) {
-			throw error("The argument representing a process in a " + REMOTE_EXPR + " must have a integer type",
-					procExpr);
-		}
-		node.setInitialType(foreignExpr.getConvertedType());
 	}
 
 	private void processResult(ResultNode node) {

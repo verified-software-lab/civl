@@ -47,8 +47,6 @@ import dev.civl.mc.model.IF.expression.CharLiteralExpression;
 import dev.civl.mc.model.IF.expression.CompoundLiteralExpression;
 import dev.civl.mc.model.IF.expression.ConditionalExpression;
 import dev.civl.mc.model.IF.expression.DereferenceExpression;
-import dev.civl.mc.model.IF.expression.DerivativeCallExpression;
-import dev.civl.mc.model.IF.expression.DifferentiableExpression;
 import dev.civl.mc.model.IF.expression.DomainGuardExpression;
 import dev.civl.mc.model.IF.expression.DotExpression;
 import dev.civl.mc.model.IF.expression.DynamicTypeOfExpression;
@@ -95,7 +93,6 @@ import dev.civl.mc.model.IF.statement.MallocStatement;
 import dev.civl.mc.model.IF.statement.NoopStatement;
 import dev.civl.mc.model.IF.statement.ParallelAssignStatement;
 import dev.civl.mc.model.IF.statement.Statement;
-import dev.civl.mc.model.IF.statement.UpdateStatement;
 import dev.civl.mc.model.IF.type.CIVLArrayType;
 import dev.civl.mc.model.IF.type.CIVLFunctionType;
 import dev.civl.mc.model.IF.type.CIVLPointerType;
@@ -117,8 +114,6 @@ import dev.civl.mc.model.common.expression.CommonCharLiteralExpression;
 import dev.civl.mc.model.common.expression.CommonCompoundLiteralExpression;
 import dev.civl.mc.model.common.expression.CommonConditionalExpression;
 import dev.civl.mc.model.common.expression.CommonDereferenceExpression;
-import dev.civl.mc.model.common.expression.CommonDerivativeCallExpression;
-import dev.civl.mc.model.common.expression.CommonDifferentiableExpression;
 import dev.civl.mc.model.common.expression.CommonDomainGuardExpression;
 import dev.civl.mc.model.common.expression.CommonDotExpression;
 import dev.civl.mc.model.common.expression.CommonDynamicTypeOfExpression;
@@ -164,7 +159,6 @@ import dev.civl.mc.model.common.statement.CommonNoopStatement;
 import dev.civl.mc.model.common.statement.CommonParallelAssignStatement;
 import dev.civl.mc.model.common.statement.CommonReturnStatement;
 import dev.civl.mc.model.common.statement.CommonSwitchBranchStatement;
-import dev.civl.mc.model.common.statement.CommonUpdateStatement;
 import dev.civl.mc.model.common.variable.CommonVariable;
 import dev.civl.mc.util.IF.Pair;
 import dev.civl.mc.util.IF.Singleton;
@@ -641,13 +635,6 @@ public class CommonModelFactory implements ModelFactory {
 			derefExprType = typeFactory.civlSetType(derefExprType);
 		// systemScope: indicates unknown scope
 		return new CommonDereferenceExpression(source, this.systemScope, derefExprType, pointer);
-	}
-
-	@Override
-	public DerivativeCallExpression derivativeCallExpression(CIVLSource source, AbstractFunction function,
-			List<Pair<Variable, IntegerLiteralExpression>> partials, List<Expression> arguments) {
-		return new CommonDerivativeCallExpression(source, joinScope(arguments), getLowerScope(arguments), function,
-				partials, arguments);
 	}
 
 	@Override
@@ -1171,9 +1158,9 @@ public class CommonModelFactory implements ModelFactory {
 
 	@Override
 	public AbstractFunction abstractFunction(CIVLSource source, Identifier name, Scope parameterScope,
-			List<Variable> parameters, CIVLType returnType, Scope containingScope, int continuity, String attribute) {
+			List<Variable> parameters, CIVLType returnType, Scope containingScope, String attribute) {
 		return new CommonAbstractFunction(source, name, parameterScope, parameters, returnType, containingScope,
-				containingScope.numFunctions(), continuity, attribute);
+				containingScope.numFunctions(), attribute);
 	}
 
 	@Override
@@ -1780,22 +1767,6 @@ public class CommonModelFactory implements ModelFactory {
 	}
 
 	@Override
-	public UpdateStatement updateStatement(CIVLSource source, Location sourceLoc, Expression guard, Expression collator,
-			CallOrSpawnStatement call) {
-		if (guard == null)
-			guard = this.trueExpression(source);
-		return new CommonUpdateStatement(source, sourceLoc, guard, collator, call);
-	}
-
-	@Override
-	public UpdateStatement updateStatement(CIVLSource source, Location srcLoc, Expression guard, Expression collator,
-			CIVLFunction function, Expression[] arguments) {
-		if (guard == null)
-			guard = this.trueExpression(source);
-		return new CommonUpdateStatement(source, srcLoc, guard, collator, function, arguments);
-	}
-
-	@Override
 	public ParallelAssignStatement parallelAssignStatement(CIVLSource source,
 			List<Pair<LHSExpression, Expression>> assignPairs) {
 		return new CommonParallelAssignStatement(source, null, this.trueExpression(source), assignPairs);
@@ -1817,17 +1788,6 @@ public class CommonModelFactory implements ModelFactory {
 	public CIVLFunction nondetFunction(CIVLSource source, Identifier name, CIVLType returnType, Scope containingScope) {
 		return new CommonNondetFunction(source, name, returnType, containingScope,
 				containingScope != null ? containingScope.numFunctions() : -1);
-	}
-
-	@Override
-	public DifferentiableExpression differentiableExpression(CIVLSource source, AbstractFunction function, int degree,
-			Expression[] lowerBounds, Expression[] upperBounds) {
-		Scope lscope = null;
-		Scope rscope = null;
-		// TODO: figure out those scopes
-
-		return new CommonDifferentiableExpression(source, lscope, rscope, typeFactory.booleanType, function, degree,
-				lowerBounds, upperBounds);
 	}
 
 	@Override

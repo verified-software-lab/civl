@@ -14,15 +14,11 @@ import dev.civl.abc.ast.node.IF.expression.IdentifierExpressionNode;
 import dev.civl.abc.ast.node.common.CommonASTNode;
 import dev.civl.abc.token.IF.Source;
 
-public class CommonFunctionCallNode extends CommonExpressionNode
-		implements
-			FunctionCallNode {
+public class CommonFunctionCallNode extends CommonExpressionNode implements FunctionCallNode {
 
-	public CommonFunctionCallNode(Source source, ExpressionNode function,
-			SequenceNode<ExpressionNode> contextArguments,
-			SequenceNode<ExpressionNode> arguments,
-			SequenceNode<ExpressionNode> scopeList) {
-		super(source, function, contextArguments, arguments, scopeList);
+	public CommonFunctionCallNode(Source source, ExpressionNode function, SequenceNode<ExpressionNode> contextArguments,
+			SequenceNode<ExpressionNode> arguments) {
+		super(source, function, contextArguments, arguments);
 	}
 
 	@Override
@@ -90,24 +86,12 @@ public class CommonFunctionCallNode extends CommonExpressionNode
 	@Override
 	public FunctionCallNode copy() {
 		@SuppressWarnings("unchecked")
-		SequenceNode<ExpressionNode> contextArguments = (SequenceNode<ExpressionNode>) child(
-				1);
+		SequenceNode<ExpressionNode> contextArguments = (SequenceNode<ExpressionNode>) child(1);
 		@SuppressWarnings("unchecked")
-		SequenceNode<ExpressionNode> arguments = (SequenceNode<ExpressionNode>) child(
-				2);
-		@SuppressWarnings("unchecked")
-		SequenceNode<ExpressionNode> scopeList = (SequenceNode<ExpressionNode>) child(
-				3);
+		SequenceNode<ExpressionNode> arguments = (SequenceNode<ExpressionNode>) child(2);
 
-		return new CommonFunctionCallNode(getSource(), duplicate(getFunction()),
-				duplicate(contextArguments), duplicate(arguments),
-				duplicate(scopeList));
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public SequenceNode<ExpressionNode> getScopeList() {
-		return (SequenceNode<ExpressionNode>) child(3);
+		return new CommonFunctionCallNode(getSource(), duplicate(getFunction()), duplicate(contextArguments),
+				duplicate(arguments));
 	}
 
 	@Override
@@ -121,8 +105,7 @@ public class CommonFunctionCallNode extends CommonExpressionNode
 		boolean result = true;
 
 		if (functionExpr instanceof IdentifierExpressionNode) {
-			IdentifierNode functionIdentifier = ((IdentifierExpressionNode) functionExpr)
-					.getIdentifier();
+			IdentifierNode functionIdentifier = ((IdentifierExpressionNode) functionExpr).getIdentifier();
 
 			if (functionIdentifier.getEntity() == null) {
 				// FIXME: Why do we need this? Not having this check was
@@ -136,23 +119,19 @@ public class CommonFunctionCallNode extends CommonExpressionNode
 			if (functionEntity instanceof Function) {
 				Function function = (Function) functionEntity;
 
-				isAtomicPureFunction = function.isLogic()
-						|| function.isAbstract()
-						|| (function.isSystemFunction() && (function.isPure()
-								|| function.isStateFunction()));
+				isAtomicPureFunction = function.isLogic() || function.isAbstract()
+						|| (function.isSystemFunction() && (function.isPure() || function.isStateFunction()));
 			}
 			if (isAtomicPureFunction) {
 				for (int i = 0; i < getNumberOfContextArguments(); i++) {
-					boolean argSEF = getContextArgument(i)
-							.isSideEffectFree(errorsAreSideEffects);
+					boolean argSEF = getContextArgument(i).isSideEffectFree(errorsAreSideEffects);
 
 					if (!argSEF)
 						return false;
 				}
 				if (result) {
 					for (int i = 0; i < getNumberOfArguments(); i++) {
-						boolean argSEF = getArgument(i)
-								.isSideEffectFree(errorsAreSideEffects);
+						boolean argSEF = getArgument(i).isSideEffectFree(errorsAreSideEffects);
 
 						if (!argSEF)
 							return false;
@@ -176,19 +155,14 @@ public class CommonFunctionCallNode extends CommonExpressionNode
 
 	@Override
 	public ASTNode setChild(int index, ASTNode child) {
-		if (index >= 4)
-			throw new ASTException(
-					"CommonFunctionCallNode has four children, but saw index "
-							+ index);
+		if (index >= 3)
+			throw new ASTException("CommonFunctionCallNode has 3 children, but saw index " + index);
 		if (index == 0 && !(child == null || child instanceof ExpressionNode))
-			throw new ASTException("Child of CommonFunctionCallNode at index "
-					+ index + " must be a ExpressionNode, but saw " + child
-					+ " with type " + child.nodeKind());
-		if (index > 0 && index < 4
-				&& !(child == null || child instanceof SequenceNode))
-			throw new ASTException("Child of CommonFunctionCallNode at index "
-					+ index + " must be a SequenceNode, but saw " + child
-					+ " with type " + child.nodeKind());
+			throw new ASTException("Child of CommonFunctionCallNode at index " + index
+					+ " must be a ExpressionNode, but saw " + child + " with type " + child.nodeKind());
+		if (index > 0 && index < 3 && !(child == null || child instanceof SequenceNode))
+			throw new ASTException("Child of CommonFunctionCallNode at index " + index
+					+ " must be a SequenceNode, but saw " + child + " with type " + child.nodeKind());
 		return super.setChild(index, child);
 	}
 }

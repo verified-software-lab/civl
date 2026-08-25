@@ -1,0 +1,8 @@
+_Bool allzero(double *p, int n) {
+  return $forall (int k : 0 .. (n - 1)) (p[k] == 0.0);
+}
+
+int main(void) {
+  double *p = NULL;
+  $assert(allzero(p, 0));   /* empty range (0..-1) over NULL p -> must be true */
+}

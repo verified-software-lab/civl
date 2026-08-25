@@ -31,6 +31,7 @@ import dev.civl.abc.ast.node.IF.acsl.NoactNode;
 import dev.civl.abc.ast.node.IF.acsl.NothingNode;
 import dev.civl.abc.ast.node.IF.acsl.ObjectOrRegionOfNode;
 import dev.civl.abc.ast.node.IF.acsl.PredicateNode;
+import dev.civl.abc.ast.node.IF.acsl.PureNode;
 import dev.civl.abc.ast.node.IF.acsl.RequiresNode;
 import dev.civl.abc.ast.node.IF.compound.ArrayDesignatorNode;
 import dev.civl.abc.ast.node.IF.compound.CompoundInitializerNode;
@@ -52,7 +53,6 @@ import dev.civl.abc.ast.node.IF.expression.CastNode;
 import dev.civl.abc.ast.node.IF.expression.CharacterConstantNode;
 import dev.civl.abc.ast.node.IF.expression.CompoundLiteralNode;
 import dev.civl.abc.ast.node.IF.expression.ConstantNode;
-import dev.civl.abc.ast.node.IF.expression.DerivativeExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.DotNode;
 import dev.civl.abc.ast.node.IF.expression.EnumerationConstantNode;
 import dev.civl.abc.ast.node.IF.expression.ExpressionNode;
@@ -67,7 +67,6 @@ import dev.civl.abc.ast.node.IF.expression.OperatorNode.Operator;
 import dev.civl.abc.ast.node.IF.expression.QuantifiedExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.QuantifiedExpressionNode.Quantifier;
 import dev.civl.abc.ast.node.IF.expression.RegularRangeNode;
-import dev.civl.abc.ast.node.IF.expression.RemoteOnExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.ScopeOfNode;
 import dev.civl.abc.ast.node.IF.expression.SizeableNode;
 import dev.civl.abc.ast.node.IF.expression.SizeofNode;
@@ -109,7 +108,6 @@ import dev.civl.abc.ast.node.IF.statement.ReturnNode;
 import dev.civl.abc.ast.node.IF.statement.RunNode;
 import dev.civl.abc.ast.node.IF.statement.StatementNode;
 import dev.civl.abc.ast.node.IF.statement.SwitchNode;
-import dev.civl.abc.ast.node.IF.statement.UpdateNode;
 import dev.civl.abc.ast.node.IF.statement.WhenNode;
 import dev.civl.abc.ast.node.IF.type.ArrayTypeNode;
 import dev.civl.abc.ast.node.IF.type.AtomicTypeNode;
@@ -374,13 +372,10 @@ public interface NodeFactory {
 	 * Returns a new instance of a typedef name node. This is a use of a typedef
 	 * name. The source is the same as that of the identifier name.
 	 * 
-	 * @param name      the identifier node representing the use of the typedef name
-	 * @param scopeList optional CIVL-C construct: list of scope parameters used to
-	 *                  instantiate a scope-parameterized typedef
+	 * @param name the identifier node representing the use of the typedef name
 	 * @return the new typedef name node wrapping the given identifier node
 	 */
-	// TODO get rid of scopeList
-	TypedefNameNode newTypedefNameNode(IdentifierNode name, SequenceNode<ExpressionNode> scopeList);
+	TypedefNameNode newTypedefNameNode(IdentifierNode name);
 
 	/**
 	 * Returns a new instance of range type node; this is the CIVL-C type
@@ -683,12 +678,9 @@ public interface NodeFactory {
 	 *                  pointer to function type
 	 * @param arguments the list of actual arguments to be evaluated and passed to
 	 *                  the function in this function call
-	 * @param scopeList the optional scope list (to be deprecated)
 	 * @return the new function call node
 	 */
-	// TODO get rid of scopeList
-	FunctionCallNode newFunctionCallNode(Source source, ExpressionNode function, List<ExpressionNode> arguments,
-			SequenceNode<ExpressionNode> scopeList);
+	FunctionCallNode newFunctionCallNode(Source source, ExpressionNode function, List<ExpressionNode> arguments);
 
 	/**
 	 * Constructs a new kernel function call node. A kernel function call in Cuda-C
@@ -709,12 +701,10 @@ public interface NodeFactory {
 	 *                         programs]
 	 * @param arguments        the list of actual arguments to be evaluated and
 	 *                         passed to the function in this function call
-	 * @param scopeList        the optional scope list (to be deprecated)
 	 * @return the new function call node
 	 */
-	// TODO get rid of scopeList
-	FunctionCallNode newFunctionCallNode(Source source, ExpressionNode function, List<ExpressionNode> contextArguments,
-			List<ExpressionNode> arguments, SequenceNode<ExpressionNode> scopeList);
+	FunctionCallNode newContextFunctionCallNode(Source source, ExpressionNode function,
+			List<ExpressionNode> contextArguments, List<ExpressionNode> arguments);
 
 	/**
 	 * Constructs a new generic selection node, used to select an expression to
@@ -853,7 +843,7 @@ public interface NodeFactory {
 			ExpressionNode arg2);
 
 	/**
-	 * Constrcts a new <code>sizeof</code> expression. This takes one argument,
+	 * Constructs a new <code>sizeof</code> expression. This takes one argument,
 	 * which can be either a type name or an expression.
 	 * 
 	 * @param source   source information for the occurrence of the entire
@@ -875,21 +865,6 @@ public interface NodeFactory {
 	 * @return the new spawn expression node
 	 */
 	SpawnNode newSpawnNode(Source source, FunctionCallNode callNode);
-
-	/**
-	 * Constructs a remote expression node, representing an expression of the form
-	 * <code>proc_expr@x</code>. This refers to a variable in the process
-	 * <code>p</code> referenced by the expression <code>proc_expr</code>. The
-	 * static variable <code>x</code> can be determined statically now. Later it
-	 * will be evaluated in a dynamic state in <code>p</code>'s context.
-	 * 
-	 * @param source source information for the entire remove expression, including
-	 *               both arguments
-	 * @param left   the left argument, which is an expression of integer type.
-	 * @param right  the right argument, which is a foreign expression that will
-	 *               evaluates on the process represented by the left expression.
-	 */
-	RemoteOnExpressionNode newRemoteOnExpressionNode(Source source, ExpressionNode left, ExpressionNode right);
 
 	/**
 	 * Constructs a new CIVL-C <code>$scopeof</code> expression node. This is an
@@ -922,17 +897,11 @@ public interface NodeFactory {
 	 *                                     true when the quantified variables is in
 	 *                                     the domain
 	 * @param expression                   The quantified expression.
-	 * @param intervalSequence             field for the <code>$uniform</code>
-	 *                                     operator---a sequence of real closed
-	 *                                     intervals that specify the domain of
-	 *                                     uniform convergence of a big-O
-	 *                                     expression; may be <code>null</code>
 	 * @return The new quantified expression with the given children.
 	 */
 	QuantifiedExpressionNode newQuantifiedExpressionNode(Source source, Quantifier quantifier,
 			SequenceNode<PairNode<SequenceNode<VariableDeclarationNode>, ExpressionNode>> boundVariableDeclarationList,
-			ExpressionNode restriction, ExpressionNode expression,
-			SequenceNode<PairNode<ExpressionNode, ExpressionNode>> intervalSequence);
+			ExpressionNode restriction, ExpressionNode expression);
 
 	/**
 	 * Constructs a new array lambda expression.
@@ -1010,21 +979,6 @@ public interface NodeFactory {
 	// Quantifier quantifier, VariableDeclarationNode variable,
 	// ExpressionNode lower, ExpressionNode upper,
 	// ExpressionNode expression);
-
-	/**
-	 * Constructs a new CIVL-C derivative expression, used to represent the
-	 * (partial) derivative of a function with respect to any number of variables,
-	 * evaluated at a point.
-	 * 
-	 * @param source    The source code elements.
-	 * @param function  The abstract function whose derivative is being taken.
-	 * @param partials  The list of partial derivatives.
-	 * @param arguments The arguments to the uninterpreted function evaluation.
-	 * @return The new derivative expression with the given children.
-	 */
-	DerivativeExpressionNode newDerivativeExpressionNode(Source source, ExpressionNode function,
-			SequenceNode<PairNode<IdentifierExpressionNode, IntegerConstantNode>> partials,
-			SequenceNode<ExpressionNode> arguments);
 
 	/**
 	 * <p>
@@ -1717,6 +1671,17 @@ public interface NodeFactory {
 	 */
 	AssignsOrReadsNode newReadsNode(Source source, SequenceNode<ExpressionNode> expressionList);
 
+	/**
+	 * Constructs a new "pure" node representing the CIVL-extended ACSL "pure;"
+	 * clause which may occur as the first line of a function contract, indicating
+	 * the function is a pure function (side-effect-free and the output is a
+	 * deterministic function of the input).
+	 * 
+	 * @param source source specifying the clause
+	 * @return the new contract node for "pure"
+	 */
+	PureNode newPureNode(Source source);
+
 	// external definitions...
 
 	/**
@@ -1752,18 +1717,12 @@ public interface NodeFactory {
 	 * @param type       The function type with the appropriate parameters and
 	 *                   return type.
 	 * @param contract   Any code contract associated with the function.
-	 * @param continuity The number of derivatives that may be taken; this applies
-	 *                   to real valued functions of real variables only
-	 * @param intervals  sequence of intervals whose Cartesian product specifies the
-	 *                   domain on which this function is differentiable to the
-	 *                   specified degree
 	 * @param attr       nullable. The optional string literal representing the
 	 *                   attribute attached to this abstract function.
 	 * @return An abstract function definition with the specified properties.
 	 */
 	AbstractFunctionDefinitionNode newAbstractFunctionDefinitionNode(Source source, IdentifierNode name, TypeNode type,
-			SequenceNode<ContractNode> contract, int continuity,
-			SequenceNode<PairNode<ExpressionNode, ExpressionNode>> intervals, StringLiteralNode attr);
+			SequenceNode<ContractNode> contract,  StringLiteralNode attr);
 
 	/**
 	 * Creates a new node representing an entire translation unit. The children of
@@ -2216,16 +2175,6 @@ public interface NodeFactory {
 	 * @return
 	 */
 	TypeFactory typeFactory();
-
-	/**
-	 * Create a new {@link UpdateNode}
-	 * 
-	 * @param source   The {@link Source} attached to the $update expression
-	 * @param collator The expression has the $collator type
-	 * @param call     The {@link FunctionCallNode} attached with this expression.
-	 * @return A new {@link UpdateNode}
-	 */
-	UpdateNode newUpdateNode(Source source, ExpressionNode collator, FunctionCallNode call);
 
 	/**
 	 * Create a new {@link RunNode}

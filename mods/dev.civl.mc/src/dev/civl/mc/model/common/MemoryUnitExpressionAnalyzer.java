@@ -45,7 +45,6 @@ import dev.civl.mc.model.IF.statement.MallocStatement;
 import dev.civl.mc.model.IF.statement.ReturnStatement;
 import dev.civl.mc.model.IF.statement.Statement;
 import dev.civl.mc.model.IF.statement.Statement.StatementKind;
-import dev.civl.mc.model.IF.statement.UpdateStatement;
 import dev.civl.mc.model.IF.variable.Variable;
 import dev.civl.mc.util.IF.Pair;
 
@@ -108,7 +107,7 @@ public class MemoryUnitExpressionAnalyzer {
 				if (i == ModelConfiguration.HEAP_VARIABLE_INDEX)
 					continue;
 				else {
-					Variable variable = myScope.variable(i);
+					Variable variable = myScope.getVariable(i);
 					MemoryUnitExpression memUnit;
 
 					if ((scopeID == 0 && variable.name().name().equals(ModelConfiguration.ATOMIC_LOCK_VARIABLE_INDEX)))
@@ -278,16 +277,6 @@ public class MemoryUnitExpressionAnalyzer {
 				computeImpactMemoryUnitsOfExpression(writableVars, returnStatement.expression(), result);
 			break;
 		}
-		case UPDATE: {// the body of the function called by $update is
-						// independent because it only affects the collate
-						// state
-			UpdateStatement updateStatement = (UpdateStatement) statement;
-
-			computeImpactMemoryUnitsOfExpression(writableVars, updateStatement.collator(), result);
-			for (Expression arg : updateStatement.arguments())
-				computeImpactMemoryUnitsOfExpression(writableVars, arg, result);
-			break;
-		}
 		default:
 			throw new CIVLUnimplementedFeatureException(
 					"computing the impact memory units" + " of statements of " + statementKind + " kind");
@@ -391,8 +380,6 @@ public class MemoryUnitExpressionAnalyzer {
 		case DEREFERENCE:
 			computeImpactMemoryUnitsOfExpression(writableVars, ((DereferenceExpression) expression).pointer(), result,
 					derefCount + 1);
-			break;
-		case DERIVATIVE:// TODO check if its arguments should be checked
 			break;
 		case DOMAIN_GUARD:
 			computeImpactMemoryUnitsOfExpression(writableVars, ((DomainGuardExpression) expression).domain(), result,
@@ -513,7 +500,6 @@ public class MemoryUnitExpressionAnalyzer {
 		case HERE_OR_ROOT:
 			break;
 		case PROC_NULL:
-		case STATE_NULL:
 			break;
 		case FUNC_CALL: {
 			CallOrSpawnStatement callStmt = ((FunctionCallExpression) expression).callStatement();

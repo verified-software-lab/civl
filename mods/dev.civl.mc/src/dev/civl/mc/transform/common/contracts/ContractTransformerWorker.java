@@ -193,7 +193,7 @@ public class ContractTransformerWorker extends BaseWorker {
 			// non-determinism:
 			Source source = newSource(targetFunctionName + "(...);", CivlcTokenConstant.CALL);
 			StatementNode callDriver = nodeFactory.newExpressionStatementNode(
-					nodeFactory.newFunctionCallNode(source, identifierExpression(driverName), Arrays.asList(), null));
+					nodeFactory.newFunctionCallNode(source, identifierExpression(driverName), Arrays.asList()));
 			ExpressionNode choiceCond;
 
 			choiceCond = nodeFactory.newOperatorNode(source, Operator.EQUALS,
@@ -538,7 +538,7 @@ public class ContractTransformerWorker extends BaseWorker {
 
 		for (VariableDeclarationNode param : funcTypeNode.getParameters())
 			funcParamIdentfiers.add(identifierExpression(param.getIdentifier().name()));
-		targetCall = nodeFactory.newFunctionCallNode(driverSource, originalBodyIdentifier, funcParamIdentfiers, null);
+		targetCall = nodeFactory.newFunctionCallNode(driverSource, originalBodyIdentifier, funcParamIdentfiers);
 
 		// Create variable declarations which are actual parameters of the
 		// target function:
@@ -612,8 +612,7 @@ public class ContractTransformerWorker extends BaseWorker {
 		Source source = var.getSource();
 		ExpressionNode callIdentifier = identifierExpression(source, MPIContractUtilities.HAVOC);
 		ExpressionNode addressOfVar = nodeFactory.newOperatorNode(var.getSource(), Operator.ADDRESSOF, var.copy());
-		FunctionCallNode call = nodeFactory.newFunctionCallNode(source, callIdentifier, Arrays.asList(addressOfVar),
-				null);
+		FunctionCallNode call = nodeFactory.newFunctionCallNode(source, callIdentifier, Arrays.asList(addressOfVar));
 
 		return call;
 	}

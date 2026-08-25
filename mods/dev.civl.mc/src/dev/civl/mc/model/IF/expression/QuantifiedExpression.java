@@ -20,7 +20,7 @@ import dev.civl.mc.util.IF.Pair;
  * variable-decl-sub-list:
  *   type ID (, ID)* (: domain)?
  *   
- * quantifier: $forall | $exists | $uniform
+ * quantifier: $forall | $exists
  * </pre>
  * 
  * e.g.,
@@ -41,7 +41,7 @@ public interface QuantifiedExpression extends Expression {
 	 * 
 	 */
 	enum Quantifier {
-		FORALL, EXISTS, UNIFORM;
+		FORALL, EXISTS;
 	}
 
 	/**

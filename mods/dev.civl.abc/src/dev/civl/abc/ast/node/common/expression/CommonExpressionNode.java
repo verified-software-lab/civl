@@ -16,15 +16,13 @@ import dev.civl.abc.ast.type.IF.Type;
 import dev.civl.abc.ast.value.IF.Value;
 import dev.civl.abc.token.IF.Source;
 
-public abstract class CommonExpressionNode extends CommonASTNode
-		implements
-			ExpressionNode {
+public abstract class CommonExpressionNode extends CommonASTNode implements ExpressionNode {
 
 	private Type initialType;
 
 	/**
-	 * Has the constant value for this expression been computed? (It may be
-	 * null.) If it has, the constant value is cached in field constantValue.
+	 * Has the constant value for this expression been computed? (It may be null.)
+	 * If it has, the constant value is cached in field constantValue.
 	 */
 	private boolean constantComputed = false;
 
@@ -35,8 +33,7 @@ public abstract class CommonExpressionNode extends CommonASTNode
 
 	protected ArrayList<Conversion> conversions = new ArrayList<Conversion>();
 
-	public CommonExpressionNode(Source source,
-			List<? extends ASTNode> arguments) {
+	public CommonExpressionNode(Source source, List<? extends ASTNode> arguments) {
 		super(source, arguments.iterator());
 	}
 
@@ -48,18 +45,16 @@ public abstract class CommonExpressionNode extends CommonASTNode
 		super(source, argument);
 	}
 
-	public CommonExpressionNode(Source source, ASTNode argument0,
-			ASTNode argument1) {
+	public CommonExpressionNode(Source source, ASTNode argument0, ASTNode argument1) {
 		super(source, argument0, argument1);
 	}
 
-	public CommonExpressionNode(Source source, ASTNode argument0,
-			ASTNode argument1, ASTNode argument2) {
+	public CommonExpressionNode(Source source, ASTNode argument0, ASTNode argument1, ASTNode argument2) {
 		super(source, argument0, argument1, argument2);
 	}
 
-	public CommonExpressionNode(Source source, ASTNode argument0,
-			ASTNode argument1, ASTNode argument2, ASTNode argument3) {
+	public CommonExpressionNode(Source source, ASTNode argument0, ASTNode argument1, ASTNode argument2,
+			ASTNode argument3) {
 		super(source, argument0, argument1, argument2, argument3);
 	}
 
@@ -106,9 +101,7 @@ public abstract class CommonExpressionNode extends CommonASTNode
 
 	protected void printExtras(String prefix, PrintStream out) {
 		int numConversions = getNumConversions();
-		String typeDescriptor = (initialType == null
-				? "UNKNOWN"
-				: "" + initialType.toString());
+		String typeDescriptor = (initialType == null ? "UNKNOWN" : "" + initialType.toString());
 
 		out.println();
 		out.print(prefix + "initial type: " + typeDescriptor);
@@ -136,12 +129,10 @@ public abstract class CommonExpressionNode extends CommonASTNode
 		Type lastType = getConvertedType();
 
 		if (lastType == null)
-			throw new RuntimeException(
-					"Internal error: adding conversion before initial type defined");
+			throw new RuntimeException("Internal error: adding conversion before initial type defined");
 		if (!lastType.equals(conversion.getOldType()))
 			throw new IllegalArgumentException(
-					"Old type of conversion is not last type:\n"
-							+ conversion.getOldType() + "\n" + lastType);
+					"Old type of conversion is not last type:\n" + conversion.getOldType() + "\n" + lastType);
 		conversions.add(conversion);
 	}
 
@@ -158,8 +149,7 @@ public abstract class CommonExpressionNode extends CommonASTNode
 	@Override
 	protected DifferenceObject diffWork(ASTNode that) {
 		if (that instanceof ExpressionNode)
-			if (this.expressionKind() == ((ExpressionNode) that)
-					.expressionKind())
+			if (this.expressionKind() == ((ExpressionNode) that).expressionKind())
 				return null;
 		return new DifferenceObject(this, that);
 	}
@@ -169,28 +159,33 @@ public abstract class CommonExpressionNode extends CommonASTNode
 		ExpressionKind kind = expressionKind();
 
 		switch (kind) {
-			case CONSTANT :
-				if (((ConstantNode) this).constantKind() == ConstantKind.STRING)
-					return true;
-				else
-					return false;
-			case COMPOUND_LITERAL :
-			case ARROW :
-			case DOT :
-			case IDENTIFIER_EXPRESSION :
+		case CONSTANT:
+			if (((ConstantNode) this).constantKind() == ConstantKind.STRING)
 				return true;
-			case OPERATOR : {
-				OperatorNode operatorNode = (OperatorNode) this;
-
-				switch (operatorNode.getOperator()) {
-					case DEREFERENCE :
-					case SUBSCRIPT :
-						return true;
-					default :
-				}
-			}
-			default :
+			else
 				return false;
+		case COMPOUND_LITERAL:
+		case ARROW:
+		case DOT:
+		case IDENTIFIER_EXPRESSION:
+			return true;
+		case OPERATOR: {
+			OperatorNode operatorNode = (OperatorNode) this;
+
+			switch (operatorNode.getOperator()) {
+			case DEREFERENCE:
+			case SUBSCRIPT:
+				return true;
+			default:
+			}
 		}
+		default:
+			return false;
+		}
+	}
+
+	@Override
+	public ExpressionNode copyWithTypes() {
+		return (ExpressionNode) super.copyWithTypes();
 	}
 }

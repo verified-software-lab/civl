@@ -102,8 +102,8 @@ public class MFASTBuilderWorker {
 
 	// Dynamic fields
 	/**
-	 * The path directing to the source file containing the entry of the
-	 * translation unit processed by <code>this</code> {@link MFASTWorker}
+	 * The path directing to the source file containing the entry of the translation
+	 * unit processed by <code>this</code> {@link MFASTWorker}
 	 */
 	private String filePath;
 
@@ -152,8 +152,7 @@ public class MFASTBuilderWorker {
 	private HashMap<String, String> formats;
 
 	/**
-	 * Indicates whether the FORTRAN program entry (<code>PROGRAM</code>)
-	 * appears
+	 * Indicates whether the FORTRAN program entry (<code>PROGRAM</code>) appears
 	 */
 	private boolean hasProgramEntry = false;
 
@@ -176,8 +175,8 @@ public class MFASTBuilderWorker {
 	private boolean useSTDIO = false;
 
 	/**
-	 * Indicates whether CIVL-C <strong>stdlib</strong> library implementation
-	 * is involved in this transformation.
+	 * Indicates whether CIVL-C <strong>stdlib</strong> library implementation is
+	 * involved in this transformation.
 	 */
 	private boolean useSTDLIB = false;
 
@@ -195,8 +194,8 @@ public class MFASTBuilderWorker {
 
 	/**
 	 * Tracks the formation associated with the parent scope of the current file
-	 * scope (e.g., FORTRAN's 'INCLUDE' statements will import a code segment
-	 * from a file named as the statement specified.)
+	 * scope (e.g., FORTRAN's 'INCLUDE' statements will import a code segment from a
+	 * file named as the statement specified.)
 	 */
 	private Stack<Formation> formations = new Stack<>();
 
@@ -215,8 +214,7 @@ public class MFASTBuilderWorker {
 	private HashMap<String, ExpressionNode> commonblockMemberMap = new HashMap<>();
 
 	// Constructor
-	public MFASTBuilderWorker(Configuration config, MFTree parseTree,
-			ASTFactory astFactory, String filePath,
+	public MFASTBuilderWorker(Configuration config, MFTree parseTree, ASTFactory astFactory, String filePath,
 			PragmaFactory pragmaFactory) {
 		this.ptree = parseTree;
 		this.filePath = filePath;
@@ -226,8 +224,7 @@ public class MFASTBuilderWorker {
 		this.pragmaFactory = pragmaFactory;
 		this.libFactory = new LibraryASTFactory(
 				// CIVL Library Implementation Preprocessor
-				Front.newPreprocessor(Language.C, config,
-						tokenFactory.newFileIndexer(), tokenFactory),
+				Front.newPreprocessor(Language.C, config, tokenFactory.newFileIndexer(), tokenFactory),
 				// CIVL Library Implementation Parser
 				Front.newParser(Language.C),
 				// CIVL Library Implementation ASTBuilder
@@ -242,8 +239,7 @@ public class MFASTBuilderWorker {
 	// Helper private functions
 
 	// For a given library name, add all nodes from CIVL's implementation
-	private void addLibASTNodes(String libName)
-			throws PreprocessorException, ParseException, SyntaxException {
+	private void addLibASTNodes(String libName) throws PreprocessorException, ParseException, SyntaxException {
 		List<BlockItemNode> libNodes = new ArrayList<BlockItemNode>();
 		AST libAST = libFactory.getASTofLibrary(libName);
 		SequenceNode<BlockItemNode> libRoot = libAST.getRootNode();
@@ -259,8 +255,7 @@ public class MFASTBuilderWorker {
 	}
 
 	// For involved libraries, Add all nodes from CIVL's implementation
-	private void addLibASTNodes()
-			throws PreprocessorException, ParseException, SyntaxException {
+	private void addLibASTNodes() throws PreprocessorException, ParseException, SyntaxException {
 		if (useFORTRAN_ARRAY)
 			addLibASTNodes(LibraryASTFactory.FORTRAN_ARRAY);
 		else if (useSTDIO) // stdio.h is included in FORTRAN_ARRAY
@@ -403,9 +398,8 @@ public class MFASTBuilderWorker {
 				}
 			}
 		if (lToken == null)
-			source = tokenFactory.newSource(tokenFactory.newCivlcToken(
-					CivlcTokenConstant.ABSENT, SRC_INFO, formations.peek(),
-					TokenVocabulary.FORTRAN));
+			source = tokenFactory.newSource(tokenFactory.newCivlcToken(CivlcTokenConstant.ABSENT, SRC_INFO,
+					formations.peek(), TokenVocabulary.FORTRAN));
 		else if (rToken == null)
 			source = tokenFactory.newSource(lToken);
 		else
@@ -449,8 +443,7 @@ public class MFASTBuilderWorker {
 	 * @param prp
 	 * @return {@link FunctionTypeNode} based on given info.
 	 */
-	private FunctionTypeNode translateFunctionType(MFTree prefix, MFTree name,
-			MFTree params, PRPair prp) {
+	private FunctionTypeNode translateFunctionType(MFTree prefix, MFTree name, MFTree params, PRPair prp) {
 		Source funcSrc = newSource(prefix, name, params);
 		TypeNode returnTypeNode = null;
 		List<VariableDeclarationNode> formalNodes = new LinkedList<>();
@@ -458,8 +451,7 @@ public class MFASTBuilderWorker {
 		boolean hasFormals = params != null;
 
 		if (prp == MFPUtils.MAIN_PROGRAM)
-			returnTypeNode = nodeFactory.newBasicTypeNode(funcSrc,
-					BasicTypeKind.INT);
+			returnTypeNode = nodeFactory.newBasicTypeNode(funcSrc, BasicTypeKind.INT);
 		else if (prp == MFPUtils.SUBROUTINE_SUBPROGRAM)
 			returnTypeNode = nodeFactory.newVoidTypeNode(funcSrc);
 		else if (prp == MFPUtils.FUNCTION_SUBPROGRAM) {
@@ -469,10 +461,8 @@ public class MFASTBuilderWorker {
 
 					if (prefixSpec.numChildren() > 0) {
 						prefixSpec = prefixSpec.getChildByIndex(0);
-						assert prefixSpec
-								.prp() == MFPUtils.DECLARATION_TYPE_SPEC;
-						returnTypeNode = translateType(
-								prefixSpec.getChildByIndex(0));
+						assert prefixSpec.prp() == MFPUtils.DECLARATION_TYPE_SPEC;
+						returnTypeNode = translateType(prefixSpec.getChildByIndex(0));
 						break;
 					}
 				}
@@ -500,22 +490,17 @@ public class MFASTBuilderWorker {
 					formal = formal.getChildByIndex(0);
 				formalSrc = newSource(formal);
 				formalNameNode = translateIdentifier(formal);
-				dummyFormalType = scopes
-						.getTypeByParIdent(formalNameNode.name(), formalSrc);
+				dummyFormalType = scopes.getTypeByParIdent(formalNameNode.name(), formalSrc);
 				// Because all FORTRAN parameters are passed-by-reference,
 				// scalar types are converted to corresponding pointer-types.
-				dummyFormalType = nodeFactory.newPointerTypeNode(formalSrc,
-						dummyFormalType);
-				formalNode = nodeFactory.newVariableDeclarationNode(formalSrc,
-						formalNameNode, dummyFormalType);
+				dummyFormalType = nodeFactory.newPointerTypeNode(formalSrc, dummyFormalType);
+				formalNode = nodeFactory.newVariableDeclarationNode(formalSrc, formalNameNode, dummyFormalType);
 				scopes.addDeclParameter(formalNameNode.name(), formalNode);
 				formalNodes.add(formalNode);
 			}
 		}
-		formalsNode = nodeFactory.newSequenceNode(newSource(params), "Formals",
-				formalNodes);
-		return nodeFactory.newFunctionTypeNode(funcSrc, returnTypeNode,
-				formalsNode, hasFormals);
+		formalsNode = nodeFactory.newSequenceNode(newSource(params), "Formals", formalNodes);
+		return nodeFactory.newFunctionTypeNode(funcSrc, returnTypeNode, formalsNode, hasFormals);
 	}
 
 	private TypeNode translateType(MFTree typeSpec) {
@@ -531,74 +516,60 @@ public class MFASTBuilderWorker {
 			else if (kind == MFPUtils.TYPE_REAL) {
 
 				if (typeSpec.numChildren() == 2)
-					typeNode = nodeFactory.newBasicTypeNode(src,
-							BasicTypeKind.FLOAT);
+					typeNode = nodeFactory.newBasicTypeNode(src, BasicTypeKind.FLOAT);
 				else {
 					final int REAL_SELECT_AS_DOUBLE = 8;
 					MFTree kindSelector = typeSpec.getChildByIndex(2);
 					String byteStr = getName(kindSelector.getChildByIndex(1));
 
 					switch (Integer.parseInt(byteStr)) {
-						case REAL_SELECT_AS_DOUBLE :
-							typeNode = nodeFactory.newBasicTypeNode(src,
-									BasicTypeKind.DOUBLE);
-							break;
-						default :
+					case REAL_SELECT_AS_DOUBLE:
+						typeNode = nodeFactory.newBasicTypeNode(src, BasicTypeKind.DOUBLE);
+						break;
+					default:
 					}
 				}
 			} else if (kind == MFPUtils.TYPE_DBL)
-				typeNode = nodeFactory.newBasicTypeNode(src,
-						BasicTypeKind.DOUBLE);
+				typeNode = nodeFactory.newBasicTypeNode(src, BasicTypeKind.DOUBLE);
 			else if (kind == MFPUtils.TYPE_CPLX)
-				typeNode = nodeFactory.newBasicTypeNode(src,
-						BasicTypeKind.FLOAT_COMPLEX);
+				typeNode = nodeFactory.newBasicTypeNode(src, BasicTypeKind.FLOAT_COMPLEX);
 			else if (kind == MFPUtils.TYPE_DCPLX)
-				typeNode = nodeFactory.newBasicTypeNode(src,
-						BasicTypeKind.DOUBLE_COMPLEX);
+				typeNode = nodeFactory.newBasicTypeNode(src, BasicTypeKind.DOUBLE_COMPLEX);
 			else if (kind == MFPUtils.TYPE_BOOL)
-				typeNode = nodeFactory.newBasicTypeNode(src,
-						BasicTypeKind.BOOL);
+				typeNode = nodeFactory.newBasicTypeNode(src, BasicTypeKind.BOOL);
 			else if (kind == MFPUtils.TYPE_CHAR)
-				typeNode = nodeFactory.newBasicTypeNode(src,
-						BasicTypeKind.CHAR);
+				typeNode = nodeFactory.newBasicTypeNode(src, BasicTypeKind.CHAR);
 			else
 				assert false;
 		} else if (prp == MFPUtils.T_TYPE) {
 			MFTree derivedTypeSpec = typeSpec.getParent().getChildByIndex(1);
 			MFTree derivedTypeName = derivedTypeSpec.getChildByIndex(0);
-			IdentifierNode derivedTypeNameNode = translateIdentifier(
-					derivedTypeName);
+			IdentifierNode derivedTypeNameNode = translateIdentifier(derivedTypeName);
 
-			typeNode = nodeFactory.newStructOrUnionTypeNode(src,
-					true /* isStruct */, derivedTypeNameNode, null);
+			typeNode = nodeFactory.newStructOrUnionTypeNode(src, true /* isStruct */, derivedTypeNameNode, null);
 			scopes.addDerivedType(derivedTypeNameNode.name());
 		} else
 			assert false;
 		return typeNode;
 	}
 
-	private InitializerNode translateInitializer(MFTree init)
-			throws SyntaxException {
+	private InitializerNode translateInitializer(MFTree init) throws SyntaxException {
 		MFTree initVal = init.getChildByIndex(0);
 
 		return translateExpr(initVal);
 	}
-	private CompoundLiteralNode createArrayDimInfoNode(Source src,
-			ExpressionNode dimInfo[][]) {
+
+	private CompoundLiteralNode createArrayDimInfoNode(Source src, ExpressionNode dimInfo[][]) {
 		int LBND = 0, UBND = 1, STRD = 2, DIM_INFO_SIZE = 3;
 		LinkedList<PairNode<DesignationNode, InitializerNode>> lbndNodes = new LinkedList<PairNode<DesignationNode, InitializerNode>>();
 		LinkedList<PairNode<DesignationNode, InitializerNode>> ubndNodes = new LinkedList<PairNode<DesignationNode, InitializerNode>>();
 		LinkedList<PairNode<DesignationNode, InitializerNode>> strdNodes = new LinkedList<PairNode<DesignationNode, InitializerNode>>();
 		LinkedList<PairNode<DesignationNode, InitializerNode>> dimInfoNode = new LinkedList<PairNode<DesignationNode, InitializerNode>>();
-		ExpressionNode numDimNode = nodeFactory.newIntConstantNode(dummySrc,
-				dimInfo.length);
-		ExpressionNode dimInfoSize = nodeFactory.newIntConstantNode(dummySrc,
-				DIM_INFO_SIZE);
+		ExpressionNode numDimNode = nodeFactory.newIntConstantNode(dummySrc, dimInfo.length);
+		ExpressionNode dimInfoSize = nodeFactory.newIntConstantNode(dummySrc, DIM_INFO_SIZE);
 		TypeNode subDimInfoTypeNode = nodeFactory.newArrayTypeNode(dummySrc,
-				nodeFactory.newBasicTypeNode(dummySrc, BasicTypeKind.INT),
-				numDimNode);
-		TypeNode dimInfoTypeNode = nodeFactory.newArrayTypeNode(dummySrc,
-				subDimInfoTypeNode, dimInfoSize);
+				nodeFactory.newBasicTypeNode(dummySrc, BasicTypeKind.INT), numDimNode);
+		TypeNode dimInfoTypeNode = nodeFactory.newArrayTypeNode(dummySrc, subDimInfoTypeNode, dimInfoSize);
 		CompoundLiteralNode dimInfoLiteralNode = null;
 
 		for (int d = 0; d < dimInfo.length; d++) {
@@ -610,56 +581,40 @@ public class MFASTBuilderWorker {
 				return null;
 			}
 
-			lbndNodes.add(nodeFactory.newPairNode(lbndNode.getSource(), null,
-					lbndNode.copy()));
-			ubndNodes.add(nodeFactory.newPairNode(ubndNode.getSource(), null,
-					ubndNode.copy()));
-			strdNodes.add(nodeFactory.newPairNode(strdNode.getSource(), null,
-					strdNode.copy()));
+			lbndNodes.add(nodeFactory.newPairNode(lbndNode.getSource(), null, lbndNode.copy()));
+			ubndNodes.add(nodeFactory.newPairNode(ubndNode.getSource(), null, ubndNode.copy()));
+			strdNodes.add(nodeFactory.newPairNode(strdNode.getSource(), null, strdNode.copy()));
 		}
-		dimInfoNode.add(nodeFactory.newPairNode(src, null,
-				nodeFactory.newCompoundInitializerNode(src, lbndNodes)));
-		dimInfoNode.add(nodeFactory.newPairNode(src, null,
-				nodeFactory.newCompoundInitializerNode(src, ubndNodes)));
-		dimInfoNode.add(nodeFactory.newPairNode(src, null,
-				nodeFactory.newCompoundInitializerNode(src, strdNodes)));
-		dimInfoLiteralNode = nodeFactory.newCompoundLiteralNode(src,
-				dimInfoTypeNode,
+		dimInfoNode.add(nodeFactory.newPairNode(src, null, nodeFactory.newCompoundInitializerNode(src, lbndNodes)));
+		dimInfoNode.add(nodeFactory.newPairNode(src, null, nodeFactory.newCompoundInitializerNode(src, ubndNodes)));
+		dimInfoNode.add(nodeFactory.newPairNode(src, null, nodeFactory.newCompoundInitializerNode(src, strdNodes)));
+		dimInfoLiteralNode = nodeFactory.newCompoundLiteralNode(src, dimInfoTypeNode,
 				nodeFactory.newCompoundInitializerNode(src, dimInfoNode));
 		return dimInfoLiteralNode;
 	}
 
-	private VariableDeclarationNode createArrayDesc(Source src,
-			IdentifierNode varNameNode, ExpressionNode dimInfo[][],
-			TypeNode baseTypeNode, FORTRAN_ARRAY_DESCRIPTOR_KIND kind,
-			boolean isGlobal) {
+	private VariableDeclarationNode createArrayDesc(Source src, IdentifierNode varNameNode, ExpressionNode dimInfo[][],
+			TypeNode baseTypeNode, FORTRAN_ARRAY_DESCRIPTOR_KIND kind, boolean isGlobal) {
 		if (dimInfo == null && baseTypeNode == null) {
 			TypeNode fArrDescType = genArrDescType(src);
 			Source ssrcArrDescSrc = varNameNode.getSource();
-			String ssrcArrDescName = varNameNode.name()
-					.substring(FORTRAN_ARRAY_ARG_PREFIX.length());
-			IdentifierNode ssrcArrDescId = nodeFactory
-					.newIdentifierNode(ssrcArrDescSrc, ssrcArrDescName);
-			ExpressionNode ssrcArrDescIdExpr = nodeFactory
-					.newIdentifierExpressionNode(ssrcArrDescSrc, ssrcArrDescId);
+			String ssrcArrDescName = varNameNode.name().substring(FORTRAN_ARRAY_ARG_PREFIX.length());
+			IdentifierNode ssrcArrDescId = nodeFactory.newIdentifierNode(ssrcArrDescSrc, ssrcArrDescName);
+			ExpressionNode ssrcArrDescIdExpr = nodeFactory.newIdentifierExpressionNode(ssrcArrDescSrc, ssrcArrDescId);
 
 			String farr_desc = "farr_section_full";
 			List<ExpressionNode> args = Arrays.asList(ssrcArrDescIdExpr);
 
-			IdentifierNode farrDescNode = nodeFactory.newIdentifierNode(src,
-					farr_desc);
-			ExpressionNode funcIdNode = nodeFactory
-					.newIdentifierExpressionNode(dummySrc, farrDescNode);
-			FunctionCallNode farrDescCallNode = nodeFactory
-					.newFunctionCallNode(src, funcIdNode, args, null);
+			IdentifierNode farrDescNode = nodeFactory.newIdentifierNode(src, farr_desc);
+			ExpressionNode funcIdNode = nodeFactory.newIdentifierExpressionNode(dummySrc, farrDescNode);
+			FunctionCallNode farrDescCallNode = nodeFactory.newFunctionCallNode(src, funcIdNode, args);
 
 			if (isGlobal) {
 				freedGlobalArrays.add(varNameNode.name());
 			} else {
 				freedArrays.push(varNameNode.name());
 			}
-			return nodeFactory.newVariableDeclarationNode(src, varNameNode,
-					fArrDescType, farrDescCallNode);
+			return nodeFactory.newVariableDeclarationNode(src, varNameNode, fArrDescType, farrDescCallNode);
 		}
 
 		// Translate Fortran Array into CIVL-Fortran-array-desc:
@@ -674,92 +629,69 @@ public class MFASTBuilderWorker {
 		TypeNode fArrDescType = genArrDescType(src);
 		// Init:
 		// -- sizeof(TYPE)
-		SizeofNode sizeofNode = nodeFactory.newSizeofNode(dummySrc,
-				baseTypeNode);
+		SizeofNode sizeofNode = nodeFactory.newSizeofNode(dummySrc, baseTypeNode);
 		// -- NUMDIM
-		ExpressionNode numDimNode = nodeFactory.newIntConstantNode(dummySrc,
-				dimInfo.length);
+		ExpressionNode numDimNode = nodeFactory.newIntConstantNode(dummySrc, dimInfo.length);
 		// -- (int[3][NUMDIM]){{LBND,..}, {RBND, ..}, {STRD,..}}
 		CompoundLiteralNode dimInfoNode = createArrayDimInfoNode(src, dimInfo);
 		if (dimInfoNode == null)
 			kind = FORTRAN_ARRAY_DESCRIPTOR_KIND.SECTION_FULL;
 
 		switch (kind) {
-			case ORIGIN :
-				farr_desc = "farr_create";
-				args = Arrays.asList(sizeofNode, numDimNode, dimInfoNode);
-				break;
-			case RESHAPE :
-				// srcName = "_" + varName
-				Source rsrcArrDescSrc = varNameNode.getSource();
-				String rsrcArrDescName = FORTRAN_ARRAY_PARAM_PREFIX
-						+ varNameNode.name();
-				IdentifierNode rsrcArrDescId = nodeFactory
-						.newIdentifierNode(rsrcArrDescSrc, rsrcArrDescName);
-				ExpressionNode rsrcArrDescIdExpr = nodeFactory
-						.newIdentifierExpressionNode(rsrcArrDescSrc,
-								rsrcArrDescId);
+		case ORIGIN:
+			farr_desc = "farr_create";
+			args = Arrays.asList(sizeofNode, numDimNode, dimInfoNode);
+			break;
+		case RESHAPE:
+			// srcName = "_" + varName
+			Source rsrcArrDescSrc = varNameNode.getSource();
+			String rsrcArrDescName = FORTRAN_ARRAY_PARAM_PREFIX + varNameNode.name();
+			IdentifierNode rsrcArrDescId = nodeFactory.newIdentifierNode(rsrcArrDescSrc, rsrcArrDescName);
+			ExpressionNode rsrcArrDescIdExpr = nodeFactory.newIdentifierExpressionNode(rsrcArrDescSrc, rsrcArrDescId);
 
-				farr_desc = "farr_reshape";
-				args = Arrays.asList(rsrcArrDescIdExpr, numDimNode,
-						dimInfoNode);
-				break;
-			case SECTION_ARG :
-				// srcName = varName.
-				Source ssrcArrDescSrc = varNameNode.getSource();
-				String ssrcArrDescName = varNameNode.name()
-						.substring(FORTRAN_ARRAY_ARG_PREFIX.length());
-				IdentifierNode ssrcArrDescId = nodeFactory
-						.newIdentifierNode(ssrcArrDescSrc, ssrcArrDescName);
-				ExpressionNode ssrcArrDescIdExpr = nodeFactory
-						.newIdentifierExpressionNode(ssrcArrDescSrc,
-								ssrcArrDescId);
+			farr_desc = "farr_reshape";
+			args = Arrays.asList(rsrcArrDescIdExpr, numDimNode, dimInfoNode);
+			break;
+		case SECTION_ARG:
+			// srcName = varName.
+			Source ssrcArrDescSrc = varNameNode.getSource();
+			String ssrcArrDescName = varNameNode.name().substring(FORTRAN_ARRAY_ARG_PREFIX.length());
+			IdentifierNode ssrcArrDescId = nodeFactory.newIdentifierNode(ssrcArrDescSrc, ssrcArrDescName);
+			ExpressionNode ssrcArrDescIdExpr = nodeFactory.newIdentifierExpressionNode(ssrcArrDescSrc, ssrcArrDescId);
 
-				farr_desc = "farr_section";
-				args = Arrays.asList(ssrcArrDescIdExpr, dimInfoNode);
-				break;
-			case SECTION_FULL :
-				Source fsrcArrDescSrc = varNameNode.getSource();
-				String fsrcArrDescName = "__" + varNameNode.name();
-				IdentifierNode fsrcArrDescId = nodeFactory
-						.newIdentifierNode(fsrcArrDescSrc, fsrcArrDescName);
-				ExpressionNode fsrcArrDescIdExpr = nodeFactory
-						.newIdentifierExpressionNode(fsrcArrDescSrc,
-								fsrcArrDescId);
-				farr_desc = "farr_section_full";
-				args = Arrays.asList(fsrcArrDescIdExpr);
-				break;
+			farr_desc = "farr_section";
+			args = Arrays.asList(ssrcArrDescIdExpr, dimInfoNode);
+			break;
+		case SECTION_FULL:
+			Source fsrcArrDescSrc = varNameNode.getSource();
+			String fsrcArrDescName = "__" + varNameNode.name();
+			IdentifierNode fsrcArrDescId = nodeFactory.newIdentifierNode(fsrcArrDescSrc, fsrcArrDescName);
+			ExpressionNode fsrcArrDescIdExpr = nodeFactory.newIdentifierExpressionNode(fsrcArrDescSrc, fsrcArrDescId);
+			farr_desc = "farr_section_full";
+			args = Arrays.asList(fsrcArrDescIdExpr);
+			break;
 		}
 
-		IdentifierNode farrDescNode = nodeFactory.newIdentifierNode(src,
-				farr_desc);
-		ExpressionNode funcIdNode = nodeFactory
-				.newIdentifierExpressionNode(dummySrc, farrDescNode);
-		FunctionCallNode farrDescCallNode = nodeFactory.newFunctionCallNode(src,
-				funcIdNode, args, null);
+		IdentifierNode farrDescNode = nodeFactory.newIdentifierNode(src, farr_desc);
+		ExpressionNode funcIdNode = nodeFactory.newIdentifierExpressionNode(dummySrc, farrDescNode);
+		FunctionCallNode farrDescCallNode = nodeFactory.newFunctionCallNode(src, funcIdNode, args);
 
 		freedArrays.push(varNameNode.name());
-		return nodeFactory.newVariableDeclarationNode(src, varNameNode,
-				fArrDescType, farrDescCallNode);
+		return nodeFactory.newVariableDeclarationNode(src, varNameNode, fArrDescType, farrDescCallNode);
 	}
 
 	private BlockItemNode createArrayDestroy(String arrayVarName) {
 		String FARR_DESTROY = "farr_destroy";
-		IdentifierNode arrIdNode = nodeFactory.newIdentifierNode(dummySrc,
-				arrayVarName);
-		ExpressionNode arrIdExprNode = nodeFactory
-				.newIdentifierExpressionNode(dummySrc, arrIdNode);
-		IdentifierNode farrDestroyNode = nodeFactory.newIdentifierNode(dummySrc,
-				FARR_DESTROY);
-		ExpressionNode funcIdNode = nodeFactory
-				.newIdentifierExpressionNode(dummySrc, farrDestroyNode);
-		FunctionCallNode farrDestroyCallNode = nodeFactory.newFunctionCallNode(
-				dummySrc, funcIdNode, Arrays.asList(arrIdExprNode), null);
+		IdentifierNode arrIdNode = nodeFactory.newIdentifierNode(dummySrc, arrayVarName);
+		ExpressionNode arrIdExprNode = nodeFactory.newIdentifierExpressionNode(dummySrc, arrIdNode);
+		IdentifierNode farrDestroyNode = nodeFactory.newIdentifierNode(dummySrc, FARR_DESTROY);
+		ExpressionNode funcIdNode = nodeFactory.newIdentifierExpressionNode(dummySrc, farrDestroyNode);
+		FunctionCallNode farrDestroyCallNode = nodeFactory.newFunctionCallNode(dummySrc, funcIdNode,
+				Arrays.asList(arrIdExprNode));
 		return nodeFactory.newExpressionStatementNode(farrDestroyCallNode);
 	}
 
-	private ExpressionNode[][] processArrayDimInfo(MFTree arrSpec)
-			throws SyntaxException {
+	private ExpressionNode[][] processArrayDimInfo(MFTree arrSpec) throws SyntaxException {
 		int LBND = 0, UBND = 1, STRD = 2;
 		int arrDimNum = arrSpec.numChildren();
 		ExpressionNode[][] dimInfo = new ExpressionNode[arrDimNum][3];
@@ -770,26 +702,24 @@ public class MFASTBuilderWorker {
 			Source src = newSource(dimSpec);
 
 			switch (dimSpec.kind()) {
-				case MFPUtils.ASE_1X : // (1 :) *
-				case MFPUtils.ASE_NN : // <null> : <null>
-					dimInfo[d][LBND] = nodeFactory.newIntConstantNode(src, 1);
-					break;
-				case MFPUtils.ASE_LU : // Expr0 : Expr1
-					dimInfo[d][UBND] = translateExpr(
-							dimSpec.getChildByIndex(1));
-				case MFPUtils.ASE_LN : // Expr0 : <null>
-				case MFPUtils.ASE_LX : // Expr0 : *
-					dimInfo[d][LBND] = translateExpr(
-							dimSpec.getChildByIndex(0));
-					break;
-				case MFPUtils.ASE_RK : // ..
-					break; // TODO:
-				case MFPUtils.ASE_1U : // (1 :) Expr0
-					dimSpec = dimSpec.getChildByIndex(0);
-				default : // Expr
-					dimInfo[d][LBND] = nodeFactory.newIntConstantNode(src, 1);
-					dimInfo[d][UBND] = translateExpr(dimSpec);
-					break;
+			case MFPUtils.ASE_1X: // (1 :) *
+			case MFPUtils.ASE_NN: // <null> : <null>
+				dimInfo[d][LBND] = nodeFactory.newIntConstantNode(src, 1);
+				break;
+			case MFPUtils.ASE_LU: // Expr0 : Expr1
+				dimInfo[d][UBND] = translateExpr(dimSpec.getChildByIndex(1));
+			case MFPUtils.ASE_LN: // Expr0 : <null>
+			case MFPUtils.ASE_LX: // Expr0 : *
+				dimInfo[d][LBND] = translateExpr(dimSpec.getChildByIndex(0));
+				break;
+			case MFPUtils.ASE_RK: // ..
+				break; // TODO:
+			case MFPUtils.ASE_1U: // (1 :) Expr0
+				dimSpec = dimSpec.getChildByIndex(0);
+			default: // Expr
+				dimInfo[d][LBND] = nodeFactory.newIntConstantNode(src, 1);
+				dimInfo[d][UBND] = translateExpr(dimSpec);
+				break;
 
 			}
 			dimInfo[d][STRD] = nodeFactory.newIntConstantNode(src, 1);
@@ -797,16 +727,14 @@ public class MFASTBuilderWorker {
 		return dimInfo;
 	}
 
-	private void processDummyFuncOrSubrDeclaration(String funcName,
-			FunctionDeclarationNode dummyDeclNode) {
+	private void processDummyFuncOrSubrDeclaration(String funcName, FunctionDeclarationNode dummyDeclNode) {
 		if (!funcDeclNodes.containsKey(funcName)) {
 			funcDeclNodes.put(funcName, dummyDeclNode);
 			programUnits.add(0, dummyDeclNode);
 		}
 	}
 
-	private ExpressionNode createArraySubscript(Source src,
-			IdentifierNode varIdNode, ExpressionNode idxInfo[],
+	private ExpressionNode createArraySubscript(Source src, IdentifierNode varIdNode, ExpressionNode idxInfo[],
 			TypeNode baseTypeNode) {
 		// Translate Fortran Array Subscript into CIVL style:
 		// (int*) farr_subscript()
@@ -824,52 +752,36 @@ public class MFASTBuilderWorker {
 
 		for (int d = 0; d < idxInfo.length; d++) {
 			idxNode = idxInfo[d].copy();
-			idxInfoNodes.add(nodeFactory.newPairNode(idxNode.getSource(), null,
-					idxNode));
+			idxInfoNodes.add(nodeFactory.newPairNode(idxNode.getSource(), null, idxNode));
 		}
 
-		CompoundLiteralNode idxInfoLiteralNode = nodeFactory
-				.newCompoundLiteralNode(src, idxInfoTypeNode, nodeFactory
-						.newCompoundInitializerNode(src, idxInfoNodes));
-		ExpressionNode isDirectNode = nodeFactory.newIntConstantNode(dummySrc,
-				0);
+		CompoundLiteralNode idxInfoLiteralNode = nodeFactory.newCompoundLiteralNode(src, idxInfoTypeNode,
+				nodeFactory.newCompoundInitializerNode(src, idxInfoNodes));
+		ExpressionNode isDirectNode = nodeFactory.newIntConstantNode(dummySrc, 0);
 		// Call on farr_subscript
-		ExpressionNode arrayIdExprNode = nodeFactory
-				.newIdentifierExpressionNode(varIdNode.getSource(),
-						varIdNode.copy());
-		IdentifierNode farrSubscriptNode = nodeFactory.newIdentifierNode(src,
-				FARR_SUBSCRIPT);
-		ExpressionNode funcIdNode = nodeFactory.newIdentifierExpressionNode(
-				varIdNode.getSource(), farrSubscriptNode);
-		FunctionCallNode farrSubscriptCallNode = nodeFactory
-				.newFunctionCallNode(src, funcIdNode,
-						Arrays.asList(arrayIdExprNode, idxInfoLiteralNode,
-								isDirectNode),
-						null);
+		ExpressionNode arrayIdExprNode = nodeFactory.newIdentifierExpressionNode(varIdNode.getSource(),
+				varIdNode.copy());
+		IdentifierNode farrSubscriptNode = nodeFactory.newIdentifierNode(src, FARR_SUBSCRIPT);
+		ExpressionNode funcIdNode = nodeFactory.newIdentifierExpressionNode(varIdNode.getSource(), farrSubscriptNode);
+		FunctionCallNode farrSubscriptCallNode = nodeFactory.newFunctionCallNode(src, funcIdNode,
+				Arrays.asList(arrayIdExprNode, idxInfoLiteralNode, isDirectNode));
 		// Cast returned value to corresponding pointer
 		CastNode ptrToArraySubscriptNode = nodeFactory.newCastNode(src,
-				nodeFactory.newPointerTypeNode(dummySrc, baseTypeNode),
-				farrSubscriptCallNode);
+				nodeFactory.newPointerTypeNode(dummySrc, baseTypeNode), farrSubscriptCallNode);
 		// De-reference the pointer to the corresponding array element.
-		return nodeFactory.newOperatorNode(src, Operator.DEREFERENCE,
-				ptrToArraySubscriptNode);
+		return nodeFactory.newOperatorNode(src, Operator.DEREFERENCE, ptrToArraySubscriptNode);
 	}
 
-	private ExpressionNode createNullConstantNode(Source src,
-			TypeNode pointerType) throws SyntaxException {
-		ExpressionNode int0Node = nodeFactory.newIntegerConstantNode(dummySrc,
-				"0");
+	private ExpressionNode createNullConstantNode(Source src, TypeNode pointerType) throws SyntaxException {
+		ExpressionNode int0Node = nodeFactory.newIntegerConstantNode(dummySrc, "0");
 		TypeNode voidTypeNode = nodeFactory.newVoidTypeNode(dummySrc);
-		TypeNode voidPtrNode = nodeFactory.newPointerTypeNode(dummySrc,
-				voidTypeNode);
-		ExpressionNode nullConstNode = nodeFactory.newCastNode(dummySrc,
-				voidPtrNode, int0Node);
+		TypeNode voidPtrNode = nodeFactory.newPointerTypeNode(dummySrc, voidTypeNode);
+		ExpressionNode nullConstNode = nodeFactory.newCastNode(dummySrc, voidPtrNode, int0Node);
 		return nodeFactory.newCastNode(src, pointerType.copy(), nullConstNode);
 	}
 
 	// R801: type declaration stmt
-	private List<BlockItemNode> translateTypeDeclaration(MFTree decl,
-			String varNamePrefix) throws SyntaxException {
+	private List<BlockItemNode> translateTypeDeclaration(MFTree decl, String varNamePrefix) throws SyntaxException {
 		final int idxDeclSpec = 1;
 		final int idxDeclAttrSpecStart = 2;
 		int numDeclChildren = decl.numChildren();
@@ -890,51 +802,47 @@ public class MFASTBuilderWorker {
 				MFTree attrSpec = decl.getChildByIndex(i);
 
 				switch (attrSpec.kind()) {
-					case MFPUtils.ATTR_DIMENSION :
-						// TODO: handling dimension(*)
-						sharedDimInfo = processArrayDimInfo(
-								attrSpec.getChildByIndex(1));
-						sharedTypeNode = genArrDescType(src);
-						sharedAttrs[MFScopeManager.ATTR_VAR_DIMENSION] = true;
-						// processArrayType(src, dimInfo, baseTypeNode.copy());
-						break;
-					case MFPUtils.ATTR_INTENT :
-						// TODO: handling intent stmt
-						MFTree intentSpec = attrSpec.getChildByIndex(1)
-								.getChildByIndex(0);
-						String specStr = this.getName(intentSpec);
+				case MFPUtils.ATTR_DIMENSION:
+					// TODO: handling dimension(*)
+					sharedDimInfo = processArrayDimInfo(attrSpec.getChildByIndex(1));
+					sharedTypeNode = genArrDescType(src);
+					sharedAttrs[MFScopeManager.ATTR_VAR_DIMENSION] = true;
+					// processArrayType(src, dimInfo, baseTypeNode.copy());
+					break;
+				case MFPUtils.ATTR_INTENT:
+					// TODO: handling intent stmt
+					MFTree intentSpec = attrSpec.getChildByIndex(1).getChildByIndex(0);
+					String specStr = this.getName(intentSpec);
 
-						sharedAttrs[MFScopeManager.ATTR_ARG_INTENT_IN] = specStr
-								.contains("IN");
-						sharedAttrs[MFScopeManager.ATTR_ARG_INTENT_OUT] = specStr
-								.contains("OUT");
-						break;
-					case MFPUtils.ATTR_ALLOCATABLE :
-						sharedAttrs[MFScopeManager.ATTR_VAR_ALLOCATABLE] = true;
-						break;
-					case MFPUtils.ATTR_POINTER :
-						sharedAttrs[MFScopeManager.ATTR_VAR_POINTER] = true;
-						break;
-					case MFPUtils.ATTR_TARGET :
-						sharedAttrs[MFScopeManager.ATTR_VAR_TARGET] = true;
-						break;
-					case MFPUtils.ATTR_ACCESS :
-					case MFPUtils.ATTR_ASYNCHRONOUS :
-					case MFPUtils.ATTR_BIND :
-					case MFPUtils.ATTR_CODIMENSION :
-					case MFPUtils.ATTR_CONTIGUOUS :
-					case MFPUtils.ATTR_EXTERNAL :
-					case MFPUtils.ATTR_INTRINSIC :
-					case MFPUtils.ATTR_OPTIONAL :
-					case MFPUtils.ATTR_PARAMETER :
-					case MFPUtils.ATTR_PROTECTED :
-					case MFPUtils.ATTR_SAVE :
-					case MFPUtils.ATTR_VALUE :
-					case MFPUtils.ATTR_VOLATILE :
-					case MFPUtils.ATTR_OTHER :
-					default :
-						System.err.println(attrSpec.prp());
-						assert false;
+					sharedAttrs[MFScopeManager.ATTR_ARG_INTENT_IN] = specStr.contains("IN");
+					sharedAttrs[MFScopeManager.ATTR_ARG_INTENT_OUT] = specStr.contains("OUT");
+					break;
+				case MFPUtils.ATTR_ALLOCATABLE:
+					sharedAttrs[MFScopeManager.ATTR_VAR_ALLOCATABLE] = true;
+					break;
+				case MFPUtils.ATTR_POINTER:
+					sharedAttrs[MFScopeManager.ATTR_VAR_POINTER] = true;
+					break;
+				case MFPUtils.ATTR_TARGET:
+					sharedAttrs[MFScopeManager.ATTR_VAR_TARGET] = true;
+					break;
+				case MFPUtils.ATTR_ACCESS:
+				case MFPUtils.ATTR_ASYNCHRONOUS:
+				case MFPUtils.ATTR_BIND:
+				case MFPUtils.ATTR_CODIMENSION:
+				case MFPUtils.ATTR_CONTIGUOUS:
+				case MFPUtils.ATTR_EXTERNAL:
+				case MFPUtils.ATTR_INTRINSIC:
+				case MFPUtils.ATTR_OPTIONAL:
+				case MFPUtils.ATTR_PARAMETER:
+				case MFPUtils.ATTR_PROTECTED:
+				case MFPUtils.ATTR_SAVE:
+				case MFPUtils.ATTR_VALUE:
+				case MFPUtils.ATTR_VOLATILE:
+				case MFPUtils.ATTR_OTHER:
+				default:
+					System.err.println(attrSpec.prp());
+					assert false;
 				}
 			}
 			if (!sharedAttrs[MFScopeManager.ATTR_VAR_DIMENSION]) {
@@ -943,8 +851,7 @@ public class MFASTBuilderWorker {
 						sharedAttrs[MFScopeManager.ATTR_VAR_POINTER] || //
 						sharedAttrs[MFScopeManager.ATTR_VAR_TARGET]) {
 					// Reference to scalar type
-					sharedTypeNode = nodeFactory.newPointerTypeNode(src,
-							baseTypeNode.copy());
+					sharedTypeNode = nodeFactory.newPointerTypeNode(src, baseTypeNode.copy());
 				} // else Value of scalar type
 			}
 		}
@@ -990,17 +897,14 @@ public class MFASTBuilderWorker {
 				MFTree spec = declEntity.getChildByIndex(j);
 				PRPair prp = spec.prp();
 
-				if (prp == MFPUtils.ARRAY_SPEC
-						|| prp == MFPUtils.COARRAY_SPEC) {
+				if (prp == MFPUtils.ARRAY_SPEC || prp == MFPUtils.COARRAY_SPEC) {
 					/*
-					 * Fortran 2018: 8.2 Type declaration statement: Item.2 The
-					 * type declaration statement also specifies the attributes
-					 * whose keywords appear in the attr-spec, except that the
-					 * DIMENSION attribute may be specified or overridden for an
-					 * entity by the appearance of array-spec in its
-					 * entity-decl, and the CODIMENSION attribute may be
-					 * specified or overridden for an entity by the appearance
-					 * of coarray-spec in its entity-decl.
+					 * Fortran 2018: 8.2 Type declaration statement: Item.2 The type declaration
+					 * statement also specifies the attributes whose keywords appear in the
+					 * attr-spec, except that the DIMENSION attribute may be specified or overridden
+					 * for an entity by the appearance of array-spec in its entity-decl, and the
+					 * CODIMENSION attribute may be specified or overridden for an entity by the
+					 * appearance of coarray-spec in its entity-decl.
 					 */
 					actualDimInfo = processArrayDimInfo(spec);
 					actualTypeNode = genArrDescType(src);
@@ -1008,26 +912,20 @@ public class MFASTBuilderWorker {
 					assert false;
 				} else if (prp == MFPUtils.INITIALIZATION) {
 					initNode = translateInitializer(spec);
-					if (scopes.hasAttr(varName,
-							MFScopeManager.ATTR_VAR_TARGET)) {
+					if (scopes.hasAttr(varName, MFScopeManager.ATTR_VAR_TARGET)) {
 						// Var. w/ TARGET shall be translated as pointer type
 						// Its init expr is assigne to an intermediate var.
-						String targetValVarName = FORTRAN_ATTR_TARGET_PREFIX
-								+ varName;
-						IdentifierNode tvVarIdNode = nodeFactory
-								.newIdentifierNode(src, targetValVarName);
-						IdentifierExpressionNode tvVarExprNode = nodeFactory
-								.newIdentifierExpressionNode(src,
-										tvVarIdNode.copy());
+						String targetValVarName = FORTRAN_ATTR_TARGET_PREFIX + varName;
+						IdentifierNode tvVarIdNode = nodeFactory.newIdentifierNode(src, targetValVarName);
+						IdentifierExpressionNode tvVarExprNode = nodeFactory.newIdentifierExpressionNode(src,
+								tvVarIdNode.copy());
 						TypeNode tvVarTypeNode = baseTypeNode.copy();
-						VariableDeclarationNode tvVarDeclNode = nodeFactory
-								.newVariableDeclarationNode(src, tvVarIdNode,
-										tvVarTypeNode, initNode);
+						VariableDeclarationNode tvVarDeclNode = nodeFactory.newVariableDeclarationNode(src, tvVarIdNode,
+								tvVarTypeNode, initNode);
 
 						declNodes.add(tvVarDeclNode);
 						scopes.addDeclVariable(targetValVarName, tvVarDeclNode);
-						initNode = nodeFactory.newOperatorNode(src,
-								Operator.ADDRESSOF, tvVarExprNode);
+						initNode = nodeFactory.newOperatorNode(src, Operator.ADDRESSOF, tvVarExprNode);
 					}
 				} else
 					assert false;
@@ -1040,40 +938,33 @@ public class MFASTBuilderWorker {
 					// Array typed parameters
 					// 1. Update parameter type decl.
 					// - change its identifier for reshaping
-					declNode.setIdentifier(nodeFactory.newIdentifierNode(
-							dummySrc, FORTRAN_ARRAY_PARAM_PREFIX + varName));
+					declNode.setIdentifier(
+							nodeFactory.newIdentifierNode(dummySrc, FORTRAN_ARRAY_PARAM_PREFIX + varName));
 					// - change its type as: farr_desc
 					declNode.setTypeNode(genArrDescType(src));
-					scopes.addDeclParameter(
-							FORTRAN_ARRAY_PARAM_PREFIX + varName, declNode);
+					scopes.addDeclParameter(FORTRAN_ARRAY_PARAM_PREFIX + varName, declNode);
 					// 2. Insert new local var. decl. for reshaping
 					/*
-					 * e.g., farr_desc PAR_ID = farr_reshape(__PAR_ID, rank,
-					 * reshap_dim_info);
+					 * e.g., farr_desc PAR_ID = farr_reshape(__PAR_ID, rank, reshap_dim_info);
 					 */
 					// - form the local var. decl. for reshaping
-					declNode = createArrayDesc(src, nameNode, actualDimInfo,
-							baseTypeNode.copy(),
-							FORTRAN_ARRAY_DESCRIPTOR_KIND.RESHAPE,
-							/* isCommon */ false);
+					declNode = createArrayDesc(src, nameNode, actualDimInfo, baseTypeNode.copy(),
+							FORTRAN_ARRAY_DESCRIPTOR_KIND.RESHAPE, /* isCommon */ false);
 					// - add the local reshaping decl. to the returned list
 					declNodes.add(declNode);
 					scopes.addDeclArray(varName, baseTypeNode);
 					scopes.addDeclParameter(varName, declNode);
 					/*
-					 * Only the inserted local variable 'varName', whose
-					 * identifier has no prefix (as the parameter identifier in
-					 * original source code), shall be accessed in the current
-					 * programing unit scope. Thus, the changed parameter
-					 * identifier, which has a prefix, is not recorded in
-					 * 'scopes'
+					 * Only the inserted local variable 'varName', whose identifier has no prefix
+					 * (as the parameter identifier in original source code), shall be accessed in
+					 * the current programing unit scope. Thus, the changed parameter identifier,
+					 * which has a prefix, is not recorded in 'scopes'
 					 */
 				} else if (actualTypeNode.kind() == TypeNodeKind.BASIC) {
 					// Scalar typed parameters
 					// Parameters are passed by references, so that their
 					// types are changed to corresponding pointer types
-					declNode.setTypeNode(nodeFactory.newPointerTypeNode(src,
-							actualTypeNode));
+					declNode.setTypeNode(nodeFactory.newPointerTypeNode(src, actualTypeNode));
 				} else {
 					// Other types
 					// Update the type declared in its parameter decl.
@@ -1086,11 +977,8 @@ public class MFASTBuilderWorker {
 						// ..
 						// *OUT_ARG = ARG
 						String outArgName = FORTRAN_INTENT_OUT_PREFIX + varName;
-						VariableDeclarationNode dummyArgDeclNode = nodeFactory
-								.newVariableDeclarationNode(
-										declNode.getSource(),
-										declNode.getIdentifier().copy(),
-										actualTypeNode.copy());
+						VariableDeclarationNode dummyArgDeclNode = nodeFactory.newVariableDeclarationNode(
+								declNode.getSource(), declNode.getIdentifier().copy(), actualTypeNode.copy());
 
 						scopes.updateParameterIdentfier(varName, outArgName);
 						varName = outArgName;
@@ -1100,10 +988,8 @@ public class MFASTBuilderWorker {
 			} else {
 				if (actualDimInfo != null) {
 					// Array typed locals
-					declNode = createArrayDesc(src, nameNode, actualDimInfo,
-							baseTypeNode.copy(),
-							FORTRAN_ARRAY_DESCRIPTOR_KIND.ORIGIN,
-							/* isCommon */ false);
+					declNode = createArrayDesc(src, nameNode, actualDimInfo, baseTypeNode.copy(),
+							FORTRAN_ARRAY_DESCRIPTOR_KIND.ORIGIN, /* isCommon */ false);
 					scopes.addDeclArray(varName, baseTypeNode);
 				} else {
 					// Non-array types
@@ -1112,11 +998,10 @@ public class MFASTBuilderWorker {
 						// TYPE _PREFIX_ID = INIT_EXPR;
 						// TYPE* ID;
 						// *ID = _PREFIX_ID;
-						declNode = nodeFactory.newVariableDeclarationNode(src,
-								nameNode, actualTypeNode.copy(), initNode);
+						declNode = nodeFactory.newVariableDeclarationNode(src, nameNode, actualTypeNode.copy(),
+								initNode);
 					} else {
-						declNode = nodeFactory.newVariableDeclarationNode(src,
-								nameNode, actualTypeNode, initNode);
+						declNode = nodeFactory.newVariableDeclarationNode(src, nameNode, actualTypeNode, initNode);
 					}
 				}
 				declNodes.add(declNode);
@@ -1138,8 +1023,7 @@ public class MFASTBuilderWorker {
 			return declNodes;
 	}
 
-	private ExpressionNode translateConstantChar(Source source, MFTree constant)
-			throws SyntaxException {
+	private ExpressionNode translateConstantChar(Source source, MFTree constant) throws SyntaxException {
 		CivlcToken strToken = constant.getChildByIndex(0).cTokens()[0];
 		String constantText = strToken.getText().replace('\'', '\"');
 
@@ -1147,10 +1031,8 @@ public class MFASTBuilderWorker {
 				tokenFactory.newStringToken(strToken).getStringLiteral());
 	}
 
-	private ExpressionNode translateConstantFloating(Source source,
-			MFTree constant) throws SyntaxException {
-		String constantText = constant.getChildByIndex(0).cTokens()[0].getText()
-				.toUpperCase();
+	private ExpressionNode translateConstantFloating(Source source, MFTree constant) throws SyntaxException {
+		String constantText = constant.getChildByIndex(0).cTokens()[0].getText().toUpperCase();
 		int eIdx = constantText.indexOf('D'); // for double
 		String suffix = "l";
 
@@ -1171,24 +1053,20 @@ public class MFASTBuilderWorker {
 		return nodeFactory.newFloatingConstantNode(source, constantText);
 	}
 
-	private ExpressionNode translateConstantInteger(Source source,
-			MFTree constant) throws SyntaxException {
-		String constantText = constant.getChildByIndex(0).cTokens()[0]
-				.getText();
+	private ExpressionNode translateConstantInteger(Source source, MFTree constant) throws SyntaxException {
+		String constantText = constant.getChildByIndex(0).cTokens()[0].getText();
 
 		return nodeFactory.newIntegerConstantNode(source, constantText);
 	}
 
-	private ExpressionNode translateConstantLogical(Source source,
-			MFTree constant) {
+	private ExpressionNode translateConstantLogical(Source source, MFTree constant) {
 		if (constant.getChildByIndex(0).prp() == MFPUtils.T_TRUE)
 			return nodeFactory.newBooleanConstantNode(source, true);
 		else
 			return nodeFactory.newBooleanConstantNode(source, false);
 	}
 
-	private ExpressionNode translateOperatorExpression(Source source,
-			MFTree exprStmt) throws SyntaxException {
+	private ExpressionNode translateOperatorExpression(Source source, MFTree exprStmt) throws SyntaxException {
 		PRPair prp = exprStmt.prp();
 		Operator op = null;
 		LinkedList<ExpressionNode> argNodes = null;
@@ -1196,10 +1074,8 @@ public class MFASTBuilderWorker {
 		if (prp == MFPUtils.PART_REF) {
 			return translateExprPartRef(exprStmt);
 		} else if (prp == MFPUtils.ASSIGNMENT_STMT) {
-			ExpressionNode lhsExprNode = translateExpr(
-					exprStmt.getChildByIndex(1));
-			ExpressionNode rhsExprNode = translateExpr(
-					exprStmt.getChildByIndex(2));
+			ExpressionNode lhsExprNode = translateExpr(exprStmt.getChildByIndex(1));
+			ExpressionNode rhsExprNode = translateExpr(exprStmt.getChildByIndex(2));
 
 			op = Operator.ASSIGN;
 			argNodes = new LinkedList<>();
@@ -1207,10 +1083,8 @@ public class MFASTBuilderWorker {
 			argNodes.add(rhsExprNode);
 			return nodeFactory.newOperatorNode(source, op, argNodes);
 		} else if (prp == MFPUtils.LEVEL_3_EXPR) {
-			ExpressionNode lhsExprNode = translateExpr(
-					exprStmt.getChildByIndex(0));
-			ExpressionNode rhsExprNode = translateExpr(
-					exprStmt.getChildByIndex(2));
+			ExpressionNode lhsExprNode = translateExpr(exprStmt.getChildByIndex(0));
+			ExpressionNode rhsExprNode = translateExpr(exprStmt.getChildByIndex(2));
 
 			prp = exprStmt.getChildByIndex(1).prp();
 			if (prp == MFPUtils.T_GE)
@@ -1263,8 +1137,7 @@ public class MFASTBuilderWorker {
 				rhsExprNode = translateExpr(val);
 				if (addOperand.getChildByIndex(0).prp() == MFPUtils.T_MINUS)
 					op = Operator.MINUS;
-				lhsExprNode = nodeFactory.newOperatorNode(src, op, lhsExprNode,
-						rhsExprNode);
+				lhsExprNode = nodeFactory.newOperatorNode(src, op, lhsExprNode, rhsExprNode);
 			}
 			return lhsExprNode;
 		} else if (prp == MFPUtils.MULT_OPERAND) {
@@ -1279,16 +1152,13 @@ public class MFASTBuilderWorker {
 
 			if (exprStmt.kind() == MFPUtils.MULT_OPERAND_POW) {
 				Source powSrc = newSource(exprStmt.getChildByIndex(1));
-				IdentifierNode powFuncNameNode = nodeFactory
-						.newIdentifierNode(powSrc, "pow");
-				ExpressionNode powFuncNode = nodeFactory
-						.newIdentifierExpressionNode(powSrc, powFuncNameNode);
+				IdentifierNode powFuncNameNode = nodeFactory.newIdentifierNode(powSrc, "pow");
+				ExpressionNode powFuncNode = nodeFactory.newIdentifierExpressionNode(powSrc, powFuncNameNode);
 
 				useMATH = true;
 				val = exprStmt.getChildByIndex(2);
 				rhsExprNode = translateExpr(val);
-				return nodeFactory.newFunctionCallNode(src, powFuncNode,
-						Arrays.asList(lhsExprNode, rhsExprNode), null);
+				return nodeFactory.newFunctionCallNode(src, powFuncNode, Arrays.asList(lhsExprNode, rhsExprNode));
 			}
 			for (int i = 1; i < exprStmt.numChildren(); i++) {
 				multOperand = exprStmt.getChildByIndex(i);
@@ -1297,8 +1167,7 @@ public class MFASTBuilderWorker {
 				rhsExprNode = translateExpr(val);
 				if (multOperand.getChildByIndex(0).prp() == MFPUtils.T_SLASH)
 					op = Operator.DIV;
-				lhsExprNode = nodeFactory.newOperatorNode(src, op, lhsExprNode,
-						rhsExprNode);
+				lhsExprNode = nodeFactory.newOperatorNode(src, op, lhsExprNode, rhsExprNode);
 			}
 			return lhsExprNode;
 		} else if (prp == MFPUtils.AND_OPERAND) {
@@ -1314,16 +1183,14 @@ public class MFASTBuilderWorker {
 					op = Operator.LAND;
 					val = exprStmt.getChildByIndex(i);
 					rhsExprNode = translateExpr(val);
-					lhsExprNode = nodeFactory.newOperatorNode(src, op,
-							lhsExprNode, rhsExprNode);
+					lhsExprNode = nodeFactory.newOperatorNode(src, op, lhsExprNode, rhsExprNode);
 				}
 				return lhsExprNode;
 			} else { // kind == MFPUtils.LAO_NOT
 				MFTree val = exprStmt.getChildByIndex(1);
 				ExpressionNode unaryExprNode = translateExpr(val);
 
-				return nodeFactory.newOperatorNode(src, Operator.NOT,
-						unaryExprNode);
+				return nodeFactory.newOperatorNode(src, Operator.NOT, unaryExprNode);
 			}
 		} else if (prp == MFPUtils.OR_OPERAND) {
 			Source src = newSource(exprStmt);
@@ -1335,8 +1202,7 @@ public class MFASTBuilderWorker {
 				op = Operator.LOR;
 				val = exprStmt.getChildByIndex(i);
 				rhsExprNode = translateExpr(val);
-				lhsExprNode = nodeFactory.newOperatorNode(src, op, lhsExprNode,
-						rhsExprNode);
+				lhsExprNode = nodeFactory.newOperatorNode(src, op, lhsExprNode, rhsExprNode);
 			}
 			return lhsExprNode;
 		} else
@@ -1353,12 +1219,10 @@ public class MFASTBuilderWorker {
 
 		assert numDataRefs > 0;
 		hostNameNode = translateIdentifier(hostName);
-		refExpr = nodeFactory.newIdentifierExpressionNode(newSource(hostName),
-				hostNameNode);
+		refExpr = nodeFactory.newIdentifierExpressionNode(newSource(hostName), hostNameNode);
 		for (int i = 1; i < numDataRefs; i++) {
 			refName = refs.getChildByIndex(i).getChildByIndex(0);
-			refExpr = nodeFactory.newDotNode(src, refExpr,
-					translateIdentifier(refName));
+			refExpr = nodeFactory.newDotNode(src, refExpr, translateIdentifier(refName));
 		}
 		return refExpr;
 	}
@@ -1369,16 +1233,14 @@ public class MFASTBuilderWorker {
 	private LinkedList<BlockItemNode> dummyFuncRefArrayArgPreStmts = new LinkedList<>();
 	private LinkedList<BlockItemNode> dummyFuncRefArrayArgPostStmts = new LinkedList<>();
 
-	private ExpressionNode translateExprFuncRef(MFTree funcRef)
-			throws SyntaxException {
+	private ExpressionNode translateExprFuncRef(MFTree funcRef) throws SyntaxException {
 		int numArrayArgs = 0;
 		Source src = newSource(funcRef);
 		List<BlockItemNode> itemNodes = new LinkedList<>();
 		MFTree funcName = funcRef.getChildByIndex(0);
 		Boolean hasArgList = funcRef.numChildren() > 1;
 		IdentifierNode funcIdNode = translateIdentifier(funcName);
-		ExpressionNode funcRefNode = nodeFactory
-				.newIdentifierExpressionNode(src, funcIdNode);
+		ExpressionNode funcRefNode = nodeFactory.newIdentifierExpressionNode(src, funcIdNode);
 		List<ExpressionNode> actualCallArgNodes = new LinkedList<ExpressionNode>();
 		List<VariableDeclarationNode> dummyFuncDeclFormalNodes = new LinkedList<VariableDeclarationNode>();
 		SequenceNode<VariableDeclarationNode> formalsNode = null;
@@ -1393,113 +1255,86 @@ public class MFASTBuilderWorker {
 				MFTree arg = args.getChildByIndex(i).getChildByIndex(0);
 				Source argSrc = newSource(arg);
 				ExpressionNode argNode = translateExpr(arg);
-				IdentifierNode formalNameNode = nodeFactory.newIdentifierNode(
-						argNode.getSource(), "__civl_dummy_arg_" + i);
+				IdentifierNode formalNameNode = nodeFactory.newIdentifierNode(argNode.getSource(),
+						"__civl_dummy_arg_" + i);
 				Boolean notSection = arraySectionDecls.isEmpty();
 
 				while (!arraySectionDecls.isEmpty())
 					itemNodes.add(0, arraySectionDecls.pop());
 				switch (argNode.expressionKind()) {
-					case OPERATOR :
-						if (((OperatorNode) argNode)
-								.getOperator() == Operator.DEREFERENCE) {
-							argNode = ((OperatorNode) argNode).getArgument(0)
-									.copy();
-							argNode.remove();
+				case OPERATOR:
+					if (((OperatorNode) argNode).getOperator() == Operator.DEREFERENCE) {
+						argNode = ((OperatorNode) argNode).getArgument(0).copy();
+						argNode.remove();
 
-							if (argNode instanceof IdentifierExpressionNode) {
-								// Arg is an identifier w/ a scalar type
-								formalTypeNode = analyzeRawExprType(argNode);
-								tempNode = formalTypeNode;
-								if (tempNode.kind() == TypeNodeKind.BASIC) {
-									if (!scopes.isParameterVar(
-											((IdentifierExpressionNode) argNode)
-													.getIdentifier().name())) {
-										argNode = nodeFactory.newOperatorNode(
-												src, Operator.ADDRESSOF,
-												argNode);
-									}
-									formalTypeNode = nodeFactory
-											.newPointerTypeNode(
-													argNode.getSource(),
-													formalTypeNode.copy());
+						if (argNode instanceof IdentifierExpressionNode) {
+							// Arg is an identifier w/ a scalar type
+							formalTypeNode = analyzeRawExprType(argNode);
+							tempNode = formalTypeNode;
+							if (tempNode.kind() == TypeNodeKind.BASIC) {
+								if (!scopes
+										.isParameterVar(((IdentifierExpressionNode) argNode).getIdentifier().name())) {
+									argNode = nodeFactory.newOperatorNode(src, Operator.ADDRESSOF, argNode);
 								}
-							} else if (argNode instanceof CastNode) {
-								formalTypeNode = ((CastNode) argNode)
-										.getCastType();
+								formalTypeNode = nodeFactory.newPointerTypeNode(argNode.getSource(),
+										formalTypeNode.copy());
 							}
-						} else {
-							formalTypeNode = analyzeRawExprType(argNode).copy();
-							argNode = processExprInFuncRefArgs(formalTypeNode,
-									argNode);
+						} else if (argNode instanceof CastNode) {
+							formalTypeNode = ((CastNode) argNode).getCastType();
 						}
-						break;
-					case IDENTIFIER_EXPRESSION :
-						tempNode = analyzeRawExprType(argNode);
-						formalTypeNode = tempNode;
-						if (tempNode.kind() == TypeNodeKind.BASIC) {
-							if (!scopes.isParameterVar(
-									((IdentifierExpressionNode) argNode)
-											.getIdentifier().name())) {
-								argNode = nodeFactory.newOperatorNode(src,
-										Operator.ADDRESSOF, argNode);
-							}
-							formalTypeNode = nodeFactory.newPointerTypeNode(src,
-									tempNode);
+					} else {
+						formalTypeNode = analyzeRawExprType(argNode).copy();
+						argNode = processExprInFuncRefArgs(formalTypeNode, argNode);
+					}
+					break;
+				case IDENTIFIER_EXPRESSION:
+					tempNode = analyzeRawExprType(argNode);
+					formalTypeNode = tempNode;
+					if (tempNode.kind() == TypeNodeKind.BASIC) {
+						if (!scopes.isParameterVar(((IdentifierExpressionNode) argNode).getIdentifier().name())) {
+							argNode = nodeFactory.newOperatorNode(src, Operator.ADDRESSOF, argNode);
 						}
-						if (notSection && tempNode
-								.kind() == TypeNodeKind.TYPEDEF_NAME) {
-							// Array type arg
-							// TODO: if this FuncRef is in an expression,
-							// then a dummy variable is required for
-							// removing side-effects caused by
-							// inserting wraps of array type args.
-							IdentifierNode arrayArgIdNode = nodeFactory
-									.newIdentifierNode(src,
-											FORTRAN_ARRAY_ARG_PREFIX
-													+ ((IdentifierExpressionNode) argNode)
-															.getIdentifier()
-															.name());
-							VariableDeclarationNode arrayArgVarDeclNode = createArrayDesc(
-									dummySrc, arrayArgIdNode, null, null,
-									FORTRAN_ARRAY_DESCRIPTOR_KIND.SECTION_ARG,
-									/* isCommon */ false);
+						formalTypeNode = nodeFactory.newPointerTypeNode(src, tempNode);
+					}
+					if (notSection && tempNode.kind() == TypeNodeKind.TYPEDEF_NAME) {
+						// Array type arg
+						// TODO: if this FuncRef is in an expression,
+						// then a dummy variable is required for
+						// removing side-effects caused by
+						// inserting wraps of array type args.
+						IdentifierNode arrayArgIdNode = nodeFactory.newIdentifierNode(src,
+								FORTRAN_ARRAY_ARG_PREFIX + ((IdentifierExpressionNode) argNode).getIdentifier().name());
+						VariableDeclarationNode arrayArgVarDeclNode = createArrayDesc(dummySrc, arrayArgIdNode, null,
+								null, FORTRAN_ARRAY_DESCRIPTOR_KIND.SECTION_ARG, /* isCommon */ false);
 
-							dummyFuncRefArrayArgPreStmts
-									.add(arrayArgVarDeclNode);
-							argNode = nodeFactory.newIdentifierExpressionNode(
-									src, arrayArgIdNode.copy());
-							numArrayArgs++;
-						}
-						if (tempNode.kind() == TypeNodeKind.ARRAY)
-							assert false;
-						break;
-					case CONSTANT :
-						argNode = argNode.copy();
-						tempNode = analyzeRawExprType(argNode);
-						formalTypeNode = nodeFactory
-								.newPointerTypeNode(dummySrc, tempNode);
-						argNode = translateExprArg(argNode);
-						break;
-					default :
+						dummyFuncRefArrayArgPreStmts.add(arrayArgVarDeclNode);
+						argNode = nodeFactory.newIdentifierExpressionNode(src, arrayArgIdNode.copy());
+						numArrayArgs++;
+					}
+					if (tempNode.kind() == TypeNodeKind.ARRAY)
 						assert false;
+					break;
+				case CONSTANT:
+					argNode = argNode.copy();
+					tempNode = analyzeRawExprType(argNode);
+					formalTypeNode = nodeFactory.newPointerTypeNode(dummySrc, tempNode);
+					argNode = translateExprArg(argNode);
+					break;
+				default:
+					assert false;
 				}
 				actualCallArgNodes.add(argNode);
 				dummyFuncDeclFormalNodes
-						.add(nodeFactory.newVariableDeclarationNode(argSrc,
-								formalNameNode, formalTypeNode.copy()));
+						.add(nodeFactory.newVariableDeclarationNode(argSrc, formalNameNode, formalTypeNode.copy()));
 			}
 		}
-		formalsNode = nodeFactory.newSequenceNode(src,
-				"DummySubroutineFormalDeclList", dummyFuncDeclFormalNodes);
+		formalsNode = nodeFactory.newSequenceNode(src, "DummySubroutineFormalDeclList", dummyFuncDeclFormalNodes);
 
-		FunctionCallNode callNode = nodeFactory.newFunctionCallNode(src,
-				funcRefNode, actualCallArgNodes, null);
-		FunctionTypeNode dummyFuncTypeNode = nodeFactory.newFunctionTypeNode(
-				src, nodeFactory.newVoidTypeNode(src), formalsNode, false);
-		FunctionDeclarationNode dummyFuncDeclNode = nodeFactory
-				.newFunctionDeclarationNode(src, funcIdNode.copy(),
-						dummyFuncTypeNode, null);
+		FunctionCallNode callNode = nodeFactory.newFunctionCallNode(src, funcRefNode, actualCallArgNodes);
+		FunctionTypeNode dummyFuncTypeNode = nodeFactory.newFunctionTypeNode(src, nodeFactory.newVoidTypeNode(src),
+				formalsNode, false);
+		FunctionDeclarationNode dummyFuncDeclNode = nodeFactory.newFunctionDeclarationNode(src, funcIdNode.copy(),
+				dummyFuncTypeNode, null);
 
 		processDummyFuncOrSubrDeclaration(getName(funcName), dummyFuncDeclNode);
 		while (numArrayArgs > 0) {
@@ -1509,8 +1344,7 @@ public class MFASTBuilderWorker {
 		return callNode;
 	}
 
-	private ExpressionNode processExprInFuncRefArgs(TypeNode exprType,
-			ExpressionNode argNode) {
+	private ExpressionNode processExprInFuncRefArgs(TypeNode exprType, ExpressionNode argNode) {
 		// Expressions, which are replaced with pointers to
 		// intermediate arg var.
 		// e.g. <code> foo(x+1,y+1.0) </code> is translated as
@@ -1521,15 +1355,11 @@ public class MFASTBuilderWorker {
 		// </code>
 		Source src = argNode.getSource();
 		String funcRefArgName = FUNC_REF_ARG_PREFIX + dummyFuncRefArgsCtr;
-		IdentifierNode argIdNode = nodeFactory.newIdentifierNode(src,
-				funcRefArgName);
-		ExpressionNode argIdExprNode = nodeFactory
-				.newIdentifierExpressionNode(src, argIdNode.copy());
-		ExpressionNode addrOfArgNode = nodeFactory.newOperatorNode(src,
-				Operator.ADDRESSOF, argIdExprNode);
-		VariableDeclarationNode argDeclNode = nodeFactory
-				.newVariableDeclarationNode(dummySrc, argIdNode,
-						exprType.copy(), argNode);
+		IdentifierNode argIdNode = nodeFactory.newIdentifierNode(src, funcRefArgName);
+		ExpressionNode argIdExprNode = nodeFactory.newIdentifierExpressionNode(src, argIdNode.copy());
+		ExpressionNode addrOfArgNode = nodeFactory.newOperatorNode(src, Operator.ADDRESSOF, argIdExprNode);
+		VariableDeclarationNode argDeclNode = nodeFactory.newVariableDeclarationNode(dummySrc, argIdNode,
+				exprType.copy(), argNode);
 
 		dummyFuncRefArgs.add(argDeclNode);
 		dummyFuncRefArgsCtr++;
@@ -1540,66 +1370,54 @@ public class MFASTBuilderWorker {
 		TypeNode rawExprTypeNode = null;
 
 		switch (exprNode.expressionKind()) {
-			case OPERATOR :
-				if (((OperatorNode) exprNode)
-						.getOperator() == Operator.DEREFERENCE) {
-					exprNode = ((OperatorNode) exprNode).getArgument(0).copy();
-					exprNode.remove();
+		case OPERATOR:
+			if (((OperatorNode) exprNode).getOperator() == Operator.DEREFERENCE) {
+				exprNode = ((OperatorNode) exprNode).getArgument(0).copy();
+				exprNode.remove();
 
-					if (exprNode instanceof IdentifierExpressionNode) {
-						// Arg is an identifier w/ a scalar type
-						rawExprTypeNode = scopes.getTypeByVarIdent(
-								((IdentifierExpressionNode) exprNode)
-										.getIdentifier().name(),
-								exprNode.getSource());
-						if (rawExprTypeNode.kind() == TypeNodeKind.POINTER)
-							rawExprTypeNode = ((PointerTypeNode) rawExprTypeNode)
-									.referencedType();
-					} else if (exprNode instanceof CastNode)
-						rawExprTypeNode = ((CastNode) exprNode).getCastType();
-				} else {
-					OperatorNode opExprNode = (OperatorNode) exprNode;
-					TypeNode tempTypeNode = null;
+				if (exprNode instanceof IdentifierExpressionNode) {
+					// Arg is an identifier w/ a scalar type
+					rawExprTypeNode = scopes.getTypeByVarIdent(
+							((IdentifierExpressionNode) exprNode).getIdentifier().name(), exprNode.getSource());
+					if (rawExprTypeNode.kind() == TypeNodeKind.POINTER)
+						rawExprTypeNode = ((PointerTypeNode) rawExprTypeNode).referencedType();
+				} else if (exprNode instanceof CastNode)
+					rawExprTypeNode = ((CastNode) exprNode).getCastType();
+			} else {
+				OperatorNode opExprNode = (OperatorNode) exprNode;
+				TypeNode tempTypeNode = null;
 
-					rawExprTypeNode = analyzeRawExprType(
-							opExprNode.getArgument(0));
-					for (int i = 1; i < opExprNode
-							.getNumberOfArguments(); i++) {
-						tempTypeNode = analyzeRawExprType(
-								((OperatorNode) exprNode).getArgument(i));
-						assert (rawExprTypeNode.kind() == tempTypeNode.kind());
-					}
+				rawExprTypeNode = analyzeRawExprType(opExprNode.getArgument(0));
+				for (int i = 1; i < opExprNode.getNumberOfArguments(); i++) {
+					tempTypeNode = analyzeRawExprType(((OperatorNode) exprNode).getArgument(i));
+					assert (rawExprTypeNode.kind() == tempTypeNode.kind());
 				}
-				break;
-			case IDENTIFIER_EXPRESSION :
-				String varName = ((IdentifierExpressionNode) exprNode)
-						.getIdentifier().name();
+			}
+			break;
+		case IDENTIFIER_EXPRESSION:
+			String varName = ((IdentifierExpressionNode) exprNode).getIdentifier().name();
 
-				rawExprTypeNode = scopes.getTypeByVarIdent(varName,
-						exprNode.getSource());
-				if (rawExprTypeNode.kind() == TypeNodeKind.POINTER)
-					rawExprTypeNode = ((PointerTypeNode) rawExprTypeNode)
-							.referencedType();
-				if (rawExprTypeNode.kind() == TypeNodeKind.TYPEDEF_NAME) {
-					if (!scopes.hasArrayType(varName)) {
-						assert false;
-					}
+			rawExprTypeNode = scopes.getTypeByVarIdent(varName, exprNode.getSource());
+			if (rawExprTypeNode.kind() == TypeNodeKind.POINTER)
+				rawExprTypeNode = ((PointerTypeNode) rawExprTypeNode).referencedType();
+			if (rawExprTypeNode.kind() == TypeNodeKind.TYPEDEF_NAME) {
+				if (!scopes.hasArrayType(varName)) {
+					assert false;
 				}
-				if (rawExprTypeNode.kind() == TypeNodeKind.ARRAY)
-					assert false;
-				break;
-			case CONSTANT :
-				if (exprNode instanceof IntegerConstantNode)
-					rawExprTypeNode = nodeFactory.newBasicTypeNode(
-							exprNode.getSource(), BasicTypeKind.INT);
-				else if (exprNode instanceof FloatingConstantNode)
-					rawExprTypeNode = nodeFactory.newBasicTypeNode(
-							exprNode.getSource(), BasicTypeKind.FLOAT);
-				else
-					assert false;
-				break;
-			default :
+			}
+			if (rawExprTypeNode.kind() == TypeNodeKind.ARRAY)
 				assert false;
+			break;
+		case CONSTANT:
+			if (exprNode instanceof IntegerConstantNode)
+				rawExprTypeNode = nodeFactory.newBasicTypeNode(exprNode.getSource(), BasicTypeKind.INT);
+			else if (exprNode instanceof FloatingConstantNode)
+				rawExprTypeNode = nodeFactory.newBasicTypeNode(exprNode.getSource(), BasicTypeKind.FLOAT);
+			else
+				assert false;
+			break;
+		default:
+			assert false;
 		}
 		if (rawExprTypeNode.parent() != null)
 			rawExprTypeNode = rawExprTypeNode.copy();
@@ -1608,23 +1426,20 @@ public class MFASTBuilderWorker {
 		return rawExprTypeNode;
 	}
 
-	private ExpressionNode translateExprPartRef(MFTree exprStmt)
-			throws SyntaxException {
+	private ExpressionNode translateExprPartRef(MFTree exprStmt) throws SyntaxException {
 		Source src = newSource(exprStmt);
 		MFTree varId = exprStmt.getChildByIndex(0);
 		MFTree subscripts = exprStmt.getChildByIndex(1);
 		int numDim = subscripts.numChildren();
 		IdentifierNode varIdNode = translateIdentifier(varId);
 		String varIdStr = varIdNode.name().toUpperCase();
-		ExpressionNode varExprNode = nodeFactory
-				.newIdentifierExpressionNode(newSource(varId), varIdNode);
+		ExpressionNode varExprNode = nodeFactory.newIdentifierExpressionNode(newSource(varId), varIdNode);
 
 		if (numDim > 0) {
 			// Array unit/section subscript
 			Boolean isUnit = true;
 			ExpressionNode idxNodes[][] = new ExpressionNode[numDim][3];
-			TypeNode arrayElementTypeNode = scopes
-					.getArrayBaseTypeByIdent(varIdStr).copy();
+			TypeNode arrayElementTypeNode = scopes.getArrayBaseTypeByIdent(varIdStr).copy();
 			MFTree subscript, lowerIndex, upperIndex, stride;
 
 			for (int i = 0; i < numDim; i++) {
@@ -1639,8 +1454,7 @@ public class MFASTBuilderWorker {
 						stride = subscript.getChildByIndex(2);
 						idxNodes[i][2] = translateExpr(stride);
 					} else // Section stride is 1 by default
-						idxNodes[i][2] = nodeFactory
-								.newIntConstantNode(dummySrc, 1);
+						idxNodes[i][2] = nodeFactory.newIntConstantNode(dummySrc, 1);
 				}
 			}
 			if (isUnit) {
@@ -1648,55 +1462,43 @@ public class MFASTBuilderWorker {
 
 				for (int i = 0; i < numDim; i++)
 					unitIdxNodes[i] = idxNodes[i][0];
-				return createArraySubscript(src, varIdNode, unitIdxNodes,
-						arrayElementTypeNode);
+				return createArraySubscript(src, varIdNode, unitIdxNodes, arrayElementTypeNode);
 			} else {
 				String arraySectionName = "__arg_" + varIdStr;
-				IdentifierNode argArraySectionId = nodeFactory
-						.newIdentifierNode(dummySrc, arraySectionName);
-				VariableDeclarationNode argArraySectionDecl = createArrayDesc(
-						dummySrc, argArraySectionId, idxNodes,
-						arrayElementTypeNode,
-						FORTRAN_ARRAY_DESCRIPTOR_KIND.SECTION_ARG,
-						/* isCommon */ false);
+				IdentifierNode argArraySectionId = nodeFactory.newIdentifierNode(dummySrc, arraySectionName);
+				VariableDeclarationNode argArraySectionDecl = createArrayDesc(dummySrc, argArraySectionId, idxNodes,
+						arrayElementTypeNode, FORTRAN_ARRAY_DESCRIPTOR_KIND.SECTION_ARG, /* isCommon */ false);
 
 				arraySectionDecls.push(argArraySectionDecl);
 				scopes.addDeclVariable(arraySectionName, argArraySectionDecl);
-				return nodeFactory.newIdentifierExpressionNode(dummySrc,
-						argArraySectionId.copy());
+				return nodeFactory.newIdentifierExpressionNode(dummySrc, argArraySectionId.copy());
 			}
 			// TODO: common block tranformation
 		}
 		return (OperatorNode) varExprNode;
 	}
 
-	private ExpressionNode translateExprStructure(Source src,
-			MFTree structConstructor) throws SyntaxException {
+	private ExpressionNode translateExprStructure(Source src, MFTree structConstructor) throws SyntaxException {
 		MFTree derivedTypeName = structConstructor.getChildByIndex(0);
 		MFTree derivedTypeVals = structConstructor.getChildByIndex(1);
-		IdentifierNode derivedTypeNameNode = translateIdentifier(
-				derivedTypeName);
-		TypeNode derivedTypeNode = nodeFactory.newStructOrUnionTypeNode(
-				newSource(derivedTypeName), true /* isStruct */,
+		IdentifierNode derivedTypeNameNode = translateIdentifier(derivedTypeName);
+		TypeNode derivedTypeNode = nodeFactory.newStructOrUnionTypeNode(newSource(derivedTypeName), true /* isStruct */,
 				derivedTypeNameNode, null);
 		LinkedList<PairNode<DesignationNode, InitializerNode>> structureLiteralNode = new LinkedList<PairNode<DesignationNode, InitializerNode>>();
 
 		for (int i = 0; i < derivedTypeVals.numChildren(); i++) {
-			MFTree fieldVal = derivedTypeVals.getChildByIndex(i)
-					.getChildByIndex(0);
+			MFTree fieldVal = derivedTypeVals.getChildByIndex(i).getChildByIndex(0);
 			ExpressionNode fieldExprNode = translateExpr(fieldVal);
 
-			structureLiteralNode.add(nodeFactory.newPairNode(
-					fieldExprNode.getSource(), null, fieldExprNode));
+			structureLiteralNode.add(nodeFactory.newPairNode(fieldExprNode.getSource(), null, fieldExprNode));
 		}
 
 		return nodeFactory.newCompoundLiteralNode(src, derivedTypeNode,
-				nodeFactory.newCompoundInitializerNode(
-						newSource(derivedTypeVals), structureLiteralNode));
+				nodeFactory.newCompoundInitializerNode(newSource(derivedTypeVals), structureLiteralNode));
 	}
 
-	private ExpressionNode translateExprVariable(Source src, MFTree ref,
-			boolean isPureDeisgnator) throws SyntaxException {
+	private ExpressionNode translateExprVariable(Source src, MFTree ref, boolean isPureDeisgnator)
+			throws SyntaxException {
 		boolean hasSubscriptsOrArgs = ref.numChildren() > 1;
 		MFTree refName = ref.getChildByIndex(0);
 		String refNameText = getName(refName).toUpperCase();
@@ -1706,9 +1508,7 @@ public class MFASTBuilderWorker {
 		if (scopes.isDerivedType(refNameText)) {
 			return translateExprStructure(src, ref);
 		}
-		if (currentFunctionName != null
-				&& currentFunctionName.equals(refNameText)
-				&& !hasSubscriptsOrArgs)
+		if (currentFunctionName != null && currentFunctionName.equals(refNameText) && !hasSubscriptsOrArgs)
 			refNameText = FORTRAN_FUNCTION_RETURN_PREFIX + refNameText;
 		refName.setNodeName(refNameText);
 		if (hasSubscriptsOrArgs) {
@@ -1724,8 +1524,7 @@ public class MFASTBuilderWorker {
 
 						argNodes.add(translateExpr(arg.getChildByIndex(0)));
 					}
-					return nodeFactory.newOperatorNode(src, Operator.MOD,
-							argNodes);
+					return nodeFactory.newOperatorNode(src, Operator.MOD, argNodes);
 				} else if (refNameText.equals("MAX"))
 					return replaceFunctionMax(src, ref);
 				else if (refNameText.equals("ABS"))
@@ -1747,73 +1546,54 @@ public class MFASTBuilderWorker {
 			}
 		} else {
 			// Scalar Variable
-			refExprNode = nodeFactory.newIdentifierExpressionNode(src,
-					translateIdentifier(refName));
+			refExprNode = nodeFactory.newIdentifierExpressionNode(src, translateIdentifier(refName));
 			if ((scopes.isParameterVar(refNameText)
-					&& !(scopes.getTypeByVarIdent(refNameText,
-							refNameSrc) instanceof CommonTypedefNameNode))
-					|| scopes.hasAttr(refNameText,
-							MFScopeManager.ATTR_VAR_POINTER))
+					&& !(scopes.getTypeByVarIdent(refNameText, refNameSrc) instanceof CommonTypedefNameNode))
+					|| scopes.hasAttr(refNameText, MFScopeManager.ATTR_VAR_POINTER))
 				// Dereference when it is a parameter with scalar type.
-				refExprNode = nodeFactory.newOperatorNode(
-						refExprNode.getSource(), Operator.DEREFERENCE,
-						refExprNode);
+				refExprNode = nodeFactory.newOperatorNode(refExprNode.getSource(), Operator.DEREFERENCE, refExprNode);
 			else if (commonblockMemberMap.containsKey(refNameText))
 				refExprNode = commonblockMemberMap.get(refNameText).copy();
 		}
-		if (!hasSubscriptsOrArgs && !scopes.isDeclaredVar(refNameText)
-				&& !scopes.isParameterVar(refNameText)
+		if (!hasSubscriptsOrArgs && !scopes.isDeclaredVar(refNameText) && !scopes.isParameterVar(refNameText)
 				&& !refNameText.startsWith("_"))
 			scopes.addUndeclaredIdent(refNameText);
 		return refExprNode;
 	}
 
-	private ExpressionNode replaceFunctionAbs(Source src, MFTree absCall)
-			throws SyntaxException {
-		MFTree arg = absCall.getChildByIndex(1).getChildByIndex(0)
-				.getChildByIndex(0);
+	private ExpressionNode replaceFunctionAbs(Source src, MFTree absCall) throws SyntaxException {
+		MFTree arg = absCall.getChildByIndex(1).getChildByIndex(0).getChildByIndex(0);
 		ExpressionNode exprNode = translateExpr(arg);
-		ExpressionNode negExprNode = nodeFactory.newOperatorNode(src,
-				Operator.UNARYMINUS, exprNode.copy());
+		ExpressionNode negExprNode = nodeFactory.newOperatorNode(src, Operator.UNARYMINUS, exprNode.copy());
 		ExpressionNode int0Node = nodeFactory.newIntConstantNode(src, 0);
-		ExpressionNode condExprNode = nodeFactory.newOperatorNode(src,
-				Operator.GTE, exprNode.copy(), int0Node.copy());
+		ExpressionNode condExprNode = nodeFactory.newOperatorNode(src, Operator.GTE, exprNode.copy(), int0Node.copy());
 		return nodeFactory.newOperatorNode(src, Operator.CONDITIONAL,
 				Arrays.asList(condExprNode, exprNode, negExprNode));
 	}
 
-	private ExpressionNode processMathFunction(String funcName, MFTree call)
-			throws SyntaxException {
+	private ExpressionNode processMathFunction(String funcName, MFTree call) throws SyntaxException {
 		Source src = newSource(call);
-		MFTree arg = call.getChildByIndex(1).getChildByIndex(0)
-				.getChildByIndex(0);
+		MFTree arg = call.getChildByIndex(1).getChildByIndex(0).getChildByIndex(0);
 		ExpressionNode argNode = translateExpr(arg);
-		IdentifierNode funcNameNode = nodeFactory.newIdentifierNode(src,
-				funcName);
-		ExpressionNode atanFuncNode = nodeFactory
-				.newIdentifierExpressionNode(src, funcNameNode);
+		IdentifierNode funcNameNode = nodeFactory.newIdentifierNode(src, funcName);
+		ExpressionNode atanFuncNode = nodeFactory.newIdentifierExpressionNode(src, funcNameNode);
 
 		useMATH = true;
-		return nodeFactory.newFunctionCallNode(src, atanFuncNode,
-				Arrays.asList(argNode), null);
+		return nodeFactory.newFunctionCallNode(src, atanFuncNode, Arrays.asList(argNode));
 	}
 
-	private ExpressionNode replaceFunctionMax(Source src, MFTree maxCall)
-			throws SyntaxException {
-		MFTree arg0 = maxCall.getChildByIndex(1).getChildByIndex(0)
-				.getChildByIndex(0);
-		MFTree arg1 = maxCall.getChildByIndex(1).getChildByIndex(1)
-				.getChildByIndex(0);
+	private ExpressionNode replaceFunctionMax(Source src, MFTree maxCall) throws SyntaxException {
+		MFTree arg0 = maxCall.getChildByIndex(1).getChildByIndex(0).getChildByIndex(0);
+		MFTree arg1 = maxCall.getChildByIndex(1).getChildByIndex(1).getChildByIndex(0);
 		ExpressionNode Expr0Node = translateExpr(arg0);
 		ExpressionNode Expr1Node = translateExpr(arg1);
-		ExpressionNode condExprNode = nodeFactory.newOperatorNode(src,
-				Operator.GTE, Expr0Node.copy(), Expr1Node.copy());
+		ExpressionNode condExprNode = nodeFactory.newOperatorNode(src, Operator.GTE, Expr0Node.copy(),
+				Expr1Node.copy());
 		return nodeFactory.newOperatorNode(src, Operator.CONDITIONAL,
 				Arrays.asList(condExprNode, Expr0Node, Expr1Node));
 	}
 
-	private ExpressionNode translateExprConstants(MFTree constant)
-			throws SyntaxException {
+	private ExpressionNode translateExprConstants(MFTree constant) throws SyntaxException {
 		Source src = newSource(constant);
 		PRPair tConstPrp = constant.prp();
 		ExpressionNode constantExprNode = null;
@@ -1839,31 +1619,23 @@ public class MFASTBuilderWorker {
 		ExpressionNode indexNode = nodeFactory.newIntConstantNode(src, 0);
 		ExpressionNode extentNode = nodeFactory.newIntConstantNode(src, 1);
 		TypeNode exprArgType = analyzeRawExprType(exprArgNode);
-		TypeNode exprArgCompoundLiteTypeNode = nodeFactory.newArrayTypeNode(src,
-				exprArgType, extentNode);
-		CompoundInitializerNode exprArgCompoundInitNode = nodeFactory
-				.newCompoundInitializerNode(src, Arrays.asList(
-						nodeFactory.newPairNode(src, null, exprArgNode)));
-		CompoundLiteralNode exprArgCompoundLiteNode = nodeFactory
-				.newCompoundLiteralNode(src, exprArgCompoundLiteTypeNode,
-						exprArgCompoundInitNode);
-		OperatorNode exprArgValueNode = nodeFactory.newOperatorNode(src,
-				Operator.SUBSCRIPT, exprArgCompoundLiteNode, indexNode);
-		return nodeFactory.newOperatorNode(src, Operator.ADDRESSOF,
-				exprArgValueNode);
+		TypeNode exprArgCompoundLiteTypeNode = nodeFactory.newArrayTypeNode(src, exprArgType, extentNode);
+		CompoundInitializerNode exprArgCompoundInitNode = nodeFactory.newCompoundInitializerNode(src,
+				Arrays.asList(nodeFactory.newPairNode(src, null, exprArgNode)));
+		CompoundLiteralNode exprArgCompoundLiteNode = nodeFactory.newCompoundLiteralNode(src,
+				exprArgCompoundLiteTypeNode, exprArgCompoundInitNode);
+		OperatorNode exprArgValueNode = nodeFactory.newOperatorNode(src, Operator.SUBSCRIPT, exprArgCompoundLiteNode,
+				indexNode);
+		return nodeFactory.newOperatorNode(src, Operator.ADDRESSOF, exprArgValueNode);
 	}
 
-	private ExpressionNode replaceFunctionPresent(Source src,
-			MFTree presentCall) throws SyntaxException {
-		MFTree varExpr = presentCall.getChildByIndex(1).getChildByIndex(0)
-				.getChildByIndex(0);
+	private ExpressionNode replaceFunctionPresent(Source src, MFTree presentCall) throws SyntaxException {
+		MFTree varExpr = presentCall.getChildByIndex(1).getChildByIndex(0).getChildByIndex(0);
 		ExpressionNode varExprNode = translateExpr(varExpr);
 		IdentifierExpressionNode varIdExprNode = (IdentifierExpressionNode) varExprNode;
 		IdentifierNode varIdNode = varIdExprNode.getIdentifier();
-		TypeNode varTypeNode = scopes.getTypeByVarIdent(varIdNode.name(),
-				varIdNode.getSource());
-		ExpressionNode presentNode = nodeFactory.newOperatorNode(src,
-				Operator.EQUALS, varExprNode,
+		TypeNode varTypeNode = scopes.getTypeByVarIdent(varIdNode.name(), varIdNode.getSource());
+		ExpressionNode presentNode = nodeFactory.newOperatorNode(src, Operator.EQUALS, varExprNode,
 				createNullConstantNode(src, varTypeNode));
 		return presentNode;
 	}
@@ -1892,15 +1664,13 @@ public class MFASTBuilderWorker {
 			} else
 				assert false;
 		}
-		componentsNode = nodeFactory.newSequenceNode(newSource(derivedTypeDef),
-				"DerivedTypeMembers", compNodes);
-		derivedTypeDefNodes.add(nodeFactory.newStructOrUnionTypeNode(src,
-				true /* isStruct */, derivedTypeNameNode, componentsNode));
+		componentsNode = nodeFactory.newSequenceNode(newSource(derivedTypeDef), "DerivedTypeMembers", compNodes);
+		derivedTypeDefNodes.add(
+				nodeFactory.newStructOrUnionTypeNode(src, true /* isStruct */, derivedTypeNameNode, componentsNode));
 		return derivedTypeDefNodes;
 	}
 
-	private List<FieldDeclarationNode> translateCompDecls(
-			MFTree compOrTypeParam) {
+	private List<FieldDeclarationNode> translateCompDecls(MFTree compOrTypeParam) {
 		Source src = newSource(compOrTypeParam);
 		LinkedList<FieldDeclarationNode> compNodes = new LinkedList<>();
 		MFTree compType = compOrTypeParam.getChildByIndex(1);
@@ -1922,8 +1692,7 @@ public class MFASTBuilderWorker {
 				assert false;
 			if (compEntity.getChildByIndex(4).prp() != MFPUtils.ABSENT)
 				assert false;
-			compNodes.add(nodeFactory.newFieldDeclarationNode(src,
-					translateIdentifier(compName), rawTypeNode.copy()));
+			compNodes.add(nodeFactory.newFieldDeclarationNode(src, translateIdentifier(compName), rawTypeNode.copy()));
 		}
 
 		if (compTypeAttr.prp() != MFPUtils.ABSENT)
@@ -1931,8 +1700,7 @@ public class MFASTBuilderWorker {
 		return compNodes;
 	}
 
-	private ExpressionNode translateExpr(MFTree exprStmt)
-			throws SyntaxException {
+	private ExpressionNode translateExpr(MFTree exprStmt) throws SyntaxException {
 		Source src = newSource(exprStmt);
 		PRPair prp = exprStmt.prp();
 		ExpressionNode exprNode = null;
@@ -1942,8 +1710,7 @@ public class MFASTBuilderWorker {
 		else if (prp == MFPUtils.VARIABLE) {
 			assert exprStmt.getChildByIndex(0).prp() == MFPUtils.DESIGNATOR;
 
-			MFTree ref = exprStmt.getChildByIndex(0).getChildByIndex(0)
-					.getChildByIndex(0);
+			MFTree ref = exprStmt.getChildByIndex(0).getChildByIndex(0).getChildByIndex(0);
 
 			return translateExprVariable(newSource(ref), ref, true);
 		} else if (prp == MFPUtils.PRIMARY) {
@@ -1958,8 +1725,7 @@ public class MFASTBuilderWorker {
 					return translateExprDataRef(newSource(refs), refs);
 				return translateExprVariable(newSource(ref), ref, false);
 			} else if (tmpPrp == MFPUtils.LITERAL_CONSTANT) {
-				MFTree constant = exprStmt.getChildByIndex(0)
-						.getChildByIndex(0);
+				MFTree constant = exprStmt.getChildByIndex(0).getChildByIndex(0);
 
 				return translateExprConstants(constant);
 			} else if (tmpPrp == MFPUtils.ARRAY_CONSTRUCTOR) {
@@ -1996,33 +1762,25 @@ public class MFASTBuilderWorker {
 			ExpressionNode predExprNode = null;
 
 			switch (getName(quantifier)) {
-				case "$FORALL" :
-					q = Quantifier.FORALL;
-					break;
-				case "$EXISTS" :
-					q = Quantifier.EXISTS;
-					break;
-				case "$UNIFORM" :
-					q = Quantifier.UNIFORM;
-					break;
-				default :
-					assert false;
+			case "$FORALL":
+				q = Quantifier.FORALL;
+				break;
+			case "$EXISTS":
+				q = Quantifier.EXISTS;
+				break;
+			default:
+				assert false;
 			}
 			boundVarTypeNode = translateType(boundVarType);
 			for (int i = 0; i < boundVarNames.numChildren(); i++) {
 				boundVarName = boundVarNames.getChildByIndex(i);
-				boundVarIdNode = translateIdentifier(
-						boundVarName.getChildByIndex(0));
-				boundVarTypeDeclNodes.add(nodeFactory
-						.newVariableDeclarationNode(newSource(boundVarName),
-								boundVarIdNode, boundVarTypeNode.copy()));
+				boundVarIdNode = translateIdentifier(boundVarName.getChildByIndex(0));
+				boundVarTypeDeclNodes.add(nodeFactory.newVariableDeclarationNode(newSource(boundVarName),
+						boundVarIdNode, boundVarTypeNode.copy()));
 			}
-			boundVarTypeDeclsNode = nodeFactory.newSequenceNode(src,
-					"Binder List", boundVarTypeDeclNodes);
-			boundVariableList.add(
-					nodeFactory.newPairNode(src, boundVarTypeDeclsNode, null));
-			boundVarDeclsNode = nodeFactory.newSequenceNode(src,
-					"bound variable declaration list", boundVariableList);
+			boundVarTypeDeclsNode = nodeFactory.newSequenceNode(src, "Binder List", boundVarTypeDeclNodes);
+			boundVariableList.add(nodeFactory.newPairNode(src, boundVarTypeDeclsNode, null));
+			boundVarDeclsNode = nodeFactory.newSequenceNode(src, "bound variable declaration list", boundVariableList);
 			if (exprStmt.numChildren() > 4) {
 				// Process restrict Expr, if it exits
 				rExpr = pExpr;
@@ -2030,16 +1788,14 @@ public class MFASTBuilderWorker {
 				restrictExprNode = translateExpr(rExpr);
 			}
 			predExprNode = translateExpr(pExpr);
-			return nodeFactory.newQuantifiedExpressionNode(src, q,
-					boundVarDeclsNode, restrictExprNode, predExprNode, null);
+			return nodeFactory.newQuantifiedExpressionNode(src, q, boundVarDeclsNode, restrictExprNode, predExprNode);
 		} else
 			assert false;
 
 		return exprNode;
 	}
 
-	private BlockItemNode translateStmtExpr(MFTree exprStmt)
-			throws SyntaxException {
+	private BlockItemNode translateStmtExpr(MFTree exprStmt) throws SyntaxException {
 		ExpressionNode exprNode = translateExpr(exprStmt);
 
 		if (exprNode == null)
@@ -2048,8 +1804,7 @@ public class MFASTBuilderWorker {
 			return nodeFactory.newExpressionStatementNode(exprNode);
 	}
 
-	private List<BlockItemNode> translateStmtPrint(MFTree printStmt)
-			throws SyntaxException {
+	private List<BlockItemNode> translateStmtPrint(MFTree printStmt) throws SyntaxException {
 		LinkedList<BlockItemNode> printfNodes = new LinkedList<>();
 		MFTree print = printStmt.getChildByIndex(1);
 		Source src = newSource(printStmt);
@@ -2057,10 +1812,8 @@ public class MFASTBuilderWorker {
 		MFTree outputFormat = printStmt.getChildByIndex(2);
 		MFTree outputFormatId = outputFormat.getChildByIndex(0);
 		MFTree outputList = printStmt.getChildByIndex(3);
-		IdentifierNode printfIdNode = nodeFactory.newIdentifierNode(printSrc,
-				"printf");
-		ExpressionNode printfFuncNode = nodeFactory
-				.newIdentifierExpressionNode(printSrc, printfIdNode);
+		IdentifierNode printfIdNode = nodeFactory.newIdentifierNode(printSrc, "printf");
+		ExpressionNode printfFuncNode = nodeFactory.newIdentifierExpressionNode(printSrc, printfIdNode);
 		ExpressionNode formatNode = null;
 		FunctionCallNode printfCallNode = null;
 		LinkedList<ExpressionNode> printfArgNodes = new LinkedList<>();
@@ -2072,8 +1825,7 @@ public class MFASTBuilderWorker {
 			outputFormatId = outputFormatId.getChildByIndex(0);
 		for (int j = 0; j < outputList.numChildren(); j++) {
 			MFTree outputItem = outputList.getChildByIndex(j);
-			ExpressionNode printfArgNode = translateExpr(
-					outputItem.getChildByIndex(0));
+			ExpressionNode printfArgNode = translateExpr(outputItem.getChildByIndex(0));
 
 			printfArgNodes.add(printfArgNode);
 		}
@@ -2089,14 +1841,11 @@ public class MFASTBuilderWorker {
 				assert false;
 		}
 		formatStr += "\\n\"";
-		formatToken = tokenFactory.newStringToken(tokenFactory.newCivlcToken(0,
-				formatStr, print.cTokens()[0].getFormation(),
-				TokenVocabulary.FORTRAN));
-		formatNode = nodeFactory.newStringLiteralNode(src, formatStr,
-				formatToken.getStringLiteral());
+		formatToken = tokenFactory.newStringToken(
+				tokenFactory.newCivlcToken(0, formatStr, print.cTokens()[0].getFormation(), TokenVocabulary.FORTRAN));
+		formatNode = nodeFactory.newStringLiteralNode(src, formatStr, formatToken.getStringLiteral());
 		printfArgNodes.add(0, formatNode);
-		printfCallNode = nodeFactory.newFunctionCallNode(src, printfFuncNode,
-				printfArgNodes, null);
+		printfCallNode = nodeFactory.newFunctionCallNode(src, printfFuncNode, printfArgNodes);
 		printfNodes.add(nodeFactory.newExpressionStatementNode(printfCallNode));
 		return printfNodes;
 	}
@@ -2111,9 +1860,7 @@ public class MFASTBuilderWorker {
 				itemNodes.add(createArrayDestroy(freedArrays.get(i)));
 		if (currentFunctionName != null) {
 			returnExprNode = nodeFactory.newIdentifierExpressionNode(src,
-					nodeFactory.newIdentifierNode(src,
-							FORTRAN_FUNCTION_RETURN_PREFIX
-									+ currentFunctionName));
+					nodeFactory.newIdentifierNode(src, FORTRAN_FUNCTION_RETURN_PREFIX + currentFunctionName));
 		}
 		itemNodes.add(nodeFactory.newReturnNode(src, returnExprNode));
 		return itemNodes;
@@ -2126,36 +1873,28 @@ public class MFASTBuilderWorker {
 		List<BlockItemNode> stopNodes = new LinkedList<>();
 		Source stopSrc = newSource(stopStmt);
 		String exitFuncName = "exit";
-		IdentifierNode exitFuncIdNode = nodeFactory.newIdentifierNode(stopSrc,
-				exitFuncName);
-		IdentifierExpressionNode exitFuncRefExprNode = nodeFactory
-				.newIdentifierExpressionNode(stopSrc, exitFuncIdNode);
-		List<ExpressionNode> argNodes = Arrays.asList(
-				nodeFactory.newIntConstantNode(stopSrc, defaultStopCode));
-		FunctionCallNode exitCallNode = nodeFactory.newFunctionCallNode(stopSrc,
-				exitFuncRefExprNode, argNodes, null);
+		IdentifierNode exitFuncIdNode = nodeFactory.newIdentifierNode(stopSrc, exitFuncName);
+		IdentifierExpressionNode exitFuncRefExprNode = nodeFactory.newIdentifierExpressionNode(stopSrc, exitFuncIdNode);
+		List<ExpressionNode> argNodes = Arrays.asList(nodeFactory.newIntConstantNode(stopSrc, defaultStopCode));
+		FunctionCallNode exitCallNode = nodeFactory.newFunctionCallNode(stopSrc, exitFuncRefExprNode, argNodes);
 
 		useSTDLIB = true;
 		if (!freedArrays.isEmpty())
 			for (int i = freedArrays.size() - 1; i >= 0; i--)
 				stopNodes.add(createArrayDestroy(freedArrays.get(i)));
 		stopNodes.add(nodeFactory.newReturnNode(stopSrc, null));
-		stopNodes.add((BlockItemNode) nodeFactory
-				.newExpressionStatementNode(exitCallNode));
+		stopNodes.add((BlockItemNode) nodeFactory.newExpressionStatementNode(exitCallNode));
 		return stopNodes;
 	}
 
-	private List<BlockItemNode> translateStmtWrite(MFTree writeStmt)
-			throws SyntaxException {
+	private List<BlockItemNode> translateStmtWrite(MFTree writeStmt) throws SyntaxException {
 		LinkedList<BlockItemNode> printfNodes = new LinkedList<>();
 		MFTree write = writeStmt.getChildByIndex(1);
 		Source src = newSource(writeStmt);
 		Source printSrc = newSource(write);
 		MFTree outputList = writeStmt.getChildByIndex(3);
-		IdentifierNode printfIdNode = nodeFactory.newIdentifierNode(printSrc,
-				"printf");
-		ExpressionNode printfFuncNode = nodeFactory
-				.newIdentifierExpressionNode(printSrc, printfIdNode);
+		IdentifierNode printfIdNode = nodeFactory.newIdentifierNode(printSrc, "printf");
+		ExpressionNode printfFuncNode = nodeFactory.newIdentifierExpressionNode(printSrc, printfIdNode);
 		ExpressionNode formatNode = null;
 		FunctionCallNode printfCallNode = null;
 		LinkedList<ExpressionNode> printfArgNodes = new LinkedList<>();
@@ -2165,27 +1904,22 @@ public class MFASTBuilderWorker {
 		useSTDIO = true;
 		for (int j = 0; j < outputList.numChildren(); j++) {
 			MFTree outputItem = outputList.getChildByIndex(j);
-			ExpressionNode printfArgNode = translateExpr(
-					outputItem.getChildByIndex(0));
+			ExpressionNode printfArgNode = translateExpr(outputItem.getChildByIndex(0));
 
 			printfArgNodes.add(printfArgNode);
 			formatStr += "%s ";
 		}
 		formatStr += "\"";
-		formatToken = tokenFactory.newStringToken(tokenFactory.newCivlcToken(0,
-				formatStr, write.cTokens()[0].getFormation(),
-				TokenVocabulary.FORTRAN));
-		formatNode = nodeFactory.newStringLiteralNode(src, formatStr,
-				formatToken.getStringLiteral());
+		formatToken = tokenFactory.newStringToken(
+				tokenFactory.newCivlcToken(0, formatStr, write.cTokens()[0].getFormation(), TokenVocabulary.FORTRAN));
+		formatNode = nodeFactory.newStringLiteralNode(src, formatStr, formatToken.getStringLiteral());
 		printfArgNodes.add(0, formatNode);
-		printfCallNode = nodeFactory.newFunctionCallNode(src, printfFuncNode,
-				printfArgNodes, null);
+		printfCallNode = nodeFactory.newFunctionCallNode(src, printfFuncNode, printfArgNodes);
 		printfNodes.add(nodeFactory.newExpressionStatementNode(printfCallNode));
 		return printfNodes;
 	}
 
-	private BlockItemNode translateStmtIf(MFTree ifConstruct)
-			throws SyntaxException, ParseException {
+	private BlockItemNode translateStmtIf(MFTree ifConstruct) throws SyntaxException, ParseException {
 		// TODO: else if & else
 		// int numOfChildren = ifConstruct.numChildren();
 		// PRPair prp = ifConstruct.prp();
@@ -2198,20 +1932,17 @@ public class MFASTBuilderWorker {
 
 		condExprNode = translateExpr(cond);
 		if (block.prp() == MFPUtils.ACTION_STMT)
-			trueBranchNode = nodeFactory.newCompoundStatementNode(
-					newSource(block), translateBlockItem(
-							block.getChildByIndex(0), FORTRAN_EMPTY_PREFIX));
+			trueBranchNode = nodeFactory.newCompoundStatementNode(newSource(block),
+					translateBlockItem(block.getChildByIndex(0), FORTRAN_EMPTY_PREFIX));
 		if (falseBranchNode == null)
-			ifStmtNode = nodeFactory.newIfNode(newSource(ifConstruct),
-					condExprNode, trueBranchNode);
+			ifStmtNode = nodeFactory.newIfNode(newSource(ifConstruct), condExprNode, trueBranchNode);
 		// else
 		// ifStmtNode = nodeFactory.newIfNode(newSource(ifConstruct),
 		// condExprNode, trueBranchNode, falseBranchNode);
 		return ifStmtNode;
 	}
 
-	private List<BlockItemNode> translateStmtParameter(MFTree parameterStmt)
-			throws SyntaxException {
+	private List<BlockItemNode> translateStmtParameter(MFTree parameterStmt) throws SyntaxException {
 		MFTree consts = parameterStmt.getChildByIndex(2);
 		int numConsts = consts.numChildren();
 		List<BlockItemNode> implicitConstDecls = new LinkedList<>();
@@ -2221,8 +1952,7 @@ public class MFASTBuilderWorker {
 			MFTree constName = constant.getChildByIndex(0);
 			MFTree constVal = constant.getChildByIndex(1);
 			String constNameText = getName(constName);
-			VariableDeclarationNode constVarDeclNode = scopes
-					.getDeclByVarIdent(constNameText);
+			VariableDeclarationNode constVarDeclNode = scopes.getDeclByVarIdent(constNameText);
 			ExpressionNode constInitValNode = translateExpr(constVal);
 
 			if (constVarDeclNode == null) {
@@ -2230,13 +1960,10 @@ public class MFASTBuilderWorker {
 				assert !scopes.isImplicitNone();
 
 				Source parameterSrc = newSource(parameterStmt);
-				IdentifierNode constNameNode = nodeFactory
-						.newIdentifierNode(parameterSrc, constNameText);
+				IdentifierNode constNameNode = nodeFactory.newIdentifierNode(parameterSrc, constNameText);
 
-				constVarDeclNode = nodeFactory.newVariableDeclarationNode(
-						parameterSrc, constNameNode,
-						scopes.getImplicitType(constNameText, parameterSrc),
-						constInitValNode);
+				constVarDeclNode = nodeFactory.newVariableDeclarationNode(parameterSrc, constNameNode,
+						scopes.getImplicitType(constNameText, parameterSrc), constInitValNode);
 				implicitConstDecls.add(constVarDeclNode);
 				scopes.addDeclVariable(constNameText, constVarDeclNode);
 			} else {
@@ -2249,19 +1976,16 @@ public class MFASTBuilderWorker {
 	}
 
 	private BlockItemNode translateStmtGoto(MFTree gotoStmt) {
-		MFTree targetLabel = gotoStmt
-				.getChildByIndex(gotoStmt.numChildren() - 1);
+		MFTree targetLabel = gotoStmt.getChildByIndex(gotoStmt.numChildren() - 1);
 
-		return nodeFactory.newGotoNode(newSource(gotoStmt),
-				translateIdentifierLabel(targetLabel));
+		return nodeFactory.newGotoNode(newSource(gotoStmt), translateIdentifierLabel(targetLabel));
 	}
 
 	private BlockItemNode translateStmtExit(MFTree exitStmt) {
 		return nodeFactory.newBreakNode(newSource(exitStmt));
 	}
 
-	private ExpressionNode translateArrayConstructor(MFTree acSpec)
-			throws SyntaxException {
+	private ExpressionNode translateArrayConstructor(MFTree acSpec) throws SyntaxException {
 		MFTree acType = acSpec.getChildByIndex(0);
 		MFTree acVals = acSpec.getChildByIndex(1);
 		TypeNode arrayLiteralType = null;
@@ -2281,12 +2005,10 @@ public class MFASTBuilderWorker {
 				constantNode = translateExpr(acVal);
 			if (arrayLiteralType == null)
 				arrayLiteralType = analyzeRawExprType(constantNode);
-			arrayLiteralNode.add(nodeFactory
-					.newPairNode(constantNode.getSource(), null, constantNode));
+			arrayLiteralNode.add(nodeFactory.newPairNode(constantNode.getSource(), null, constantNode));
 		}
-		return nodeFactory.newCompoundLiteralNode(newSource(acSpec),
-				arrayLiteralType, nodeFactory.newCompoundInitializerNode(
-						newSource(acVals), arrayLiteralNode));
+		return nodeFactory.newCompoundLiteralNode(newSource(acSpec), arrayLiteralType,
+				nodeFactory.newCompoundInitializerNode(newSource(acVals), arrayLiteralNode));
 	}
 
 	/**
@@ -2302,8 +2024,8 @@ public class MFASTBuilderWorker {
 	 * @throws SyntaxException
 	 * @throws ParseException
 	 */
-	private List<BlockItemNode> translateBlockItem(MFTree item,
-			String varNamePrefix) throws SyntaxException, ParseException {
+	private List<BlockItemNode> translateBlockItem(MFTree item, String varNamePrefix)
+			throws SyntaxException, ParseException {
 		MFTree label = item.getChildByIndex(0);
 		List<BlockItemNode> itemNodes = new ArrayList<BlockItemNode>();
 		PRPair prp = item.prp();
@@ -2393,11 +2115,9 @@ public class MFASTBuilderWorker {
 		else if (prp == MFPUtils.COMPUTED_GOTO_STMT)
 			assert false;
 		else if (prp == MFPUtils.CONTINUE_STMT)
-			itemNodes.add((BlockItemNode) nodeFactory
-					.newNullStatementNode(newSource(item)));
+			itemNodes.add((BlockItemNode) nodeFactory.newNullStatementNode(newSource(item)));
 		else if (prp == MFPUtils.CYCLE_STMT)
-			itemNodes.add((BlockItemNode) nodeFactory
-					.newContinueNode(newSource(item)));
+			itemNodes.add((BlockItemNode) nodeFactory.newContinueNode(newSource(item)));
 		else if (prp == MFPUtils.DEALLOCATE_STMT)
 			assert false;
 		else if (prp == MFPUtils.ENDFILE_STMT)
@@ -2467,36 +2187,29 @@ public class MFASTBuilderWorker {
 		if (label.prp() == MFPUtils.LABEL && !label.isNullToken(0)) {
 			StatementNode labelledStmtNode = (StatementNode) itemNodes.get(0);
 			IdentifierNode lblIdNode = translateIdentifierLabel(label);
-			OrdinaryLabelNode lblDeclNode = nodeFactory
-					.newStandardLabelDeclarationNode(newSource(label),
-							lblIdNode, labelledStmtNode);
-			itemNodes.set(0, nodeFactory.newLabeledStatementNode(
-					newSource(item), lblDeclNode, labelledStmtNode));
+			OrdinaryLabelNode lblDeclNode = nodeFactory.newStandardLabelDeclarationNode(newSource(label), lblIdNode,
+					labelledStmtNode);
+			itemNodes.set(0, nodeFactory.newLabeledStatementNode(newSource(item), lblDeclNode, labelledStmtNode));
 		}
 		return itemNodes;
 	}
 
-	private List<BlockItemNode> translateStmtPointerAssignment(
-			MFTree stmtPtrAssign) throws SyntaxException {
+	private List<BlockItemNode> translateStmtPointerAssignment(MFTree stmtPtrAssign) throws SyntaxException {
 		Source src = newSource(stmtPtrAssign);
 		List<BlockItemNode> itemNodes = new LinkedList<>();
 		MFTree varPointer = stmtPtrAssign.getChildByIndex(1);
 		MFTree valTarget = stmtPtrAssign.getChildByIndex(2);
 		ExpressionNode varPointerIdNode = translateExprDataRef(src, varPointer);
 		ExpressionNode valTargetExprNode = translateExpr(valTarget);
-		OperatorNode exprPtrAssignNode = nodeFactory.newOperatorNode(src,
-				Operator.ASSIGN, varPointerIdNode, valTargetExprNode);
-		assert scopes.hasAttr(getName(varPointer),
-				MFScopeManager.ATTR_VAR_POINTER) && //
-				scopes.hasAttr(getName(valTarget),
-						MFScopeManager.ATTR_VAR_TARGET);
-		itemNodes
-				.add(nodeFactory.newExpressionStatementNode(exprPtrAssignNode));
+		OperatorNode exprPtrAssignNode = nodeFactory.newOperatorNode(src, Operator.ASSIGN, varPointerIdNode,
+				valTargetExprNode);
+		assert scopes.hasAttr(getName(varPointer), MFScopeManager.ATTR_VAR_POINTER) && //
+				scopes.hasAttr(getName(valTarget), MFScopeManager.ATTR_VAR_TARGET);
+		itemNodes.add(nodeFactory.newExpressionStatementNode(exprPtrAssignNode));
 		return itemNodes;
 	}
 
-	private List<BlockItemNode> translateStmtData(MFTree stmtData)
-			throws SyntaxException {
+	private List<BlockItemNode> translateStmtData(MFTree stmtData) throws SyntaxException {
 		Source src = newSource(stmtData);
 		List<BlockItemNode> itemNodes = new LinkedList<>();
 		MFTree dataInitSet, dataVars, dataVals, dataVar, dataVal;
@@ -2518,18 +2231,14 @@ public class MFASTBuilderWorker {
 					while (dataVar.numChildren() > 0)
 						dataVar = dataVar.getChildByIndex(0);
 					dataVarIdNode = this.translateIdentifier(dataVar);
-					dataVarTypeNode = scopes.getTypeByVarIdent(
-							dataVarIdNode.name(), dataVarIdNode.getSource());
+					dataVarTypeNode = scopes.getTypeByVarIdent(dataVarIdNode.name(), dataVarIdNode.getSource());
 					if (dataVarTypeNode.kind() == TypeNodeKind.ARRAY) {
 						assert false;
 					} else {
-						dataVarDeclNode = nodeFactory
-								.newVariableDeclarationNode(src, dataVarIdNode,
-										dataVarTypeNode,
-										dataValExprNode.copy());
+						dataVarDeclNode = nodeFactory.newVariableDeclarationNode(src, dataVarIdNode, dataVarTypeNode,
+								dataValExprNode.copy());
 						itemNodes.add(dataVarDeclNode);
-						scopes.addDeclVariable(dataVarIdNode.name(),
-								dataVarDeclNode);
+						scopes.addDeclVariable(dataVarIdNode.name(), dataVarDeclNode);
 					}
 				}
 			} else
@@ -2538,8 +2247,7 @@ public class MFASTBuilderWorker {
 		return itemNodes;
 	}
 
-	private List<BlockItemNode> translateStmtDimension(MFTree stmtDim)
-			throws SyntaxException {
+	private List<BlockItemNode> translateStmtDimension(MFTree stmtDim) throws SyntaxException {
 		Source arraySrc;
 		List<BlockItemNode> itemNodes = new LinkedList<>();
 		MFTree declDims = stmtDim.getChildByIndex(2);
@@ -2568,11 +2276,10 @@ public class MFASTBuilderWorker {
 				// associated with a Dimension Statement.
 				// Then, the actual variable 'X' used will be reshaped
 				// from its original parameter, which is wrapped as '__X'.
-				VariableDeclarationNode formalDeclNode = scopes
-						.getDeclByParIdent(arrayName);
+				VariableDeclarationNode formalDeclNode = scopes.getDeclByParIdent(arrayName);
 
-				formalDeclNode.setIdentifier(nodeFactory.newIdentifierNode(
-						dummySrc, FORTRAN_ARRAY_PARAM_PREFIX + arrayName));
+				formalDeclNode
+						.setIdentifier(nodeFactory.newIdentifierNode(dummySrc, FORTRAN_ARRAY_PARAM_PREFIX + arrayName));
 				formalDeclNode.setTypeNode(genArrDescType(arraySrc));
 				arrDescKind = FORTRAN_ARRAY_DESCRIPTOR_KIND.RESHAPE;
 			} else if (scopes.isDeclaredVar(arrayName)) {
@@ -2580,15 +2287,13 @@ public class MFASTBuilderWorker {
 				// corresponding array type if the variable is
 				// associated with a Dimension Statement.
 				// The out-dated declaration shall be updated.
-				VariableDeclarationNode localDeclNode = scopes
-						.getDeclByVarIdent(arrayName);
+				VariableDeclarationNode localDeclNode = scopes.getDeclByVarIdent(arrayName);
 
-				localDeclNode.setIdentifier(nodeFactory.newIdentifierNode(
-						dummySrc, FORTRAN_ARRAY_LOCAL_PREFIX + arrayName));
+				localDeclNode
+						.setIdentifier(nodeFactory.newIdentifierNode(dummySrc, FORTRAN_ARRAY_LOCAL_PREFIX + arrayName));
 				localDeclNode.setTypeNode(genArrDescType(arraySrc));
 			} // else do nothing additional for newly declared variables
-			arrayDeclNode = createArrayDesc(arraySrc, arrayIdNode, dimInfo,
-					arrayBaseTypeNode.copy(), arrDescKind,
+			arrayDeclNode = createArrayDesc(arraySrc, arrayIdNode, dimInfo, arrayBaseTypeNode.copy(), arrDescKind,
 					/* isCommon */ false);
 			scopes.addDeclVariable(arrayName, arrayDeclNode);
 			itemNodes.add(arrayDeclNode);
@@ -2596,8 +2301,7 @@ public class MFASTBuilderWorker {
 		return itemNodes;
 	}
 
-	private List<BlockItemNode> translateBlockItems(MFTree execPart)
-			throws SyntaxException, ParseException {
+	private List<BlockItemNode> translateBlockItems(MFTree execPart) throws SyntaxException, ParseException {
 		int numExec = execPart.numChildren();
 		OmpExecutableNode ompExecNode = null;
 		List<BlockItemNode> itemNodes = new LinkedList<>();
@@ -2619,11 +2323,10 @@ public class MFASTBuilderWorker {
 			}
 
 			if (prp == MFPUtils.ACTION_STMT) {
-				List<BlockItemNode> tmpItemNodes = translateBlockItem(
-						execCstr.getChildByIndex(0), FORTRAN_EMPTY_PREFIX);
+				List<BlockItemNode> tmpItemNodes = translateBlockItem(execCstr.getChildByIndex(0),
+						FORTRAN_EMPTY_PREFIX);
 
-				if (tmpItemNodes.size() == 1 && tmpItemNodes.get(0)
-						.blockItemKind() == BlockItemKind.STATEMENT)
+				if (tmpItemNodes.size() == 1 && tmpItemNodes.get(0).blockItemKind() == BlockItemKind.STATEMENT)
 					stmtNode = (StatementNode) tmpItemNodes.get(0);
 				else
 					itemNodes.addAll(tmpItemNodes);
@@ -2667,8 +2370,7 @@ public class MFASTBuilderWorker {
 		return itemNodes;
 	}
 
-	private ASTNode translateCIVLPrimitives(MFTree civl_stmt)
-			throws SyntaxException {
+	private ASTNode translateCIVLPrimitives(MFTree civl_stmt) throws SyntaxException {
 		MFTree civlKey = civl_stmt;
 
 		if (civlKey.numChildren() > 0)
@@ -2678,43 +2380,33 @@ public class MFASTBuilderWorker {
 
 		useCIVLC = true;
 		switch (keyStr) {
-			case "$input" :
-				isInputVarDecl = true;
-				return null;
-			case "$output" :
-				isOutputVarDecl = true;
-				return null;
-			case "$assume" :
-			case "$assert" :
-				int numArgs = civl_stmt.numChildren() - 1;
-				assert numArgs >= 0;
-				Source civlKeySrc = newSource(civlKey);
-				IdentifierNode civlFuncIDNode = nodeFactory
-						.newIdentifierNode(civlKeySrc, keyStr);
-				ExpressionNode civlFuncIDExprNode = nodeFactory
-						.newIdentifierExpressionNode(civlKeySrc,
-								civlFuncIDNode);
-				ExpressionNode[] civlFuncArgNodes = new ExpressionNode[numArgs];
+		case "$input":
+			isInputVarDecl = true;
+			return null;
+		case "$output":
+			isOutputVarDecl = true;
+			return null;
+		case "$assume":
+		case "$assert":
+			int numArgs = civl_stmt.numChildren() - 1;
+			assert numArgs >= 0;
+			Source civlKeySrc = newSource(civlKey);
+			IdentifierNode civlFuncIDNode = nodeFactory.newIdentifierNode(civlKeySrc, keyStr);
+			ExpressionNode civlFuncIDExprNode = nodeFactory.newIdentifierExpressionNode(civlKeySrc, civlFuncIDNode);
+			ExpressionNode[] civlFuncArgNodes = new ExpressionNode[numArgs];
 
-				for (int i = 0; i < numArgs; i++)
-					civlFuncArgNodes[i] = translateExpr(
-							civl_stmt.getChildByIndex(i + 1));
-				return nodeFactory.newFunctionCallNode(newSource(civl_stmt),
-						civlFuncIDExprNode, Arrays.asList(civlFuncArgNodes),
-						null);
-			default :
-				throw new SyntaxException(
-						"Syntax Error: invalid CIVL-F primitive: '" + keyStr
-								+ "'",
-						newSource(civl_stmt));
+			for (int i = 0; i < numArgs; i++)
+				civlFuncArgNodes[i] = translateExpr(civl_stmt.getChildByIndex(i + 1));
+			return nodeFactory.newFunctionCallNode(newSource(civl_stmt), civlFuncIDExprNode,
+					Arrays.asList(civlFuncArgNodes));
+		default:
+			throw new SyntaxException("Syntax Error: invalid CIVL-F primitive: '" + keyStr + "'", newSource(civl_stmt));
 		}
 	}
 
-	private ASTNode translatePragma(MFTree pragma_stmt)
-			throws SyntaxException, ParseException {
+	private ASTNode translatePragma(MFTree pragma_stmt) throws SyntaxException, ParseException {
 		Source src = newSource(pragma_stmt);
-		IdentifierNode pragmaNameNode = translateIdentifier(
-				pragma_stmt.getChildByIndex(0));
+		IdentifierNode pragmaNameNode = translateIdentifier(pragma_stmt.getChildByIndex(0));
 		String pragmaName = pragmaNameNode.name().toUpperCase();
 		PragmaNode pragmaNode = null;
 		PragmaHandler pHandler = null;
@@ -2722,13 +2414,10 @@ public class MFASTBuilderWorker {
 		if (pragmaName.equals("CVL")) {
 			return translateCIVLPrimitives(pragma_stmt.getChildByIndex(1));
 		} else if (pragmaName.equals("OMP")) {
-			CivlcTokenSequence pragmaTokens = ptree
-					.getTokenSourceProducer(pragma_stmt.getChildByIndex(1));
-			CivlcToken pragmaEndToken = (CivlcToken) pragma_stmt
-					.getChildByIndex(2).cTokens()[0];
+			CivlcTokenSequence pragmaTokens = ptree.getTokenSourceProducer(pragma_stmt.getChildByIndex(1));
+			CivlcToken pragmaEndToken = (CivlcToken) pragma_stmt.getChildByIndex(2).cTokens()[0];
 
-			pragmaNode = nodeFactory.newPragmaNode(src, pragmaNameNode,
-					pragmaTokens, pragmaEndToken);
+			pragmaNode = nodeFactory.newPragmaNode(src, pragmaNameNode, pragmaTokens, pragmaEndToken);
 		} else {// pragma not supported
 			throw new SyntaxException("Unsupported pragma: " + pragmaName, src);
 		}
@@ -2742,8 +2431,7 @@ public class MFASTBuilderWorker {
 		return pHandler.processPragmaNode(pragmaNode, null);
 	}
 
-	private StatementNode translateConstructDo(MFTree doConstruct)
-			throws SyntaxException, ParseException {
+	private StatementNode translateConstructDo(MFTree doConstruct) throws SyntaxException, ParseException {
 		IdentifierNode doVarIdNode = null;
 		ExpressionNode doVarExprNode = null;
 		ForLoopInitializerNode initNode = null;
@@ -2766,20 +2454,17 @@ public class MFASTBuilderWorker {
 			ExpressionNode stepValNode = null;
 
 			doVarIdNode = translateIdentifier(doVar);
-			doVarExprNode = nodeFactory.newIdentifierExpressionNode(doCtrlSrc,
-					doVarIdNode);
-			initNode = nodeFactory.newOperatorNode(doCtrlSrc, Operator.ASSIGN,
-					doVarExprNode.copy(), translateExpr(doVarInit));
-			condNode = nodeFactory.newOperatorNode(doCtrlSrc, Operator.LTE,
-					doVarExprNode.copy(), translateExpr(doVarCond));
+			doVarExprNode = nodeFactory.newIdentifierExpressionNode(doCtrlSrc, doVarIdNode);
+			initNode = nodeFactory.newOperatorNode(doCtrlSrc, Operator.ASSIGN, doVarExprNode.copy(),
+					translateExpr(doVarInit));
+			condNode = nodeFactory.newOperatorNode(doCtrlSrc, Operator.LTE, doVarExprNode.copy(),
+					translateExpr(doVarCond));
 			if (doCtrl.numChildren() < 4)
 				stepValNode = nodeFactory.newIntConstantNode(doCtrlSrc, 1);
 			else
 				stepValNode = translateExpr(doCtrl.getChildByIndex(3));
-			stepNode = nodeFactory.newOperatorNode(doCtrlSrc, Operator.PLUSEQ,
-					doVarExprNode.copy(), stepValNode);
-			if (!scopes.isDeclaredVar(doVarIdNode.name())
-					&& !scopes.isParameterVar(doVarIdNode.name())) {
+			stepNode = nodeFactory.newOperatorNode(doCtrlSrc, Operator.PLUSEQ, doVarExprNode.copy(), stepValNode);
+			if (!scopes.isDeclaredVar(doVarIdNode.name()) && !scopes.isParameterVar(doVarIdNode.name())) {
 				scopes.addUndeclaredIdent(doVarIdNode.name());
 			}
 		}
@@ -2787,8 +2472,7 @@ public class MFASTBuilderWorker {
 		if (hasDoEndStmt) {
 			MFTree doEndLabel = doEnd.getChildByIndex(0);
 			MFTree doEndAction = doEnd.getChildByIndex(4);
-			MFTree dummyExecConstruct = new MFTree(
-					MFPUtils.EXECUTABLE_CONSTRUCT);
+			MFTree dummyExecConstruct = new MFTree(MFPUtils.EXECUTABLE_CONSTRUCT);
 			String lblTxt = getName(doEndLabel);
 
 			// Proc End Do
@@ -2804,8 +2488,7 @@ public class MFASTBuilderWorker {
 		// Proc Body
 		bodyNode = translateBody(null, doBody, null, doConstruct.prp());
 		// Gen Civl For Loop
-		return nodeFactory.newForLoopNode(newSource(doConstruct), initNode,
-				condNode, stepNode, bodyNode, null);
+		return nodeFactory.newForLoopNode(newSource(doConstruct), initNode, condNode, stepNode, bodyNode, null);
 	}
 
 	private void processStmtFormat(MFTree formatStmt) {
@@ -2817,12 +2500,10 @@ public class MFASTBuilderWorker {
 		String fmtPattern = "";
 
 		for (int i = 0; i < numFormatItems; i++) {
-			String fmtItemText = getName(
-					formatItems.getChildByIndex(i).getChildByIndex(0));
+			String fmtItemText = getName(formatItems.getChildByIndex(i).getChildByIndex(0));
 
 			if (fmtItemText.startsWith("'") || fmtItemText.startsWith("\"")) {
-				fmtPattern += fmtItemText.substring(1,
-						fmtItemText.length() - 1);
+				fmtPattern += fmtItemText.substring(1, fmtItemText.length() - 1);
 			} else {
 				fmtPattern += " %s";
 			}
@@ -2852,24 +2533,21 @@ public class MFASTBuilderWorker {
 				letterSpecs = implicitSpec.getChildByIndex(1);
 				for (int j = 0; j < letterSpecs.numChildren(); j++) {
 					letterSpec = letterSpecs.getChildByIndex(j);
-					charStart = getName(letterSpec.getChildByIndex(0))
-							.charAt(0);
-					charEnd = letterSpec.numChildren() == 1
-							? charStart
+					charStart = getName(letterSpec.getChildByIndex(0)).charAt(0);
+					charEnd = letterSpec.numChildren() == 1 ? charStart
 							: getName(letterSpec.getChildByIndex(1)).charAt(0);
-					scopes.setImplicitType(charStart, charEnd,
-							implicitTypeNode);
+					scopes.setImplicitType(charStart, charEnd, implicitTypeNode);
 				}
 			}
 		} else if (spec.prp() == MFPUtils.IMPLICIT_NONE_SPEC) {
 			switch (spec.kind()) {
-				case MFPUtils.NONE_PURE :
-					scopes.setImplicitNone();
-					break;
-				case MFPUtils.NONE_EXTN :
-				case MFPUtils.NONE_TYPE :
-				default :
-					assert false;
+			case MFPUtils.NONE_PURE:
+				scopes.setImplicitNone();
+				break;
+			case MFPUtils.NONE_EXTN:
+			case MFPUtils.NONE_TYPE:
+			default:
+				assert false;
 			}
 		}
 	}
@@ -2879,23 +2557,21 @@ public class MFASTBuilderWorker {
 		String moduleName = getName(useModule);
 
 		switch (moduleName) {
-			case "OMP_LIB" :
-				useOMP = true;
-				break;
-			default :
-				// assert false;
+		case "OMP_LIB":
+			useOMP = true;
+			break;
+		default:
+			// assert false;
 		}
 	}
 
-	private ASTNode processPragma(MFTree pragma)
-			throws SyntaxException, ParseException {
+	private ASTNode processPragma(MFTree pragma) throws SyntaxException, ParseException {
 		ASTNode pragmaNode = translatePragma(pragma);
 
 		if (pragmaNode == null)
 			return null;
 		else if (pragmaNode instanceof ExpressionNode)
-			return nodeFactory
-					.newExpressionStatementNode((ExpressionNode) pragmaNode);
+			return nodeFactory.newExpressionStatementNode((ExpressionNode) pragmaNode);
 		else if (pragmaNode instanceof StatementNode)
 			return (StatementNode) pragmaNode;
 		else
@@ -2904,8 +2580,7 @@ public class MFASTBuilderWorker {
 		return null;
 	}
 
-	private BlockItemNode translateConstructIf(MFTree ifConstruct)
-			throws SyntaxException, ParseException {
+	private BlockItemNode translateConstructIf(MFTree ifConstruct) throws SyntaxException, ParseException {
 		int numChildren = ifConstruct.numChildren();
 		int numBlock = numChildren / 2;
 		MFTree condStmt = null;
@@ -2922,20 +2597,17 @@ public class MFASTBuilderWorker {
 			block = ifConstruct.getChildByIndex(i + 1);
 			condPrp = condStmt.prp();
 			if (condPrp == MFPUtils.ELSE_STMT) // else_stmt
-				falseBranchNode = nodeFactory.newCompoundStatementNode(
-						newSource(block), translateBlockItems(block));
+				falseBranchNode = nodeFactory.newCompoundStatementNode(newSource(block), translateBlockItems(block));
 			else {
 				condExpr = condStmt.getChildByIndex(condStmt.numChildren() - 2);
 				condExprNode = translateExpr(condExpr);
-				trueBranchNode = nodeFactory.newCompoundStatementNode(
-						newSource(block), translateBlockItems(block));
+				trueBranchNode = nodeFactory.newCompoundStatementNode(newSource(block), translateBlockItems(block));
 				if (condPrp == MFPUtils.IF_THEN_STMT) // if_stmt
-					ifStmtNode = nodeFactory.newIfNode(newSource(ifConstruct),
-							condExprNode, trueBranchNode, falseBranchNode);
+					ifStmtNode = nodeFactory.newIfNode(newSource(ifConstruct), condExprNode, trueBranchNode,
+							falseBranchNode);
 				else // else_if_stmt
-					falseBranchNode = nodeFactory.newIfNode(
-							newSource(ifConstruct), condExprNode,
-							trueBranchNode, falseBranchNode);
+					falseBranchNode = nodeFactory.newIfNode(newSource(ifConstruct), condExprNode, trueBranchNode,
+							falseBranchNode);
 			}
 		}
 		return ifStmtNode;
@@ -2943,8 +2615,8 @@ public class MFASTBuilderWorker {
 
 	private String currentFunctionName = null;
 
-	private List<BlockItemNode> processSpecPart(MFTree specPart,
-			String varNamePrefix) throws SyntaxException, ParseException {
+	private List<BlockItemNode> processSpecPart(MFTree specPart, String varNamePrefix)
+			throws SyntaxException, ParseException {
 		List<BlockItemNode> itemNodes = new LinkedList<>();
 		int numSpec = specPart.numChildren();
 
@@ -2953,8 +2625,7 @@ public class MFASTBuilderWorker {
 			PRPair prp = spec.prp();
 
 			if (prp == MFPUtils.DECLARATION_CONSTRUCT)
-				itemNodes.addAll(translateBlockItem(spec.getChildByIndex(0),
-						varNamePrefix));
+				itemNodes.addAll(translateBlockItem(spec.getChildByIndex(0), varNamePrefix));
 			else if (prp == MFPUtils.IMPLICIT_STMT)
 				processStmtImplicit(spec);
 			else if (prp == MFPUtils.PARAMETER_STMT)
@@ -2987,9 +2658,8 @@ public class MFASTBuilderWorker {
 	 * @throws SyntaxException
 	 * @throws ParseException
 	 */
-	private CompoundStatementNode translateBody(MFTree specPart,
-			MFTree execPart, FunctionTypeNode funcTypeNode, PRPair BodyPrp)
-			throws SyntaxException, ParseException {
+	private CompoundStatementNode translateBody(MFTree specPart, MFTree execPart, FunctionTypeNode funcTypeNode,
+			PRPair BodyPrp) throws SyntaxException, ParseException {
 		int indexEndSpec = -1;
 
 		// init
@@ -3001,8 +2671,7 @@ public class MFASTBuilderWorker {
 
 			// Process specification_part
 			if (specPart != null) {
-				itemNodes.addAll(
-						processSpecPart(specPart, FORTRAN_EMPTY_PREFIX));
+				itemNodes.addAll(processSpecPart(specPart, FORTRAN_EMPTY_PREFIX));
 			}
 			indexEndSpec = itemNodes.size();
 			// Process execution_part
@@ -3025,33 +2694,27 @@ public class MFASTBuilderWorker {
 							int collapse = ompForNode.collapse();
 
 							if (collapse == 1) {
-								StatementNode forStmtNode = (StatementNode) itemNodes
-										.get(i + 1);
+								StatementNode forStmtNode = (StatementNode) itemNodes.get(i + 1);
 
 								itemNodes.set(i + 1, null);
 								ompForNode.setStatementNode(forStmtNode);
 							} else {
-								ArrayList<BlockItemNode> forStmtNodes = new ArrayList<>(
-										collapse);
+								ArrayList<BlockItemNode> forStmtNodes = new ArrayList<>(collapse);
 								CompoundStatementNode stmtsNode;
 
 								src = itemNodes.get(i + 1).getSource();
 								for (int j = 1; j < collapse; j++) {
-									StatementNode forStmtNode = (StatementNode) itemNodes
-											.get(i + j);
+									StatementNode forStmtNode = (StatementNode) itemNodes.get(i + j);
 
 									itemNodes.set(i + j, null);
 									forStmtNodes.add(forStmtNode);
 								}
-								stmtsNode = nodeFactory
-										.newCompoundStatementNode(src,
-												forStmtNodes);
+								stmtsNode = nodeFactory.newCompoundStatementNode(src, forStmtNodes);
 								ompForNode.setStatementNode(stmtsNode);
 							}
 							itemNodes.set(i, ompForNode);
 						} else {
-							StatementNode stmtNode = (StatementNode) itemNodes
-									.get(i + 1);
+							StatementNode stmtNode = (StatementNode) itemNodes.get(i + 1);
 
 							itemNodes.set(i + 1, null);
 							ompExecNode.setStatementNode(stmtNode);
@@ -3074,23 +2737,18 @@ public class MFASTBuilderWorker {
 			}
 			if (!scopes.isImplicitNone()) {
 				for (String undeclIdent : scopes.getUndeclaredIdents()) {
-					IdentifierNode identNode = nodeFactory
-							.newIdentifierNode(dummySrc, undeclIdent);
-					TypeNode typeNode = scopes.getImplicitType(undeclIdent,
-							dummySrc);
-					VariableDeclarationNode implicitVarDeclNode = nodeFactory
-							.newVariableDeclarationNode(dummySrc, identNode,
-									typeNode);
+					IdentifierNode identNode = nodeFactory.newIdentifierNode(dummySrc, undeclIdent);
+					TypeNode typeNode = scopes.getImplicitType(undeclIdent, dummySrc);
+					VariableDeclarationNode implicitVarDeclNode = nodeFactory.newVariableDeclarationNode(dummySrc,
+							identNode, typeNode);
 
 					itemNodes.add(indexEndSpec, implicitVarDeclNode);
 				}
 			}
-			if (itemNodes.size() > 0 && itemNodes
-					.get(itemNodes.size() - 1) instanceof ReturnNode) {
+			if (itemNodes.size() > 0 && itemNodes.get(itemNodes.size() - 1) instanceof ReturnNode) {
 				freedArrays.clear();
 				for (String gArrName : freedGlobalArrays)
-					itemNodes.add(itemNodes.size() - 1,
-							createArrayDestroy(gArrName));
+					itemNodes.add(itemNodes.size() - 1, createArrayDestroy(gArrName));
 			} else {
 				while (!freedArrays.isEmpty())
 					itemNodes.add(createArrayDestroy(freedArrays.pop()));
@@ -3098,8 +2756,7 @@ public class MFASTBuilderWorker {
 					itemNodes.add(createArrayDestroy(gArrName));
 			}
 			removeDummyVarDeclForFunction(itemNodes, indexEndSpec);
-			return nodeFactory.newCompoundStatementNode(
-					newSource(specPart, execPart), itemNodes);
+			return nodeFactory.newCompoundStatementNode(newSource(specPart, execPart), itemNodes);
 		} else if (BodyPrp == MFPUtils.SUBROUTINE_SUBPROGRAM || //
 				BodyPrp == MFPUtils.FUNCTION_SUBPROGRAM) {
 			Source src = null;
@@ -3117,8 +2774,7 @@ public class MFASTBuilderWorker {
 					PRPair prp = spec.prp();
 
 					if (prp == MFPUtils.DECLARATION_CONSTRUCT)
-						itemNodes.addAll(translateBlockItem(
-								spec.getChildByIndex(0), FORTRAN_EMPTY_PREFIX));
+						itemNodes.addAll(translateBlockItem(spec.getChildByIndex(0), FORTRAN_EMPTY_PREFIX));
 					else if (prp == MFPUtils.IMPLICIT_STMT)
 						processStmtImplicit(spec);
 					else if (prp == MFPUtils.PARAMETER_STMT)
@@ -3138,8 +2794,7 @@ public class MFASTBuilderWorker {
 			if (BodyPrp == MFPUtils.FUNCTION_SUBPROGRAM) {
 				// Process return variable declaration
 				IdentifierNode newRtnVarIdentNode = null;
-				Boolean hasNoReturnType = funcTypeNode.getReturnType().kind()
-						.equals(TypeNodeKind.VOID);
+				Boolean hasNoReturnType = funcTypeNode.getReturnType().kind().equals(TypeNodeKind.VOID);
 
 				// Check func. rtn. val. decl.
 				for (BlockItemNode itemNode : itemNodes) {
@@ -3156,36 +2811,27 @@ public class MFASTBuilderWorker {
 					// Rtn. Type must be defined in func. body
 					assert rtnVarDeclNode != null;
 					// Update rtn. var. name
-					IdentifierNode oldRtnVarIdentNode = rtnVarDeclNode
-							.getIdentifier();
-					TypeNode rtnVarTypeNode = rtnVarDeclNode.getTypeNode()
-							.copy();
+					IdentifierNode oldRtnVarIdentNode = rtnVarDeclNode.getIdentifier();
+					TypeNode rtnVarTypeNode = rtnVarDeclNode.getTypeNode().copy();
 
 					oldRtnVarIdentNode.remove();
-					newRtnVarIdentNode = nodeFactory.newIdentifierNode(
-							oldRtnVarIdentNode.getSource(),
-							FORTRAN_FUNCTION_RETURN_PREFIX
-									+ currentFunctionName);
+					newRtnVarIdentNode = nodeFactory.newIdentifierNode(oldRtnVarIdentNode.getSource(),
+							FORTRAN_FUNCTION_RETURN_PREFIX + currentFunctionName);
 					rtnVarDeclNode.setIdentifier(newRtnVarIdentNode);
 					// Update func. type
 					funcTypeNode.setReturnType(rtnVarTypeNode);
 				} else if (rtnVarDeclNode == null) {
 					// Rtn. Type has been defined in func. stmt.
 					// Rtn. var. does not defined in func. body
-					newRtnVarIdentNode = nodeFactory.newIdentifierNode(
-							funcTypeNode.getSource(),
-							FORTRAN_FUNCTION_RETURN_PREFIX
-									+ currentFunctionName);
-					rtnVarDeclNode = nodeFactory.newVariableDeclarationNode(
-							funcTypeNode.getSource(), newRtnVarIdentNode,
-							funcTypeNode.getReturnType().copy());
+					newRtnVarIdentNode = nodeFactory.newIdentifierNode(funcTypeNode.getSource(),
+							FORTRAN_FUNCTION_RETURN_PREFIX + currentFunctionName);
+					rtnVarDeclNode = nodeFactory.newVariableDeclarationNode(funcTypeNode.getSource(),
+							newRtnVarIdentNode, funcTypeNode.getReturnType().copy());
 					// Add rtn. var. decl.
 					itemNodes.add(rtnVarDeclNode);
 				} else {
-					rtnVarDeclNode.setIdentifier(nodeFactory.newIdentifierNode(
-							funcTypeNode.getSource(),
-							FORTRAN_FUNCTION_RETURN_PREFIX
-									+ currentFunctionName));
+					rtnVarDeclNode.setIdentifier(nodeFactory.newIdentifierNode(funcTypeNode.getSource(),
+							FORTRAN_FUNCTION_RETURN_PREFIX + currentFunctionName));
 				}
 			}
 			indexEndSpec = itemNodes.size();
@@ -3209,33 +2855,27 @@ public class MFASTBuilderWorker {
 							int collapse = ompForNode.collapse();
 
 							if (collapse == 1) {
-								StatementNode forStmtNode = (StatementNode) itemNodes
-										.get(i + 1);
+								StatementNode forStmtNode = (StatementNode) itemNodes.get(i + 1);
 
 								itemNodes.set(i + 1, null);
 								ompForNode.setStatementNode(forStmtNode);
 							} else {
-								ArrayList<BlockItemNode> forStmtNodes = new ArrayList<>(
-										collapse);
+								ArrayList<BlockItemNode> forStmtNodes = new ArrayList<>(collapse);
 								CompoundStatementNode stmtsNode;
 
 								src = itemNodes.get(i + 1).getSource();
 								for (int j = 1; j < collapse; j++) {
-									StatementNode forStmtNode = (StatementNode) itemNodes
-											.get(i + j);
+									StatementNode forStmtNode = (StatementNode) itemNodes.get(i + j);
 
 									itemNodes.set(i + j, null);
 									forStmtNodes.add(forStmtNode);
 								}
-								stmtsNode = nodeFactory
-										.newCompoundStatementNode(src,
-												forStmtNodes);
+								stmtsNode = nodeFactory.newCompoundStatementNode(src, forStmtNodes);
 								ompForNode.setStatementNode(stmtsNode);
 							}
 							itemNodes.set(i, ompForNode);
 						} else {
-							StatementNode stmtNode = (StatementNode) itemNodes
-									.get(i + 1);
+							StatementNode stmtNode = (StatementNode) itemNodes.get(i + 1);
 
 							itemNodes.set(i + 1, null);
 							ompExecNode.setStatementNode(stmtNode);
@@ -3258,13 +2898,10 @@ public class MFASTBuilderWorker {
 			}
 			if (!scopes.isImplicitNone()) {
 				for (String undeclIdent : scopes.getUndeclaredIdents()) {
-					IdentifierNode identNode = nodeFactory
-							.newIdentifierNode(dummySrc, undeclIdent);
-					TypeNode typeNode = scopes.getImplicitType(undeclIdent,
-							dummySrc);
-					VariableDeclarationNode implicitVarDeclNode = nodeFactory
-							.newVariableDeclarationNode(dummySrc, identNode,
-									typeNode);
+					IdentifierNode identNode = nodeFactory.newIdentifierNode(dummySrc, undeclIdent);
+					TypeNode typeNode = scopes.getImplicitType(undeclIdent, dummySrc);
+					VariableDeclarationNode implicitVarDeclNode = nodeFactory.newVariableDeclarationNode(dummySrc,
+							identNode, typeNode);
 
 					itemNodes.add(indexEndSpec, implicitVarDeclNode);
 				}
@@ -3275,37 +2912,25 @@ public class MFASTBuilderWorker {
 				while (!freedArrays.isEmpty())
 					itemNodes.add(createArrayDestroy(freedArrays.pop()));
 			}
-			for (String outArgName : scopes
-					.getAllIntentOutParameterIdentifiers()) {
+			for (String outArgName : scopes.getAllIntentOutParameterIdentifiers()) {
 				// Make actual argument references the dummy argument
-				String dummyArgName = outArgName
-						.substring(FORTRAN_INTENT_OUT_PREFIX.length());
-				IdentifierExpressionNode outArgIdExprNode = nodeFactory
-						.newIdentifierExpressionNode(dummySrc, nodeFactory
-								.newIdentifierNode(dummySrc, outArgName));
-				IdentifierExpressionNode dummyArgIdExprNode = nodeFactory
-						.newIdentifierExpressionNode(dummySrc, nodeFactory
-								.newIdentifierNode(dummySrc, dummyArgName));
-				ExpressionNode derefOutArgExprNode = nodeFactory
-						.newOperatorNode(dummySrc, Operator.DEREFERENCE,
-								outArgIdExprNode);
-				ExpressionNode argAssignExprNode = nodeFactory.newOperatorNode(
-						dummySrc, Operator.ASSIGN, derefOutArgExprNode,
-						dummyArgIdExprNode);
-				itemNodes.add(nodeFactory
-						.newExpressionStatementNode(argAssignExprNode));
+				String dummyArgName = outArgName.substring(FORTRAN_INTENT_OUT_PREFIX.length());
+				IdentifierExpressionNode outArgIdExprNode = nodeFactory.newIdentifierExpressionNode(dummySrc,
+						nodeFactory.newIdentifierNode(dummySrc, outArgName));
+				IdentifierExpressionNode dummyArgIdExprNode = nodeFactory.newIdentifierExpressionNode(dummySrc,
+						nodeFactory.newIdentifierNode(dummySrc, dummyArgName));
+				ExpressionNode derefOutArgExprNode = nodeFactory.newOperatorNode(dummySrc, Operator.DEREFERENCE,
+						outArgIdExprNode);
+				ExpressionNode argAssignExprNode = nodeFactory.newOperatorNode(dummySrc, Operator.ASSIGN,
+						derefOutArgExprNode, dummyArgIdExprNode);
+				itemNodes.add(nodeFactory.newExpressionStatementNode(argAssignExprNode));
 			}
 			if (rtnVarDeclNode != null)
-				itemNodes.add(nodeFactory.newReturnNode(src,
-						nodeFactory.newIdentifierExpressionNode(src,
-								nodeFactory.newIdentifierNode(src,
-										FORTRAN_FUNCTION_RETURN_PREFIX
-												+ currentFunctionName))));
+				itemNodes.add(nodeFactory.newReturnNode(src, nodeFactory.newIdentifierExpressionNode(src,
+						nodeFactory.newIdentifierNode(src, FORTRAN_FUNCTION_RETURN_PREFIX + currentFunctionName))));
 			removeDummyVarDeclForFunction(itemNodes, indexEndSpec);
-			return nodeFactory.newCompoundStatementNode(
-					newSource(specPart, execPart), itemNodes);
-		} else if (BodyPrp == MFPUtils.DO_CONSTRUCT
-				|| BodyPrp == MFPUtils.IF_STMT) {
+			return nodeFactory.newCompoundStatementNode(newSource(specPart, execPart), itemNodes);
+		} else if (BodyPrp == MFPUtils.DO_CONSTRUCT || BodyPrp == MFPUtils.IF_STMT) {
 			Source src = null;
 			List<BlockItemNode> itemNodes = new LinkedList<>();
 			OmpExecutableNode ompExecNode = null;
@@ -3330,33 +2955,27 @@ public class MFASTBuilderWorker {
 							int collapse = ompForNode.collapse();
 
 							if (collapse == 1) {
-								StatementNode forStmtNode = (StatementNode) itemNodes
-										.get(i + 1);
+								StatementNode forStmtNode = (StatementNode) itemNodes.get(i + 1);
 
 								itemNodes.set(i + 1, null);
 								ompForNode.setStatementNode(forStmtNode);
 							} else {
-								ArrayList<BlockItemNode> forStmtNodes = new ArrayList<>(
-										collapse);
+								ArrayList<BlockItemNode> forStmtNodes = new ArrayList<>(collapse);
 								CompoundStatementNode stmtsNode;
 
 								src = itemNodes.get(i + 1).getSource();
 								for (int j = 1; j < collapse; j++) {
-									StatementNode forStmtNode = (StatementNode) itemNodes
-											.get(i + j);
+									StatementNode forStmtNode = (StatementNode) itemNodes.get(i + j);
 
 									itemNodes.set(i + j, null);
 									forStmtNodes.add(forStmtNode);
 								}
-								stmtsNode = nodeFactory
-										.newCompoundStatementNode(src,
-												forStmtNodes);
+								stmtsNode = nodeFactory.newCompoundStatementNode(src, forStmtNodes);
 								ompForNode.setStatementNode(stmtsNode);
 							}
 							itemNodes.set(i, ompForNode);
 						} else {
-							StatementNode stmtNode = (StatementNode) itemNodes
-									.get(i + 1);
+							StatementNode stmtNode = (StatementNode) itemNodes.get(i + 1);
 
 							itemNodes.set(i + 1, null);
 							ompExecNode.setStatementNode(stmtNode);
@@ -3377,30 +2996,26 @@ public class MFASTBuilderWorker {
 				}
 				itemNodes = newItemNodes;
 			}
-			return nodeFactory.newCompoundStatementNode(
-					newSource(specPart, execPart), itemNodes);
+			return nodeFactory.newCompoundStatementNode(newSource(specPart, execPart), itemNodes);
 		} else
 			assert false;
 		return null;
 	}
 
-	private void removeDummyVarDeclForFunction(List<BlockItemNode> nodes,
-			int end) {
+	private void removeDummyVarDeclForFunction(List<BlockItemNode> nodes, int end) {
 		BlockItemNode itemNode;
 
 		for (int i = 0; i < end; i++) {
 			itemNode = nodes.get(i);
 			if (itemNode instanceof VariableDeclarationNode
-					&& funcDeclNodes.keySet().contains(
-							((VariableDeclarationNode) itemNode).getName())) {
+					&& funcDeclNodes.keySet().contains(((VariableDeclarationNode) itemNode).getName())) {
 				nodes.remove(i);
 				end--;
 			}
 		}
 	}
 
-	private BlockItemNode translateProgramFunction(MFTree function, PRPair prp)
-			throws SyntaxException, ParseException {
+	private BlockItemNode translateProgramFunction(MFTree function, PRPair prp) throws SyntaxException, ParseException {
 		BlockItemNode funcItem = null;
 		int numChildren = function.numChildren();
 		String funcNameText = null;
@@ -3443,8 +3058,8 @@ public class MFASTBuilderWorker {
 		} else {
 			// Func. decl. has not been added
 			// Then, the decl. is created based on func. def.
-			dummyFuncDeclNode = nodeFactory.newFunctionDeclarationNode(src,
-					translateIdentifier(funcName), typeNode.copy(), null);
+			dummyFuncDeclNode = nodeFactory.newFunctionDeclarationNode(src, translateIdentifier(funcName),
+					typeNode.copy(), null);
 			processDummyFuncOrSubrDeclaration(funcNameText, dummyFuncDeclNode);
 		}
 		// Check function prefix
@@ -3457,11 +3072,9 @@ public class MFASTBuilderWorker {
 				if (prefixSpec.numChildren() > 0) {
 					// Omitted, prefix for return type has been processed.
 				} else if (prefixSpecKind == MFPUtils.PFX_PURE) {
-					scopes.setAttrByIdent(funcNameText,
-							MFScopeManager.ATTR_FUNC_PURE);
+					scopes.setAttrByIdent(funcNameText, MFScopeManager.ATTR_FUNC_PURE);
 				} else if (prefixSpecKind == MFPUtils.PFX_RECURSIVE) {
-					scopes.setAttrByIdent(funcNameText,
-							MFScopeManager.ATTR_FUNC_RECURSIVE);
+					scopes.setAttrByIdent(funcNameText, MFScopeManager.ATTR_FUNC_RECURSIVE);
 				} else
 					assert false;
 			}
@@ -3470,13 +3083,10 @@ public class MFASTBuilderWorker {
 
 		currentFunctionName = funcNameText;
 		bodyNode = translateBody(specPart, execPart, typeNode, prp);
-		funcItem = nodeFactory.newFunctionDefinitionNode(src, nameNode,
-				typeNode.copy(), null, bodyNode);
+		funcItem = nodeFactory.newFunctionDefinitionNode(src, nameNode, typeNode.copy(), null, bodyNode);
 		// Update possible function decl type info
-		if (currentFunctionName != null
-				&& funcDeclNodes.containsKey(currentFunctionName))
-			this.funcDeclNodes.get(this.currentFunctionName)
-					.setTypeNode(typeNode.copy());
+		if (currentFunctionName != null && funcDeclNodes.containsKey(currentFunctionName))
+			this.funcDeclNodes.get(this.currentFunctionName).setTypeNode(typeNode.copy());
 		commonblockMemberMap = new HashMap<>();
 		currentFunctionName = null;
 		puIdStack.pop();
@@ -3493,8 +3103,7 @@ public class MFASTBuilderWorker {
 	 * @throws SyntaxException
 	 * @throws ParseException
 	 */
-	private BlockItemNode translateProgramMain(MFTree progUnit, PRPair prp)
-			throws SyntaxException, ParseException {
+	private BlockItemNode translateProgramMain(MFTree progUnit, PRPair prp) throws SyntaxException, ParseException {
 		BlockItemNode puItem = null;
 		int numChildren = progUnit.numChildren();
 		MFTree progStmt = progUnit.getChildByIndex(0);
@@ -3520,8 +3129,7 @@ public class MFASTBuilderWorker {
 		typeNode = translateFunctionType(null, progId, args, prp);
 		scopes.setProgramUnitType(typeNode);
 		bodyNode = translateBody(specPart, execPart, null, prp);
-		puItem = nodeFactory.newFunctionDefinitionNode(src, nameNode, typeNode,
-				null, bodyNode);
+		puItem = nodeFactory.newFunctionDefinitionNode(src, nameNode, typeNode, null, bodyNode);
 		commonblockMemberMap = new HashMap<>();
 		puIdStack.pop();
 		return puItem;
@@ -3531,17 +3139,14 @@ public class MFASTBuilderWorker {
 	 * R502: program unit<br>
 	 * R503: external subprogram
 	 * 
-	 * @param ptree
-	 *                  the root of a FORTRAN parse tree
-	 * @param scope
-	 *                  the root scope
+	 * @param ptree the root of a FORTRAN parse tree
+	 * @param scope the root scope
 	 * @return a {@link List} of {@link BlockItemNode} representing each program
 	 *         unit.
 	 * @throws SyntaxException
 	 * @throws ParseException
 	 */
-	private List<BlockItemNode> translateProgramUnit(MFTree ptree)
-			throws SyntaxException, ParseException {
+	private List<BlockItemNode> translateProgramUnit(MFTree ptree) throws SyntaxException, ParseException {
 		PRPair prp = ptree.prp();
 		List<BlockItemNode> itemNodes = new LinkedList<>();
 		List<BlockItemNode> programUnits = new LinkedList<>();
@@ -3568,8 +3173,7 @@ public class MFASTBuilderWorker {
 		return itemNodes;
 	}
 
-	private List<BlockItemNode> translateModule(MFTree module)
-			throws SyntaxException, ParseException {
+	private List<BlockItemNode> translateModule(MFTree module) throws SyntaxException, ParseException {
 		List<BlockItemNode> itemNodes = new LinkedList<>();
 		MFTree moduleStmt = module.getChildByIndex(0);
 		MFTree moduleName = moduleStmt.getChildByIndex(2);
@@ -3592,18 +3196,15 @@ public class MFASTBuilderWorker {
 		return itemNodes;
 	}
 
-	private List<BlockItemNode> translateStmtCall(MFTree callStmt)
-			throws SyntaxException {
+	private List<BlockItemNode> translateStmtCall(MFTree callStmt) throws SyntaxException {
 		int numArrayArgs = 0;
 		Source src = newSource(callStmt);
 		List<BlockItemNode> itemNodes = new LinkedList<>();
-		MFTree funcRef = callStmt.getChildByIndex(2).getChildByIndex(0)
-				.getChildByIndex(0);
+		MFTree funcRef = callStmt.getChildByIndex(2).getChildByIndex(0).getChildByIndex(0);
 		MFTree funcName = funcRef.getChildByIndex(0);
 		Boolean hasArgList = funcRef.numChildren() > 1;
 		IdentifierNode funcIdNode = translateIdentifier(funcName);
-		ExpressionNode funcRefNode = nodeFactory
-				.newIdentifierExpressionNode(src, funcIdNode);
+		ExpressionNode funcRefNode = nodeFactory.newIdentifierExpressionNode(src, funcIdNode);
 		List<ExpressionNode> actualCallArgNodes = new LinkedList<ExpressionNode>();
 		List<VariableDeclarationNode> dummyFuncDeclFormalNodes = new LinkedList<VariableDeclarationNode>();
 		SequenceNode<VariableDeclarationNode> formalsNode = null;
@@ -3619,8 +3220,8 @@ public class MFASTBuilderWorker {
 				MFTree arg = args.getChildByIndex(i).getChildByIndex(0);
 				Source argSrc = newSource(arg);
 				ExpressionNode argNode = translateExpr(arg);
-				IdentifierNode formalNameNode = nodeFactory.newIdentifierNode(
-						argNode.getSource(), "__civl_dummy_arg_" + i);
+				IdentifierNode formalNameNode = nodeFactory.newIdentifierNode(argNode.getSource(),
+						"__civl_dummy_arg_" + i);
 				Boolean notSection = arraySectionDecls.isEmpty();
 
 				while (!arraySectionDecls.isEmpty()) {
@@ -3628,101 +3229,75 @@ public class MFASTBuilderWorker {
 					numArrayArgs++;
 				}
 				switch (argNode.expressionKind()) {
-					case OPERATOR :
-						if (((OperatorNode) argNode)
-								.getOperator() == Operator.DEREFERENCE) {
-							argNode = ((OperatorNode) argNode).getArgument(0)
-									.copy();
-							argNode.remove();
+				case OPERATOR:
+					if (((OperatorNode) argNode).getOperator() == Operator.DEREFERENCE) {
+						argNode = ((OperatorNode) argNode).getArgument(0).copy();
+						argNode.remove();
 
-							if (argNode instanceof IdentifierExpressionNode) {
-								// Arg is an identifier w/ a scalar type
-								argName = ((IdentifierExpressionNode) argNode)
-										.getIdentifier().name();
-								formalTypeNode = scopes
-										.getTypeByVarIdent(argName, argSrc)
-										.copy();
-								tempNode = formalTypeNode;
-								if (tempNode.kind() == TypeNodeKind.BASIC) {
-									if (!scopes.isParameterVar(argName))
-										argNode = nodeFactory.newOperatorNode(
-												src, Operator.ADDRESSOF,
-												argNode);
-									formalTypeNode = nodeFactory
-											.newPointerTypeNode(
-													argNode.getSource(),
-													formalTypeNode.copy());
-								}
-							} else if (argNode instanceof CastNode) {
-								formalTypeNode = ((CastNode) argNode)
-										.getCastType();
+						if (argNode instanceof IdentifierExpressionNode) {
+							// Arg is an identifier w/ a scalar type
+							argName = ((IdentifierExpressionNode) argNode).getIdentifier().name();
+							formalTypeNode = scopes.getTypeByVarIdent(argName, argSrc).copy();
+							tempNode = formalTypeNode;
+							if (tempNode.kind() == TypeNodeKind.BASIC) {
+								if (!scopes.isParameterVar(argName))
+									argNode = nodeFactory.newOperatorNode(src, Operator.ADDRESSOF, argNode);
+								formalTypeNode = nodeFactory.newPointerTypeNode(argNode.getSource(),
+										formalTypeNode.copy());
 							}
-						} else
-							assert false;
-						break;
-					case IDENTIFIER_EXPRESSION :
-						argName = ((IdentifierExpressionNode) argNode)
-								.getIdentifier().name();
-						formalTypeNode = scopes
-								.getTypeByVarIdent(argName, argSrc).copy();
-						tempNode = formalTypeNode;
-						if (tempNode.kind() == TypeNodeKind.BASIC) {
-							argNode = nodeFactory.newOperatorNode(src,
-									Operator.ADDRESSOF, argNode);
-							formalTypeNode = nodeFactory.newPointerTypeNode(
-									argNode.getSource(), formalTypeNode.copy());
+						} else if (argNode instanceof CastNode) {
+							formalTypeNode = ((CastNode) argNode).getCastType();
 						}
-						if (notSection && tempNode
-								.kind() == TypeNodeKind.TYPEDEF_NAME) {
-							IdentifierNode arrayArgIdNode = nodeFactory
-									.newIdentifierNode(argNode.getSource(),
-											FORTRAN_ARRAY_ARG_PREFIX + argName);
-							VariableDeclarationNode arrayArgVarDeclNode = createArrayDesc(
-									dummySrc, arrayArgIdNode, null, null,
-									FORTRAN_ARRAY_DESCRIPTOR_KIND.SECTION_ARG,
-									/* isCommon */ false);
-
-							itemNodes.add(arrayArgVarDeclNode);
-							argNode = nodeFactory.newIdentifierExpressionNode(
-									src, arrayArgIdNode.copy());
-							numArrayArgs++;
-						}
-						if (tempNode.kind() == TypeNodeKind.ARRAY)
-							assert false;
-						break;
-					case CONSTANT :
-						argNode = argNode.copy();
-						if (argNode instanceof IntegerConstantNode) {
-							tempNode = nodeFactory.newBasicTypeNode(
-									argNode.getSource(), BasicTypeKind.INT);
-							formalTypeNode = nodeFactory
-									.newPointerTypeNode(dummySrc, tempNode);
-						} else
-							assert false;
-						break;
-					default :
+					} else
 						assert false;
+					break;
+				case IDENTIFIER_EXPRESSION:
+					argName = ((IdentifierExpressionNode) argNode).getIdentifier().name();
+					formalTypeNode = scopes.getTypeByVarIdent(argName, argSrc).copy();
+					tempNode = formalTypeNode;
+					if (tempNode.kind() == TypeNodeKind.BASIC) {
+						argNode = nodeFactory.newOperatorNode(src, Operator.ADDRESSOF, argNode);
+						formalTypeNode = nodeFactory.newPointerTypeNode(argNode.getSource(), formalTypeNode.copy());
+					}
+					if (notSection && tempNode.kind() == TypeNodeKind.TYPEDEF_NAME) {
+						IdentifierNode arrayArgIdNode = nodeFactory.newIdentifierNode(argNode.getSource(),
+								FORTRAN_ARRAY_ARG_PREFIX + argName);
+						VariableDeclarationNode arrayArgVarDeclNode = createArrayDesc(dummySrc, arrayArgIdNode, null,
+								null, FORTRAN_ARRAY_DESCRIPTOR_KIND.SECTION_ARG, /* isCommon */ false);
+
+						itemNodes.add(arrayArgVarDeclNode);
+						argNode = nodeFactory.newIdentifierExpressionNode(src, arrayArgIdNode.copy());
+						numArrayArgs++;
+					}
+					if (tempNode.kind() == TypeNodeKind.ARRAY)
+						assert false;
+					break;
+				case CONSTANT:
+					argNode = argNode.copy();
+					if (argNode instanceof IntegerConstantNode) {
+						tempNode = nodeFactory.newBasicTypeNode(argNode.getSource(), BasicTypeKind.INT);
+						formalTypeNode = nodeFactory.newPointerTypeNode(dummySrc, tempNode);
+					} else
+						assert false;
+					break;
+				default:
+					assert false;
 				}
 				actualCallArgNodes.add(argNode);
 				dummyFuncDeclFormalNodes
-						.add(nodeFactory.newVariableDeclarationNode(argSrc,
-								formalNameNode, formalTypeNode.copy()));
+						.add(nodeFactory.newVariableDeclarationNode(argSrc, formalNameNode, formalTypeNode.copy()));
 			}
 		}
-		formalsNode = nodeFactory.newSequenceNode(src,
-				"DummySubroutineFormalDeclList", dummyFuncDeclFormalNodes);
+		formalsNode = nodeFactory.newSequenceNode(src, "DummySubroutineFormalDeclList", dummyFuncDeclFormalNodes);
 
-		FunctionCallNode callNode = nodeFactory.newFunctionCallNode(src,
-				funcRefNode, actualCallArgNodes, null);
-		FunctionTypeNode dummyFuncTypeNode = nodeFactory.newFunctionTypeNode(
-				src, nodeFactory.newVoidTypeNode(src), formalsNode, false);
-		FunctionDeclarationNode dummyFuncDeclNode = nodeFactory
-				.newFunctionDeclarationNode(src, funcIdNode.copy(),
-						dummyFuncTypeNode, null);
+		FunctionCallNode callNode = nodeFactory.newFunctionCallNode(src, funcRefNode, actualCallArgNodes);
+		FunctionTypeNode dummyFuncTypeNode = nodeFactory.newFunctionTypeNode(src, nodeFactory.newVoidTypeNode(src),
+				formalsNode, false);
+		FunctionDeclarationNode dummyFuncDeclNode = nodeFactory.newFunctionDeclarationNode(src, funcIdNode.copy(),
+				dummyFuncTypeNode, null);
 
 		processDummyFuncOrSubrDeclaration(getName(funcName), dummyFuncDeclNode);
-		itemNodes.add((BlockItemNode) nodeFactory
-				.newExpressionStatementNode(callNode));
+		itemNodes.add((BlockItemNode) nodeFactory.newExpressionStatementNode(callNode));
 		while (numArrayArgs > 0) {
 			itemNodes.add(createArrayDestroy(freedArrays.pop()));
 			numArrayArgs--;
@@ -3732,26 +3307,24 @@ public class MFASTBuilderWorker {
 
 	private HashMap<String, Integer> commonBlockName2NumObjs = new HashMap<>();
 
-	private List<BlockItemNode> translateStmtCommon(MFTree commonStmt)
-			throws SyntaxException {
+	private List<BlockItemNode> translateStmtCommon(MFTree commonStmt) throws SyntaxException {
 		final int INDEX_FIRST_COMMON_BLOCK = 2;
 		List<BlockItemNode> itemNodes = new LinkedList<>();
 
 		// Iterates each group of a commonBlockName and its objects
-		for (int i = INDEX_FIRST_COMMON_BLOCK; i < commonStmt
-				.numChildren(); i++) {
+		for (int i = INDEX_FIRST_COMMON_BLOCK; i < commonStmt.numChildren(); i++) {
 			MFTree cBlock = commonStmt.getChildByIndex(i);
 			MFTree cBObjs = cBlock.getChildByIndex(0);
 			Source srcCBlock = newSource(cBlock);
-			//Source srcCBObjs = newSource(cBObjs);
+			// Source srcCBObjs = newSource(cBObjs);
 			String cBName = getName(cBlock);
 			int numCBObjs = cBObjs.numChildren();
 			int cBOIdx = 0;
 
 			/*
-			 * Note that: a same commonBlockName may occur multiple times
-			 * Successive appearance in a same scope unit are regarded as
-			 * continuation of the list for that specific commonBlcokName
+			 * Note that: a same commonBlockName may occur multiple times Successive
+			 * appearance in a same scope unit are regarded as continuation of the list for
+			 * that specific commonBlcokName
 			 */
 			if (commonBlockName2NumObjs.containsKey(cBName)) {
 				cBOIdx = commonBlockName2NumObjs.get(cBName);
@@ -3764,41 +3337,32 @@ public class MFASTBuilderWorker {
 				String gCBOName = FORTRAN_COMMON_BLOCK_PREFIX + //
 						cBName + "_" + cBOIdx;
 				String lCBOName = getName(cBOId);
-				IdentifierNode gCBOIdNode = nodeFactory
-						.newIdentifierNode(srcCBlock, gCBOName);
-				IdentifierNode lCBOIdNode = nodeFactory
-						.newIdentifierNode(srcCBOId, lCBOName);
-				TypeNode cBVarTypeNode = scopes
-						.getTypeByVarIdent(lCBOName, srcCBOId).copy();
+				IdentifierNode gCBOIdNode = nodeFactory.newIdentifierNode(srcCBlock, gCBOName);
+				IdentifierNode lCBOIdNode = nodeFactory.newIdentifierNode(srcCBOId, lCBOName);
+				TypeNode cBVarTypeNode = scopes.getTypeByVarIdent(lCBOName, srcCBOId).copy();
 				VariableDeclarationNode gCBOVarDeclNode = null;
 				VariableDeclarationNode lCBOVarDeclNode = null;
 
 				if (cBObj.numChildren() > 1) {
 					// Array type (as Fortran array descriptor struct)
 					MFTree arraySpec = cBObj.getChildByIndex(1);
-					ExpressionNode dimInfo[][] = processArrayDimInfo(
-							arraySpec.getChildByIndex(0));
+					ExpressionNode dimInfo[][] = processArrayDimInfo(arraySpec.getChildByIndex(0));
 
 					cBVarTypeNode = genArrDescType(srcCBObj);
-					gCBOVarDeclNode = createArrayDesc(srcCBObj, gCBOIdNode,
-							dimInfo, cBVarTypeNode.copy(),
-							FORTRAN_ARRAY_DESCRIPTOR_KIND.ORIGIN,
-							/* isCommon */ true);
-					lCBOVarDeclNode = nodeFactory.newVariableDeclarationNode(
-							srcCBObj, lCBOIdNode, cBVarTypeNode);
+					gCBOVarDeclNode = createArrayDesc(srcCBObj, gCBOIdNode, dimInfo, cBVarTypeNode.copy(),
+							FORTRAN_ARRAY_DESCRIPTOR_KIND.ORIGIN, /* isCommon */ true);
+					lCBOVarDeclNode = nodeFactory.newVariableDeclarationNode(srcCBObj, lCBOIdNode, cBVarTypeNode);
 				} else {
 					// Scalar Type
-					gCBOVarDeclNode = nodeFactory.newVariableDeclarationNode(
-							srcCBObj, gCBOIdNode, cBVarTypeNode.copy());
-					lCBOVarDeclNode = nodeFactory.newVariableDeclarationNode(
-							srcCBObj, lCBOIdNode, cBVarTypeNode);
+					gCBOVarDeclNode = nodeFactory.newVariableDeclarationNode(srcCBObj, gCBOIdNode,
+							cBVarTypeNode.copy());
+					lCBOVarDeclNode = nodeFactory.newVariableDeclarationNode(srcCBObj, lCBOIdNode, cBVarTypeNode);
 				}
 				// Collect global common blk. var. decl.
 				commonVarDeclNodes.add(gCBOVarDeclNode);
 				// Collect local common blk. var. decl.
 				/*
-				 * each local decl. is initialized by being assigned with the
-				 * global storage
+				 * each local decl. is initialized by being assigned with the global storage
 				 */
 				// TODO:
 				itemNodes.add(lCBOVarDeclNode);
@@ -3812,10 +3376,9 @@ public class MFASTBuilderWorker {
 
 	private TypeNode genArrDescType(Source src) {
 		String FARR_DESC = "farr_desc";
-		IdentifierNode fArrDescNode = nodeFactory.newIdentifierNode(src,
-				FARR_DESC);
+		IdentifierNode fArrDescNode = nodeFactory.newIdentifierNode(src, FARR_DESC);
 
-		return nodeFactory.newTypedefNameNode(fArrDescNode, null);
+		return nodeFactory.newTypedefNameNode(fArrDescNode);
 	}
 
 	// The driver of generating CIVL AST from FORTRAN parse tree.
@@ -3826,10 +3389,8 @@ public class MFASTBuilderWorker {
 		assert numProgUnit > 0;
 		this.scopes = new MFScopeManager(this.nodeFactory);
 		for (int i = 0; i < numProgUnit; i++)
-			this.programUnits.addAll(
-					translateProgramUnit(this.ptree.getChildByIndex(i)));
-		this.root = this.nodeFactory.newTranslationUnitNode(rootSrc,
-				this.programUnits);
+			this.programUnits.addAll(translateProgramUnit(this.ptree.getChildByIndex(i)));
+		this.root = this.nodeFactory.newTranslationUnitNode(rootSrc, this.programUnits);
 	}
 
 	// Interfaces or non-private functions
@@ -3838,14 +3399,12 @@ public class MFASTBuilderWorker {
 	 */
 	public AST generateAST() {
 		AST civlAst = null;
-		SourceFile rootSrcFile = new SourceFile(new File(filePath),
-				srcFiles.size());
+		SourceFile rootSrcFile = new SourceFile(new File(filePath), srcFiles.size());
 
 		srcFiles.put(rootSrcFile.getIndex(), rootSrcFile);
 		formations.add(tokenFactory.newInclusion(rootSrcFile));
-		dummySrc = tokenFactory
-				.newSource(tokenFactory.newCivlcToken(CivlcTokenConstant.ABSENT,
-						SRC_INFO, formations.peek(), TokenVocabulary.FORTRAN));
+		dummySrc = tokenFactory.newSource(tokenFactory.newCivlcToken(CivlcTokenConstant.ABSENT, SRC_INFO,
+				formations.peek(), TokenVocabulary.FORTRAN));
 		try {
 			genASTRoot();
 			// Add global variables translated from common block.
@@ -3853,8 +3412,7 @@ public class MFASTBuilderWorker {
 			// Add $input/$output variables
 			root.insertChildren(0, inputOutputVarDeclNodes);
 			addLibASTNodes();
-			civlAst = astFactory.newAST(root, srcFiles.values(),
-					hasProgramEntry);
+			civlAst = astFactory.newAST(root, srcFiles.values(), hasProgramEntry);
 			// civlAst.prettyPrint(System.out, true);
 		} catch (SyntaxException | PreprocessorException | ParseException e) {
 			e.printStackTrace();

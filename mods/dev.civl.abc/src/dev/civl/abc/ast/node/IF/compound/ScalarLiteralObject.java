@@ -13,7 +13,7 @@ import dev.civl.abc.ast.node.IF.expression.ExpressionNode;
 public interface ScalarLiteralObject extends LiteralObject {
 
 	/**
-	 * Returns the expression corrresponding to this scalar literal object.
+	 * Returns the expression corresponding to this scalar literal object.
 	 * 
 	 * @return the corresponding expression
 	 */

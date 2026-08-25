@@ -25,112 +25,14 @@ import dev.civl.mc.model.IF.variable.Variable;
 public interface Scope extends Sourceable {
 
 	/**
-	 * @return The containing scope of this scope. If this is the top-most
-	 *         scope, returns null.
-	 */
-	Scope parent();
-
-	/**
-	 * <p>
-	 * <b>Important notice: </b> Never ever modify the variable!
-	 * </p>
-	 * 
-	 * @return The set of variables contained in this scope. The iterator over
-	 *         the returned set will iterate in variable ID order.
-	 */
-	Variable[] variables();
-
-	/**
-	 * @return The number of variables contained in this scope.
-	 */
-	int numVariables();
-
-	/**
-	 * @return The number of functions contained in this scope.
-	 */
-	int numFunctions();
-
-	/**
-	 * @return The id of this scope. This id is unique within the model.
-	 */
-	int id();
-
-	/**
-	 * @return The scopes contained by this scope.
-	 */
-	Set<Scope> children();
-
-	/**
 	 * @return The model to which this scope belongs.
 	 */
 	Model model();
 
 	/**
-	 * @param parent
-	 *            The containing scope of this scope.
+	 * @return The id of this scope. This id is unique within the model.
 	 */
-	void setParent(Scope parent);
-
-	/**
-	 * @param variables
-	 *            The set of variables contained in this scope.
-	 */
-	void setVariables(Set<Variable> variables);
-
-	/**
-	 * @param children
-	 *            The scopes contained by this scope.
-	 */
-	void setChildren(Set<Scope> children);
-
-	/**
-	 * @param A
-	 *            new scope contained by this scope.
-	 */
-	void addChild(Scope child);
-
-	/**
-	 * A new variable in this scope.
-	 */
-	void addVariable(Variable variable);
-
-	/**
-	 * If a variable is already included in this scope, return the included
-	 * variable. Otherwise return null.
-	 * 
-	 * @param variable
-	 *            The variable which is being checked.
-	 * @return included variable iff variable already exists in this scope, null
-	 *         otherwise.
-	 */
-	Variable contains(Variable variable);
-
-	/**
-	 * Get the variable associated with an identifier. If this scope does not
-	 * contain such a variable, parent scopes will be recursively checked.
-	 * 
-	 * @param name
-	 *            The identifier for the variable.
-	 * @return The model representation of the variable in this scope hierarchy,
-	 *         or null if not found.
-	 */
-	Variable variable(Identifier name);
-
-	/**
-	 * Get the variable at the specified array index.
-	 * 
-	 * @param vid
-	 *            The index of the variable. Should be in the range
-	 *            [0,numVariable()-1].
-	 * @return The variable at the index.
-	 */
-	Variable variable(int vid);
-
-	/**
-	 * @param function
-	 *            The function containing this scope.
-	 */
-	void setFunction(CIVLFunction function);
+	int id();
 
 	/**
 	 * @return The function containing this scope.
@@ -143,95 +45,231 @@ public interface Scope extends Sourceable {
 	Identifier functionName();
 
 	/**
-	 * A variables has a "procRefType" if it is of type Process, if it is an
-	 * array with element of procRefType, or if it is a struct with fields of
-	 * procRefType.
+	 * Sets the containing function.
+	 * 
+	 * @param function the function containing this scope.
+	 */
+	void setFunction(CIVLFunction function);
+
+	/**
+	 * @return The containing scope of this scope. If this is the top-most scope,
+	 *         returns null.
+	 */
+	Scope parent();
+
+	/**
+	 * @param parent The containing scope of this scope.
+	 */
+	void setParent(Scope parent);
+
+	/**
+	 * Return true iff this scope is a descendant of (i.e., contained within) the
+	 * given scope {@code anc}.
+	 * 
+	 * @param anc a non-null scope
+	 * @return {@code true} iff this scope is a descendant of {@code anc}
+	 */
+	boolean isDescendantOf(Scope anc);
+
+	/**
+	 * @return The scopes contained by this scope.
+	 */
+	Set<Scope> children();
+
+	/**
+	 * @param children The scopes contained by this scope.
+	 */
+	void setChildren(Set<Scope> children);
+
+	/**
+	 * @param A new scope contained by this scope.
+	 */
+	void addChild(Scope child);
+
+	/**
+	 * <p>
+	 * <b>Important notice: </b> Never ever modify the variable!
+	 * </p>
+	 * 
+	 * @return The set of variables contained in this scope. The iterator over the
+	 *         returned set will iterate in variable ID order.
+	 */
+	Variable[] variables();
+
+	/**
+	 * @return The number of variables contained in this scope.
+	 */
+	int numVariables();
+
+	/**
+	 * Does this scope contain at least one variable? (Not counting containing
+	 * scopes.)
+	 * 
+	 * @return {@code true} iff this scope contains at least one variable
+	 */
+	boolean hasVariable();
+
+	/**
+	 * Gets the index of the given variable in the sequence of variables belonging
+	 * to this scope. This finds the first variable in the sequence that "equals"
+	 * (using the equals method) the given variable, and returns its index. If there
+	 * is no such variable in the sequence, returns -1.
+	 * 
+	 * @param staticVariable a non-null variable
+	 * @return index of {@code staticVariable} in the variable sequence of this
+	 *         scope, or -1
+	 */
+	int getVid(Variable staticVariable);
+
+	boolean hasVariableWtPointer();
+
+	/**
+	 * @param variables The set of variables contained in this scope.
+	 */
+	void setVariables(Set<Variable> variables);
+
+	/**
+	 * A new variable in this scope.
+	 */
+	void addVariable(Variable variable);
+
+	/**
+	 * If a variable with the same name as the given variable is already in in this
+	 * scope, returns that variable. Otherwise return {@code null}.
+	 * 
+	 * @param variable variable with name to look for
+	 * @return variable in this scope with same name or {@code null}
+	 */
+	Variable getMatch(Variable variable);
+
+	/**
+	 * Says whether this scope contains a variable with the given name. Does not
+	 * look in containing scopes.
+	 * 
+	 * @param name a non-null string, the name of the variable to look for
+	 * @return {@code true} iff this scope contains a variable with the given name
+	 */
+	boolean containsVariable(String name);
+
+	/**
+	 * Finds the variable in this scope with the given name. Does not look in
+	 * containing scopes.
+	 * 
+	 * @param name a non-null string, the name of the variable to look for
+	 * @return the variable with the given name or {@code null} if no variable with
+	 *         than name exists in this scope
+	 */
+	Variable getVariable(String name);
+
+	/**
+	 * Get the variable associated with an identifier. If this scope does not
+	 * contain such a variable, parent scopes will be recursively checked.
+	 * 
+	 * @param name The identifier for the variable.
+	 * @return The model representation of the variable in this scope hierarchy, or
+	 *         null if not found.
+	 */
+	Variable seekVariable(Identifier name);
+
+	/**
+	 * Get the variable at the specified array index.
+	 * 
+	 * @param vid The index of the variable. Should be in the range
+	 *            [0,numVariable()-1].
+	 * @return The variable at the index.
+	 */
+	Variable getVariable(int vid);
+
+	/**
+	 * A variables has a "procRefType" if it is of type Process, if it is an array
+	 * with element of procRefType, or if it is a struct with fields of procRefType.
 	 * 
 	 * @return A collection of the variables in this scope with a procRefType.
 	 */
 	Collection<Variable> variablesWithProcrefs();
 
 	/**
-	 * A variables has a "$state" type, if it is of type $state, if it is an
-	 * array with element of type $state, or if it is a struct with fields of
-	 * type $state.
+	 * A variables has a "$state" type, if it is of type $state, if it is an array
+	 * with element of type $state, or if it is a struct with fields of type $state.
 	 * 
 	 * @return A collection of the variables in this scope with a type $state.
 	 */
 	Collection<Variable> variablesWithStaterefs();
 
 	/**
-	 * A variables has a "scopeRefType" if it is of type Scope, if it is an
-	 * array with element of scopeRefType, if it is a struct with fields of
-	 * scopeRefType, or if it contains a pointer.
+	 * A variables has a "scopeRefType" if it is of type Scope, if it is an array
+	 * with element of scopeRefType, if it is a struct with fields of scopeRefType,
+	 * or if it contains a pointer.
 	 * 
 	 * @return A collection of the variables in this scope with a scopeRefType.
 	 */
 	Collection<Variable> variablesWithScoperefs();
 
 	/**
-	 * A variable contains a pointer type if it is of type PointerType, if it is
-	 * an array with elements containing pointer type, or if it is a struct with
-	 * fields containing pointer type.
+	 * A variable contains a pointer type if it is of type PointerType, if it is an
+	 * array with elements containing pointer type, or if it is a struct with fields
+	 * containing pointer type.
 	 * 
-	 * @return A collection of the variables in this scope containing pointer
-	 *         types.
+	 * @return A collection of the variables in this scope containing pointer types.
 	 */
 	Collection<Variable> variablesWithPointers();
 
 	/**
 	 * A variable whose type is not a primitive type.
 	 * 
-	 * @return A collection of the variables in this scope containing pointer
-	 *         types.
+	 * @return A collection of the variables in this scope containing pointer types.
 	 */
 	Collection<Variable> varsNeedSymbolicConstant();
 
 	/**
-	 * Print the scope and all children.
-	 * 
-	 * @param prefix
-	 *            String prefix to print on each line
-	 * @param out
-	 *            The PrintStream to use for printing.
-	 * @param isDebug
-	 *            True iff the debugging option is enabled, when more
-	 *            information will be printed, such as if a variable is purely
-	 *            local
+	 * @return The number of functions contained in this scope.
 	 */
-	void print(String prefix, PrintStream out, boolean isDebug);
-
-	// TODO: Is this necessary? vid contained in variable.
-	// Maybe, since this can check that the variable is actually a member of
-	// this scope and throw an exception otherwise. If it throws an exception,
-	// that should also be in this contract.
-	int getVid(Variable staticVariable);
+	int numFunctions();
 
 	/**
-	 * Return true if the scope is a descendant of the scope anc
+	 * Adds a function to this scope.
 	 * 
-	 * @param des
-	 * @param anc
-	 * @return true or false
+	 * @param function a non-null function to add
 	 */
-	boolean isDescendantOf(Scope anc);
-
-	boolean containsVariable(String name);
-
-	Variable variable(String name);
-
 	void addFunction(CIVLFunction function);
-
-	CIVLFunction getFunction(Identifier name);
-
+	
 	CIVLFunction getFunction(String name);
+
+	/**
+	 * Searches for a function with the given name in this scope and then ancestor
+	 * scopes. Same as {@code getFunction(name.name())}.
+	 * 
+	 * @param name non-null identifier containing name to search for
+	 * @return the first function found with given name (starting in this scope and
+	 *         then moving up the ancestor path), or {@code null} if there is no
+	 *         such function
+	 */
+	CIVLFunction seekFunction(Identifier name);
+
+	/**
+	 * Searches for a function with the given name in this scope and then ancestor
+	 * scopes.
+	 * 
+	 * @param name non-null string, the name to search for
+	 * @return the first function found with given name (starting in this scope and
+	 *         then moving up the ancestor path), or {@code null} if there is no
+	 *         such function
+	 */
+	CIVLFunction seekFunction(String name);
 
 	CIVLFunction getFunction(int fid);
 
 	void complete();
 
-	boolean hasVariable();
-
-	boolean hasVariableWtPointer();
+	/**
+	 * Print the scope and all children.
+	 * 
+	 * @param prefix  String prefix to print on each line
+	 * @param out     The PrintStream to use for printing.
+	 * @param isDebug True iff the debugging option is enabled, when more
+	 *                information will be printed, such as if a variable is purely
+	 *                local
+	 */
+	void print(String prefix, PrintStream out, boolean isDebug);
 
 }

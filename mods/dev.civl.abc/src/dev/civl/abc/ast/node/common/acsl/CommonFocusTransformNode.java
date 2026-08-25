@@ -129,7 +129,7 @@ public abstract class CommonFocusTransformNode extends CommonTransformNode
 	protected FunctionCallNode functionCall(String name,
 			List<ExpressionNode> args) {
 		return nodeFactory.newFunctionCallNode(newSource("functionCall", name),
-				identifierExpression(name), args, null);
+				identifierExpression(name), args);
 	}
 
 	protected FunctionCallNode functionCall(String name) {

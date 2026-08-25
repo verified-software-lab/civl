@@ -355,7 +355,7 @@ public class IOWorker extends BaseWorker {
 		FunctionCallNode copyCall = nodeFactory.newFunctionCallNode(source,
 				nodeFactory.newIdentifierExpressionNode(source,
 						nodeFactory.newIdentifierNode(source, FILESYSTEM_COPY_OUTPUT)),
-				Arrays.asList(civlFileSystem, outputArray), null);
+				Arrays.asList(civlFileSystem, outputArray));
 
 		return nodeFactory.newExpressionStatementNode(copyCall);
 	}
@@ -389,7 +389,7 @@ public class IOWorker extends BaseWorker {
 
 		if (this.hasCIVLfileSystem) {
 			freeFilesystem = nodeFactory.newFunctionCallNode(source, nodeFactory.newIdentifierExpressionNode(source,
-					nodeFactory.newIdentifierNode(source, FILESYSTEM_DESTROY)), Arrays.asList(argument), null);
+					nodeFactory.newIdentifierNode(source, FILESYSTEM_DESTROY)), Arrays.asList(argument));
 			freeFilesystemStatement = nodeFactory.newExpressionStatementNode(freeFilesystem);
 			result.add(freeFilesystemStatement);
 		}
@@ -397,7 +397,7 @@ public class IOWorker extends BaseWorker {
 			argument = nodeFactory.newIdentifierExpressionNode(source, nodeFactory.newIdentifierNode(source, STDOUT));
 			freeStdout = nodeFactory.newFunctionCallNode(source,
 					nodeFactory.newIdentifierExpressionNode(source, nodeFactory.newIdentifierNode(source, FREE)),
-					Arrays.asList(argument), null);
+					Arrays.asList(argument));
 			freeStdoutStatement = nodeFactory.newExpressionStatementNode(freeStdout);
 			nullPointer = nodeFactory.newCastNode(source,
 					nodeFactory.newPointerTypeNode(source, nodeFactory.newVoidTypeNode(source)),
@@ -410,7 +410,7 @@ public class IOWorker extends BaseWorker {
 			argument = nodeFactory.newIdentifierExpressionNode(source, nodeFactory.newIdentifierNode(source, STDIN));
 			freeStdin = nodeFactory.newFunctionCallNode(source,
 					nodeFactory.newIdentifierExpressionNode(source, nodeFactory.newIdentifierNode(source, FREE)),
-					Arrays.asList(argument), null);
+					Arrays.asList(argument));
 			freeStdinStatement = nodeFactory.newExpressionStatementNode(freeStdin);
 			nullPointer = nodeFactory.newCastNode(source,
 					nodeFactory.newPointerTypeNode(source, nodeFactory.newVoidTypeNode(source)),
@@ -423,7 +423,7 @@ public class IOWorker extends BaseWorker {
 			argument = nodeFactory.newIdentifierExpressionNode(source, nodeFactory.newIdentifierNode(source, STDERR));
 			freeStderr = nodeFactory.newFunctionCallNode(source,
 					nodeFactory.newIdentifierExpressionNode(source, nodeFactory.newIdentifierNode(source, FREE)),
-					Arrays.asList(argument), null);
+					Arrays.asList(argument));
 			freeStderrStatement = nodeFactory.newExpressionStatementNode(freeStderr);
 			nullPointer = nodeFactory.newCastNode(source,
 					nodeFactory.newPointerTypeNode(source, nodeFactory.newVoidTypeNode(source)),
@@ -771,7 +771,7 @@ public class IOWorker extends BaseWorker {
 					for (int i = 1; i < funcCall.getNumberOfArguments(); i++)
 						arguments.add(funcCall.getArgument(i).copy());
 					printfCall = nodeFactory.newFunctionCallNode(source,
-							this.identifierExpression(funcName.getSource(), PRINTF), arguments, null);
+							this.identifierExpression(funcName.getSource(), PRINTF), arguments);
 					node.parent().setChild(node.childIndex(), printfCall);
 				}
 			}

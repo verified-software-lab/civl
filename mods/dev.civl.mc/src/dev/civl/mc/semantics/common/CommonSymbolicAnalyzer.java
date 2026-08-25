@@ -46,7 +46,6 @@ import dev.civl.mc.model.IF.statement.ParallelAssignStatement;
 import dev.civl.mc.model.IF.statement.ReturnStatement;
 import dev.civl.mc.model.IF.statement.Statement;
 import dev.civl.mc.model.IF.statement.Statement.StatementKind;
-import dev.civl.mc.model.IF.statement.UpdateStatement;
 import dev.civl.mc.model.IF.type.CIVLArrayType;
 import dev.civl.mc.model.IF.type.CIVLHeapType;
 import dev.civl.mc.model.IF.type.CIVLMemType;
@@ -337,7 +336,7 @@ public class CommonSymbolicAnalyzer implements SymbolicAnalyzer {
 			lexicalScope = this.modelFactory.model().staticConstantScope();
 		else
 			lexicalScope = state.getDyscope(dyscopeId).lexicalScope();
-		varType = lexicalScope.variable(vid).type();
+		varType = lexicalScope.getVariable(vid).type();
 		return typeOfObjByRef(varType, reference);
 	}
 
@@ -349,7 +348,7 @@ public class CommonSymbolicAnalyzer implements SymbolicAnalyzer {
 		SymbolicExpression varValue;
 
 		if (dyscopeId == ModelConfiguration.DYNAMIC_CONSTANT_SCOPE) {
-			varValue = modelFactory.model().staticConstantScope().variable(vid).constantValue();
+			varValue = modelFactory.model().staticConstantScope().getVariable(vid).constantValue();
 		} else
 			varValue = state.getDyscope(dyscopeId).getValue(vid);
 		return universe.dereference(varValue, reference).type();
@@ -423,7 +422,7 @@ public class CommonSymbolicAnalyzer implements SymbolicAnalyzer {
 		result.append(prefix + "dyscope d" + id + " (parent=" + parentString + ", static=" + lexicalScope.id() + ")\n");
 		result.append(prefix + "| variables\n");
 		for (int i = 0; i < numVars; i++) {
-			Variable variable = lexicalScope.variable(i);
+			Variable variable = lexicalScope.getVariable(i);
 			SymbolicExpression value = dyscope.getValue(i);
 			String varName = variable.name().name();
 
@@ -765,14 +764,18 @@ public class CommonSymbolicAnalyzer implements SymbolicAnalyzer {
 
 		if (dyscopeId == ModelConfiguration.NULL_POINTER_DYSCOPE && vid == ModelConfiguration.NULL_POINTER_VID) {
 			result.append("(void*)0");
+			if (reference != null && !reference.isIdentityReference()) {
+				result.append("+");
+				result.append(reference);
+			}
 		} else if (dyscopeId == ModelConfiguration.DYNAMIC_CONSTANT_SCOPE) {
 			result.append(this.stringLiteralToString(source,
-					this.modelFactory.model().staticConstantScope().variable(vid).constantValue()));
+					this.modelFactory.model().staticConstantScope().getVariable(vid).constantValue()));
 		} else if (dyscopeId < 0)
 			result.append("UNDEFINED");
 		else {
 			DynamicScope dyscope = state.getDyscope(dyscopeId);
-			Variable variable = dyscope.lexicalScope().variable(vid);
+			Variable variable = dyscope.lexicalScope().getVariable(vid);
 
 			if (variable.type().equals(this.heapType)) {
 				result.append(heapObjectReferenceToString(source, dyscopeId, this.heapType, reference).third);
@@ -1912,15 +1915,6 @@ public class CommonSymbolicAnalyzer implements SymbolicAnalyzer {
 			}
 			break;
 		}
-		case UPDATE: {
-			UpdateStatement update = (UpdateStatement) statement;
-
-			result.append("$update (");
-			result.append(this.expressionEvaluation(state, pid, update.collator()).right);
-			result.append(") ");
-			result.append(this.statementEvaluation(state, postState, pid, update.call()));
-			break;
-		}
 		default:
 			throw new CIVLUnimplementedFeatureException("pretty-printing statement of " + kind + " kind",
 					statement.getSource());
@@ -2132,7 +2126,6 @@ public class CommonSymbolicAnalyzer implements SymbolicAnalyzer {
 				break;
 			}
 			case BOUND_VARIABLE:
-			case DERIVATIVE:
 			case FUNCTION_GUARD:
 			case RESULT:
 			case SCOPEOF:
@@ -2140,7 +2133,6 @@ public class CommonSymbolicAnalyzer implements SymbolicAnalyzer {
 			case SYSTEM_GUARD:
 			case UNDEFINED_PROC:
 			case PROC_NULL:
-			case STATE_NULL:
 				result.append(expression.toString());
 				break;
 			default:
@@ -2253,7 +2245,7 @@ public class CommonSymbolicAnalyzer implements SymbolicAnalyzer {
 		SymbolicExpression value;
 
 		if (dyscope == ModelConfiguration.DYNAMIC_CONSTANT_SCOPE) {
-			value = modelFactory.model().staticConstantScope().variable(vid).constantValue();
+			value = modelFactory.model().staticConstantScope().getVariable(vid).constantValue();
 		} else if (dyscope < 0)
 			return new Pair<>(universe.falseExpression(), ResultType.NO);
 		else

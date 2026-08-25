@@ -90,7 +90,7 @@ public class AcslContractAnalyzerWorker {
 		return false;
 	}
 
-	// TODO: MPIContractExpression type checking!
+	// TODO: Get rid of MPI contract code (no longer supported)
 
 	/**
 	 * Recursively process entity analysis for a {@link ContractNode}.
@@ -212,6 +212,7 @@ public class AcslContractAnalyzerWorker {
 			break;
 		}
 		case PURE: {
+			// nothing to analyze for now
 			break;
 		}
 		default:

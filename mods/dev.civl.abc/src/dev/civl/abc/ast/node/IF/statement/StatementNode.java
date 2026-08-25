@@ -70,10 +70,6 @@ public interface StatementNode extends BlockItemNode {
 		 */
 		SWITCH,
 		/**
-		 * A CIVL-C <code>$update</code> statement. Can be cast to {@link UpdateNode}
-		 */
-		UPDATE,
-		/**
 		 * A CIVL-C guarded statement (<code>$when</code>). Can be cast to
 		 * {@link WhenNOde}
 		 */

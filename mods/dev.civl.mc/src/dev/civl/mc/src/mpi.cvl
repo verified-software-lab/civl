@@ -720,9 +720,11 @@ int MPI_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     scount = sendcount;
     stype = sendtype;
   }
-  for (int i=0; i<nprocs; i++)
-    scatter(sbuf, scount, stype, recvbuf, recvcount, recvtype,
+  for (int i=0; i<nprocs; i++) {
+    void * rbuf = $mpi_pointer_add(recvbuf, i*recvcount, recvtype);
+    scatter(sbuf, scount, stype, rbuf, recvcount, recvtype,
 	    i, ALLTOALL_TAG, comm, "MPI_Alltoall()");
+  }
   if (inplace) $free(sbuf);
   return 0;
 }

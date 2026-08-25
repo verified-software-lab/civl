@@ -8,13 +8,10 @@ import dev.civl.abc.ast.entity.IF.EntityFactory;
 import dev.civl.abc.ast.entity.IF.Scope;
 import dev.civl.abc.ast.entity.IF.Scope.ScopeKind;
 import dev.civl.abc.ast.node.IF.ASTNode;
-import dev.civl.abc.ast.node.IF.IdentifierNode;
 import dev.civl.abc.ast.node.IF.SequenceNode;
 import dev.civl.abc.ast.node.IF.acsl.ContractNode;
-import dev.civl.abc.ast.node.IF.declaration.DeclarationNode;
 import dev.civl.abc.ast.node.IF.declaration.FunctionDeclarationNode;
 import dev.civl.abc.ast.node.IF.declaration.FunctionDefinitionNode;
-import dev.civl.abc.ast.node.IF.declaration.ScopeParameterizedDeclarationNode;
 import dev.civl.abc.ast.node.IF.declaration.VariableDeclarationNode;
 import dev.civl.abc.ast.node.IF.expression.ArrayLambdaNode;
 import dev.civl.abc.ast.node.IF.expression.LambdaNode;
@@ -82,8 +79,7 @@ import dev.civl.abc.token.IF.SyntaxException;
  */
 public class ScopeAnalyzer implements Analyzer {
 
-	public static void setScopes(AST ast, EntityFactory scopeFactory)
-			throws SyntaxException {
+	public static void setScopes(AST ast, EntityFactory scopeFactory) throws SyntaxException {
 		(new ScopeAnalyzer(scopeFactory)).analyze(ast);
 	}
 
@@ -95,34 +91,26 @@ public class ScopeAnalyzer implements Analyzer {
 		this.scopeFactory = scopeFactory;
 	}
 
-	private void processFunctionDefinitionNode(FunctionDefinitionNode funcNode,
-			Scope parentScope) throws SyntaxException {
+	private void processFunctionDefinitionNode(FunctionDefinitionNode funcNode, Scope parentScope)
+			throws SyntaxException {
 		// children: identifier, type, contract (optional), body
 		String name = funcNode.getName();
 		FunctionTypeNode typeNode = (FunctionTypeNode) funcNode.getTypeNode();
 		SequenceNode<ContractNode> contract = funcNode.getContract();
 		CompoundStatementNode body = funcNode.getBody();
-		SequenceNode<VariableDeclarationNode> paramsNode = typeNode
-				.getParameters();
-		Scope newFunctionScope = scopeFactory.newScope(ScopeKind.FUNCTION,
-				parentScope, funcNode);
-		Scope parameterScope = scopeFactory.newScope(ScopeKind.BLOCK,
-				newFunctionScope, paramsNode);
+		SequenceNode<VariableDeclarationNode> paramsNode = typeNode.getParameters();
+		Scope newFunctionScope = scopeFactory.newScope(ScopeKind.FUNCTION, parentScope, funcNode);
+		Scope parameterScope = scopeFactory.newScope(ScopeKind.BLOCK, newFunctionScope, paramsNode);
 
 		if (name == null)
-			throw new SyntaxException(
-					"Encountered a function definition with no name",
-					funcNode.getSource());
+			throw new SyntaxException("Encountered a function definition with no name", funcNode.getSource());
 		if (!parentScope.addFunctionName(name)) {
-			throw new SyntaxException(
-					"Second definition of function " + name + " in same scope",
-					funcNode.getSource());
+			throw new SyntaxException("Second definition of function " + name + " in same scope", funcNode.getSource());
 		}
 		if (paramsNode != null)
 			processRecursive(paramsNode, parameterScope, null);
 		if (contract != null) {
-			Scope contractScope = scopeFactory.newScope(ScopeKind.CONTRACT,
-					parameterScope, contract);
+			Scope contractScope = scopeFactory.newScope(ScopeKind.CONTRACT, parameterScope, contract);
 
 			processRecursive(contract, contractScope, null);
 		}
@@ -130,8 +118,7 @@ public class ScopeAnalyzer implements Analyzer {
 		processRecursive(funcNode, parentScope, null);
 	}
 
-	private void processFunctionDeclarationNode(
-			FunctionDeclarationNode funcNode, Scope parentScope)
+	private void processFunctionDeclarationNode(FunctionDeclarationNode funcNode, Scope parentScope)
 			throws SyntaxException {
 		// children: ident, type, contract.
 		TypeNode typeNode = funcNode.getTypeNode();
@@ -140,16 +127,13 @@ public class ScopeAnalyzer implements Analyzer {
 			FunctionTypeNode functionTypeNode = (FunctionTypeNode) typeNode;
 
 			SequenceNode<ContractNode> contract = funcNode.getContract();
-			SequenceNode<VariableDeclarationNode> paramsNode = functionTypeNode
-					.getParameters();
-			Scope parameterScope = scopeFactory.newScope(ScopeKind.BLOCK,
-					parentScope, paramsNode);
+			SequenceNode<VariableDeclarationNode> paramsNode = functionTypeNode.getParameters();
+			Scope parameterScope = scopeFactory.newScope(ScopeKind.BLOCK, parentScope, paramsNode);
 
 			if (paramsNode != null)
 				processRecursive(paramsNode, parameterScope, null);
 			if (contract != null) {
-				Scope contractScope = scopeFactory.newScope(ScopeKind.CONTRACT,
-						parameterScope, contract);
+				Scope contractScope = scopeFactory.newScope(ScopeKind.CONTRACT, parameterScope, contract);
 
 				processRecursive(contract, contractScope, null);
 			}
@@ -158,78 +142,52 @@ public class ScopeAnalyzer implements Analyzer {
 	}
 
 	/**
-	 * Performs scope analysis on a node and all its decendants, but back tracks
-	 * if it encounters a node that already has a non-null scope. I.e., if a
-	 * node has a non-null scope, it and all of its descendants are left alone.
+	 * Performs scope analysis on a node and all its decendants, but back tracks if
+	 * it encounters a node that already has a non-null scope. I.e., if a node has a
+	 * non-null scope, it and all of its descendants are left alone.
 	 * 
-	 * @param node
-	 *            an AST node
-	 * @param parentScope
-	 *            the current scope we are in when the given node is reached;
-	 *            may be null if node is the root node, i.e., the first node in
-	 *            the AST
-	 * @param functionScope
-	 *            the function scope for the current function we are "in" when
-	 *            we reach this node; this is used only for LabelNodes as these
-	 *            must go into the first containing function scope; may be null
-	 *            if the node and all its descendants could not possibly have a
-	 *            label
-	 * @throws SyntaxException
-	 *             if AST is malformed in some way
+	 * @param node          an AST node
+	 * @param parentScope   the current scope we are in when the given node is
+	 *                      reached; may be null if node is the root node, i.e., the
+	 *                      first node in the AST
+	 * @param functionScope the function scope for the current function we are "in"
+	 *                      when we reach this node; this is used only for
+	 *                      LabelNodes as these must go into the first containing
+	 *                      function scope; may be null if the node and all its
+	 *                      descendants could not possibly have a label
+	 * @throws SyntaxException if AST is malformed in some way
 	 */
-	public void processNode(ASTNode node, Scope parentScope,
-			Scope functionScope) throws SyntaxException {
+	public void processNode(ASTNode node, Scope parentScope, Scope functionScope) throws SyntaxException {
 
 		if (node.getScope() != null)
 			return;
 		if (parentScope == null) {
 			parentScope = scopeFactory.newScope(ScopeKind.FILE, null, node);
-		} else if (node instanceof QuantifiedExpressionNode
-				|| node instanceof ArrayLambdaNode
+		} else if (node instanceof QuantifiedExpressionNode || node instanceof ArrayLambdaNode
 				|| node instanceof LambdaNode) {
-			parentScope = scopeFactory.newScope(ScopeKind.BLOCK, parentScope,
-					node);
-		} else if (node instanceof ScopeParameterizedDeclarationNode) {
-			DeclarationNode base = ((ScopeParameterizedDeclarationNode) node)
-					.baseDeclaration();
-			SequenceNode<VariableDeclarationNode> scopeList = ((ScopeParameterizedDeclarationNode) node)
-					.parameters();
-			IdentifierNode identifier = base.getIdentifier();
-			Scope blockScope = scopeFactory.newScope(ScopeKind.BLOCK,
-					parentScope, node);
-
-			processRecursive(identifier, parentScope, null);
-			processRecursive(scopeList, blockScope, null);
-			processNode(base, blockScope, functionScope);
+			parentScope = scopeFactory.newScope(ScopeKind.BLOCK, parentScope, node);
 		} else if (node instanceof FunctionDefinitionNode) {
-			processFunctionDefinitionNode((FunctionDefinitionNode) node,
-					parentScope);
+			processFunctionDefinitionNode((FunctionDefinitionNode) node, parentScope);
 			return;
 		} else if (node instanceof CompoundStatementNode) {
-			parentScope = scopeFactory.newScope(ScopeKind.BLOCK, parentScope,
-					node);
+			parentScope = scopeFactory.newScope(ScopeKind.BLOCK, parentScope, node);
 		} else if (node instanceof SwitchNode) {
 			ASTNode body = ((SwitchNode) node).getBody();
 			Scope bodyScope;
 
-			parentScope = scopeFactory.newScope(ScopeKind.BLOCK, parentScope,
-					node);
-			bodyScope = scopeFactory.newScope(ScopeKind.BLOCK, parentScope,
-					body);
+			parentScope = scopeFactory.newScope(ScopeKind.BLOCK, parentScope, node);
+			bodyScope = scopeFactory.newScope(ScopeKind.BLOCK, parentScope, body);
 			processRecursive(body, bodyScope, functionScope);
 		} else if (node instanceof IfNode) {
 			ASTNode trueBranch = ((IfNode) node).getTrueBranch();
 			ASTNode falseBranch = ((IfNode) node).getFalseBranch();
 			Scope trueBranchScope;
 
-			parentScope = scopeFactory.newScope(ScopeKind.BLOCK, parentScope,
-					node);
-			trueBranchScope = scopeFactory.newScope(ScopeKind.BLOCK,
-					parentScope, trueBranch);
+			parentScope = scopeFactory.newScope(ScopeKind.BLOCK, parentScope, node);
+			trueBranchScope = scopeFactory.newScope(ScopeKind.BLOCK, parentScope, trueBranch);
 			processRecursive(trueBranch, trueBranchScope, functionScope);
 			if (falseBranch != null) {
-				Scope falseBranchScope = scopeFactory.newScope(ScopeKind.BLOCK,
-						parentScope, falseBranch);
+				Scope falseBranchScope = scopeFactory.newScope(ScopeKind.BLOCK, parentScope, falseBranch);
 
 				processRecursive(falseBranch, falseBranchScope, functionScope);
 			}
@@ -239,10 +197,8 @@ public class ScopeAnalyzer implements Analyzer {
 			ASTNode loopContracts = loopNode.loopContracts();
 			Scope bodyScope;
 
-			parentScope = scopeFactory.newScope(ScopeKind.BLOCK, parentScope,
-					node);
-			bodyScope = scopeFactory.newScope(ScopeKind.BLOCK, parentScope,
-					body);
+			parentScope = scopeFactory.newScope(ScopeKind.BLOCK, parentScope, node);
+			bodyScope = scopeFactory.newScope(ScopeKind.BLOCK, parentScope, body);
 
 			Iterable<ASTNode> children = loopNode.children();
 
@@ -254,8 +210,8 @@ public class ScopeAnalyzer implements Analyzer {
 			// Process body and contracts (if exists) specially:
 			processRecursive(body, bodyScope, functionScope);
 			if (loopContracts != null) {
-				Scope conditionScope = scopeFactory.newScope(ScopeKind.CONTRACT,
-						loopNode.getCondition().getScope(), loopContracts);
+				Scope conditionScope = scopeFactory.newScope(ScopeKind.CONTRACT, loopNode.getCondition().getScope(),
+						loopContracts);
 
 				processRecursive(loopContracts, conditionScope, functionScope);
 			}
@@ -264,14 +220,11 @@ public class ScopeAnalyzer implements Analyzer {
 			ASTNode body = ((CivlForNode) node).getBody();
 			Scope bodyScope;
 
-			parentScope = scopeFactory.newScope(ScopeKind.BLOCK, parentScope,
-					node);
-			bodyScope = scopeFactory.newScope(ScopeKind.BLOCK, parentScope,
-					body);
+			parentScope = scopeFactory.newScope(ScopeKind.BLOCK, parentScope, node);
+			bodyScope = scopeFactory.newScope(ScopeKind.BLOCK, parentScope, body);
 			processRecursive(body, bodyScope, functionScope);
 		} else if (node instanceof FunctionDeclarationNode) {
-			processFunctionDeclarationNode((FunctionDeclarationNode) node,
-					parentScope);
+			processFunctionDeclarationNode((FunctionDeclarationNode) node, parentScope);
 			return;
 		} else if (node instanceof FunctionTypeNode) {
 			// a function type node may occur outside of a function
@@ -279,8 +232,7 @@ public class ScopeAnalyzer implements Analyzer {
 			ASTNode parameters = ((FunctionTypeNode) node).getParameters();
 
 			if (parameters != null && parameters.getScope() == null) {
-				Scope prototypeScope = scopeFactory.newScope(
-						ScopeKind.FUNCTION_PROTOTYPE, parentScope, parameters);
+				Scope prototypeScope = scopeFactory.newScope(ScopeKind.FUNCTION_PROTOTYPE, parentScope, parameters);
 
 				processRecursive(parameters, prototypeScope, functionScope);
 			}
@@ -307,17 +259,12 @@ public class ScopeAnalyzer implements Analyzer {
 	 * Assigns the given scope to the given node and then invokes method
 	 * {@link #processNode} to all the children.
 	 * 
-	 * @param node
-	 *            an ASTNode which does not yet have a Scope
-	 * @param scope
-	 *            the scope that will be assigned to the given node
-	 * @param functionScope
-	 *            the function scope we are currently in
-	 * @throws SyntaxException
-	 *             if problem in AST
+	 * @param node          an ASTNode which does not yet have a Scope
+	 * @param scope         the scope that will be assigned to the given node
+	 * @param functionScope the function scope we are currently in
+	 * @throws SyntaxException if problem in AST
 	 */
-	private void processRecursive(ASTNode node, Scope scope,
-			Scope functionScope) throws SyntaxException {
+	private void processRecursive(ASTNode node, Scope scope, Scope functionScope) throws SyntaxException {
 		Iterable<ASTNode> children = node.children();
 
 		assert scope != null;

@@ -1,0 +1,7 @@
+#include <complex.h>
+
+int main(void) {
+  double complex x = 3.0 + 4.0*I;
+  double complex r = CMPLX((double)cabs(x), 0.0);   /* <-- triggers the NPE */
+  $assert(cimag(r) == 0.0);
+}

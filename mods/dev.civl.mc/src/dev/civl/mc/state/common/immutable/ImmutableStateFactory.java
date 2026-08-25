@@ -536,7 +536,7 @@ public class ImmutableStateFactory implements StateFactory {
 			if (id < 0 && config.isPropertyToggled(CIVLProperty.MEMORY_LEAK)
 					&& !toBeIgnored.contains(HeapErrorKind.NONEMPTY)) {
 				ImmutableDynamicScope scopeToBeRemoved = theState.getDyscope(i);
-				Variable heapVariable = scopeToBeRemoved.lexicalScope().variable(ModelConfiguration.HEAP_VAR);
+				Variable heapVariable = scopeToBeRemoved.lexicalScope().getVariable(ModelConfiguration.HEAP_VAR);
 				SymbolicExpression heapValue = scopeToBeRemoved.getValue(heapVariable.vid());
 
 				if (!(heapValue.isNull() || symbolicUtil.isEmptyHeap(heapValue))) {

@@ -5,7 +5,6 @@ import dev.civl.abc.ast.node.IF.acsl.ExtendedQuantifiedExpressionNode;
 import dev.civl.abc.ast.node.IF.acsl.NothingNode;
 import dev.civl.abc.ast.node.IF.declaration.InitializerNode;
 import dev.civl.abc.ast.node.IF.statement.ForLoopInitializerNode;
-import dev.civl.abc.ast.node.IF.statement.UpdateNode;
 import dev.civl.abc.ast.type.IF.Type;
 
 /**
@@ -81,11 +80,6 @@ public interface ExpressionNode extends InitializerNode, SizeableNode, ForLoopIn
 		 */
 		CONSTANT,
 		/**
-		 * A CIVL-C derivative expression; can be cast to
-		 * {@link DerivativeExpressionNode}.
-		 */
-		DERIVATIVE_EXPRESSION,
-		/**
 		 * A C dot expression, which has the form <code>e.f</code>; can be cast to
 		 * {@link DotNode}.
 		 */
@@ -137,11 +131,6 @@ public interface ExpressionNode extends InitializerNode, SizeableNode, ForLoopIn
 		 */
 		REGULAR_RANGE,
 		/**
-		 * A CIVL-C remote reference expression, which refers to a variable in a
-		 * different process. Can be cast to {@link RemoteExpressionNode}.
-		 */
-		REMOTE_REFERENCE,
-		/**
 		 * The CIVL-C <code>$result</code> built-in variable, which refers to the result
 		 * returned by a function. Can be cast to {@link ResultNode}.
 		 */
@@ -164,11 +153,6 @@ public interface ExpressionNode extends InitializerNode, SizeableNode, ForLoopIn
 		 * A GNU C statement expression; can be cast to {@link StatementExpressionNode}
 		 */
 		STATEMENT_EXPRESSION,
-		/**
-		 * An <code>$update($collator) f() </code> expression. It may be cast to
-		 * {@link UpdateNode}.
-		 */
-		UPDATE,
 		/**
 		 * An ACSL-CIVL-C wildcard expression (<code>...</code>); can be cast to
 		 * {@link WildcardNode}.
@@ -202,6 +186,9 @@ public interface ExpressionNode extends InitializerNode, SizeableNode, ForLoopIn
 
 	@Override
 	ExpressionNode copy();
+
+	@Override
+	ExpressionNode copyWithTypes();
 
 	/**
 	 * Returns the kind of this expression. Every expression belongs to exactly one

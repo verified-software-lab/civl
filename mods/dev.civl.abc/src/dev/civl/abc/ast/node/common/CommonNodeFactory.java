@@ -42,6 +42,7 @@ import dev.civl.abc.ast.node.IF.acsl.NoactNode;
 import dev.civl.abc.ast.node.IF.acsl.NothingNode;
 import dev.civl.abc.ast.node.IF.acsl.ObjectOrRegionOfNode;
 import dev.civl.abc.ast.node.IF.acsl.PredicateNode;
+import dev.civl.abc.ast.node.IF.acsl.PureNode;
 import dev.civl.abc.ast.node.IF.acsl.RequiresNode;
 import dev.civl.abc.ast.node.IF.compound.ArrayDesignatorNode;
 import dev.civl.abc.ast.node.IF.compound.CompoundInitializerNode;
@@ -63,7 +64,6 @@ import dev.civl.abc.ast.node.IF.expression.CastNode;
 import dev.civl.abc.ast.node.IF.expression.CharacterConstantNode;
 import dev.civl.abc.ast.node.IF.expression.CompoundLiteralNode;
 import dev.civl.abc.ast.node.IF.expression.ConstantNode;
-import dev.civl.abc.ast.node.IF.expression.DerivativeExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.DotNode;
 import dev.civl.abc.ast.node.IF.expression.EnumerationConstantNode;
 import dev.civl.abc.ast.node.IF.expression.ExpressionNode;
@@ -78,7 +78,6 @@ import dev.civl.abc.ast.node.IF.expression.OperatorNode.Operator;
 import dev.civl.abc.ast.node.IF.expression.QuantifiedExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.QuantifiedExpressionNode.Quantifier;
 import dev.civl.abc.ast.node.IF.expression.RegularRangeNode;
-import dev.civl.abc.ast.node.IF.expression.RemoteOnExpressionNode;
 import dev.civl.abc.ast.node.IF.expression.ScopeOfNode;
 import dev.civl.abc.ast.node.IF.expression.SizeableNode;
 import dev.civl.abc.ast.node.IF.expression.SizeofNode;
@@ -123,7 +122,6 @@ import dev.civl.abc.ast.node.IF.statement.ReturnNode;
 import dev.civl.abc.ast.node.IF.statement.RunNode;
 import dev.civl.abc.ast.node.IF.statement.StatementNode;
 import dev.civl.abc.ast.node.IF.statement.SwitchNode;
-import dev.civl.abc.ast.node.IF.statement.UpdateNode;
 import dev.civl.abc.ast.node.IF.statement.WhenNode;
 import dev.civl.abc.ast.node.IF.type.ArrayTypeNode;
 import dev.civl.abc.ast.node.IF.type.AtomicTypeNode;
@@ -159,6 +157,7 @@ import dev.civl.abc.ast.node.common.acsl.CommonNoactNode;
 import dev.civl.abc.ast.node.common.acsl.CommonNothingNode;
 import dev.civl.abc.ast.node.common.acsl.CommonObjectOrRegionOfNode;
 import dev.civl.abc.ast.node.common.acsl.CommonPredicateNode;
+import dev.civl.abc.ast.node.common.acsl.CommonPureNode;
 import dev.civl.abc.ast.node.common.acsl.CommonRequiresNode;
 import dev.civl.abc.ast.node.common.compound.CommonArrayDesignatorNode;
 import dev.civl.abc.ast.node.common.compound.CommonCompoundInitializerNode;
@@ -177,7 +176,6 @@ import dev.civl.abc.ast.node.common.expression.CommonArrowNode;
 import dev.civl.abc.ast.node.common.expression.CommonCastNode;
 import dev.civl.abc.ast.node.common.expression.CommonCharacterConstantNode;
 import dev.civl.abc.ast.node.common.expression.CommonCompoundLiteralNode;
-import dev.civl.abc.ast.node.common.expression.CommonDerivativeExpressionNode;
 import dev.civl.abc.ast.node.common.expression.CommonDotNode;
 import dev.civl.abc.ast.node.common.expression.CommonEnumerationConstantNode;
 import dev.civl.abc.ast.node.common.expression.CommonExpressionNode;
@@ -192,7 +190,6 @@ import dev.civl.abc.ast.node.common.expression.CommonOperatorNode;
 import dev.civl.abc.ast.node.common.expression.CommonProcnullNode;
 import dev.civl.abc.ast.node.common.expression.CommonQuantifiedExpressionNode;
 import dev.civl.abc.ast.node.common.expression.CommonRegularRangeNode;
-import dev.civl.abc.ast.node.common.expression.CommonRemoteExpressionNode;
 import dev.civl.abc.ast.node.common.expression.CommonResultNode;
 import dev.civl.abc.ast.node.common.expression.CommonScopeOfNode;
 import dev.civl.abc.ast.node.common.expression.CommonSelfNode;
@@ -229,7 +226,6 @@ import dev.civl.abc.ast.node.common.statement.CommonNullStatementNode;
 import dev.civl.abc.ast.node.common.statement.CommonReturnNode;
 import dev.civl.abc.ast.node.common.statement.CommonRunNode;
 import dev.civl.abc.ast.node.common.statement.CommonSwitchNode;
-import dev.civl.abc.ast.node.common.statement.CommonUpdateNode;
 import dev.civl.abc.ast.node.common.statement.CommonWhenNode;
 import dev.civl.abc.ast.node.common.type.CommonArrayTypeNode;
 import dev.civl.abc.ast.node.common.type.CommonAtomicTypeNode;
@@ -407,8 +403,8 @@ public class CommonNodeFactory implements NodeFactory {
 	}
 
 	@Override
-	public TypedefNameNode newTypedefNameNode(IdentifierNode name, SequenceNode<ExpressionNode> scopeList) {
-		return new CommonTypedefNameNode(name.getSource(), name, scopeList);
+	public TypedefNameNode newTypedefNameNode(IdentifierNode name) {
+		return new CommonTypedefNameNode(name.getSource(), name);
 	}
 
 	@Override
@@ -477,11 +473,11 @@ public class CommonNodeFactory implements NodeFactory {
 	}
 
 	@Override
-	public FunctionCallNode newFunctionCallNode(Source source, ExpressionNode function, List<ExpressionNode> arguments,
-			SequenceNode<ExpressionNode> scopeList) {
+	public FunctionCallNode newFunctionCallNode(Source source, ExpressionNode function,
+			List<ExpressionNode> arguments) {
 		SequenceNode<ExpressionNode> argumentSequenceNode = newSequenceNode(source, "ActualParameterList", arguments);
 
-		return new CommonFunctionCallNode(source, function, null, argumentSequenceNode, scopeList);
+		return new CommonFunctionCallNode(source, function, null, argumentSequenceNode);
 	}
 
 	@Override
@@ -497,15 +493,13 @@ public class CommonNodeFactory implements NodeFactory {
 	}
 
 	@Override
-	public FunctionCallNode newFunctionCallNode(Source source, ExpressionNode function,
-			List<ExpressionNode> contextArguments, List<ExpressionNode> arguments,
-			SequenceNode<ExpressionNode> scopeList) {
+	public FunctionCallNode newContextFunctionCallNode(Source source, ExpressionNode function,
+			List<ExpressionNode> contextArguments, List<ExpressionNode> arguments) {
 		SequenceNode<ExpressionNode> contextArgumentSequenceNode = newSequenceNode(source, "ActualContextParameterList",
 				contextArguments);
 		SequenceNode<ExpressionNode> argumentSequenceNode = newSequenceNode(source, "ActualParameterList", arguments);
 
-		return new CommonFunctionCallNode(source, function, contextArgumentSequenceNode, argumentSequenceNode,
-				scopeList);
+		return new CommonFunctionCallNode(source, function, contextArgumentSequenceNode, argumentSequenceNode);
 	}
 
 	@Override
@@ -727,9 +721,8 @@ public class CommonNodeFactory implements NodeFactory {
 
 	@Override
 	public AbstractFunctionDefinitionNode newAbstractFunctionDefinitionNode(Source source, IdentifierNode name,
-			TypeNode type, SequenceNode<ContractNode> contract, int continuity,
-			SequenceNode<PairNode<ExpressionNode, ExpressionNode>> intervals, StringLiteralNode attr) {
-		return new CommonAbstractFunctionDefinitionNode(source, name, type, contract, continuity, intervals, attr);
+			TypeNode type, SequenceNode<ContractNode> contract, StringLiteralNode attr) {
+		return new CommonAbstractFunctionDefinitionNode(source, name, type, contract, attr);
 	}
 
 	@Override
@@ -762,26 +755,9 @@ public class CommonNodeFactory implements NodeFactory {
 	}
 
 	@Override
-	public RemoteOnExpressionNode newRemoteOnExpressionNode(Source source, ExpressionNode left, ExpressionNode right) {
-		return new CommonRemoteExpressionNode(source, left, right);
-	}
-
-	@Override
 	public ScopeOfNode newScopeOfNode(Source source, IdentifierExpressionNode variableExpression) {
 		return new CommonScopeOfNode(source, variableExpression);
 	}
-
-	// @Override
-	// public AssumeNode newAssumeNode(Source source, ExpressionNode expression)
-	// {
-	// return new CommonAssumeNode(source, expression);
-	// }
-	//
-	// @Override
-	// public AssertNode newAssertNode(Source source, ExpressionNode expression,
-	// SequenceNode<ExpressionNode> explanation) {
-	// return new CommonAssertNode(source, expression, explanation);
-	// }
 
 	@Override
 	public WhenNode newWhenNode(Source source, ExpressionNode guard, StatementNode body) {
@@ -845,13 +821,6 @@ public class CommonNodeFactory implements NodeFactory {
 	@Override
 	public EnsuresNode newEnsuresNode(Source source, ExpressionNode expression) {
 		return new CommonEnsuresNode(source, expression);
-	}
-
-	@Override
-	public DerivativeExpressionNode newDerivativeExpressionNode(Source source, ExpressionNode function,
-			SequenceNode<PairNode<IdentifierExpressionNode, IntegerConstantNode>> partials,
-			SequenceNode<ExpressionNode> arguments) {
-		return new CommonDerivativeExpressionNode(source, function, partials, arguments);
 	}
 
 	@Override
@@ -1091,6 +1060,11 @@ public class CommonNodeFactory implements NodeFactory {
 	}
 
 	@Override
+	public PureNode newPureNode(Source source) {
+		return new CommonPureNode(source);
+	}
+
+	@Override
 	public TypeFactory typeFactory() {
 		return typeFactory;
 	}
@@ -1109,10 +1083,9 @@ public class CommonNodeFactory implements NodeFactory {
 	@Override
 	public QuantifiedExpressionNode newQuantifiedExpressionNode(Source source, Quantifier quantifier,
 			SequenceNode<PairNode<SequenceNode<VariableDeclarationNode>, ExpressionNode>> boundVariableDeclarationList,
-			ExpressionNode restriction, ExpressionNode expression,
-			SequenceNode<PairNode<ExpressionNode, ExpressionNode>> intervalSequence) {
+			ExpressionNode restriction, ExpressionNode expression) {
 		return new CommonQuantifiedExpressionNode(source, quantifier, boundVariableDeclarationList, restriction,
-				expression, intervalSequence);
+				expression);
 	}
 
 	@Override
@@ -1144,11 +1117,6 @@ public class CommonNodeFactory implements NodeFactory {
 	public LambdaNode newLambdaNode(Source source, VariableDeclarationNode boundVariableDeclaration,
 			ExpressionNode restriction, ExpressionNode expression) {
 		return new CommonLambdaNode(source, boundVariableDeclaration, restriction, expression);
-	}
-
-	@Override
-	public UpdateNode newUpdateNode(Source source, ExpressionNode collator, FunctionCallNode call) {
-		return new CommonUpdateNode(source, collator, call);
 	}
 
 	@Override

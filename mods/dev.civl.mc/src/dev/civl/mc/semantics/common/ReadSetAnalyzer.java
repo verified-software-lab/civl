@@ -278,7 +278,6 @@ public class ReadSetAnalyzer {
 		case REAL_LITERAL:
 		case RESULT:
 		case SELF:
-		case STATE_NULL:
 		case STRING_LITERAL:
 		case UNDEFINED_PROC:
 		case WILDCARD:
@@ -287,8 +286,6 @@ public class ReadSetAnalyzer {
 			break;
 		/* shall not happen section */
 		case MEMORY_UNIT:
-		case DERIVATIVE:
-		case DIFFERENTIABLE:
 			throw new CIVLUnimplementedFeatureException(
 					"dynamic analysis of read set during evaluation of " + "expression of " + kind + " kind");
 		default:

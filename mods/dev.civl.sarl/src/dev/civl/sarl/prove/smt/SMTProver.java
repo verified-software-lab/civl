@@ -334,6 +334,10 @@ public class SMTProver implements TheoremProver {
 				result.add("-t");
 				result.add("" + timeout);
 				break;
+			case VAMPIRE:
+				result.add("--time_limit");
+				result.add("" + timeout);
+				break;
 			default:
 			}
 		}

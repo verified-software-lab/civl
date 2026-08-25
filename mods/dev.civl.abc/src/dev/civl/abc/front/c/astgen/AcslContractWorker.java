@@ -60,7 +60,6 @@ import static dev.civl.abc.front.c.parse.AcslParser.QUANTIFIED;
 import static dev.civl.abc.front.c.parse.AcslParser.READ_ACSL;
 import static dev.civl.abc.front.c.parse.AcslParser.REAL_ACSL;
 import static dev.civl.abc.front.c.parse.AcslParser.RELCHAIN;
-import static dev.civl.abc.front.c.parse.AcslParser.REMOTE_ACCESS;
 import static dev.civl.abc.front.c.parse.AcslParser.RESULT_ACSL;
 import static dev.civl.abc.front.c.parse.AcslParser.SELF;
 import static dev.civl.abc.front.c.parse.AcslParser.SET_BINDERS;
@@ -112,6 +111,7 @@ import dev.civl.abc.ast.node.IF.acsl.FocusAssertTransformNode;
 import dev.civl.abc.ast.node.IF.acsl.FocusLoopTransformNode;
 import dev.civl.abc.ast.node.IF.acsl.GuardsNode;
 import dev.civl.abc.ast.node.IF.acsl.MemoryEventNode.MemoryEventNodeKind;
+import dev.civl.abc.ast.node.IF.acsl.PureNode;
 import dev.civl.abc.ast.node.IF.acsl.RequiresNode;
 import dev.civl.abc.ast.node.IF.acsl.TransformNode;
 import dev.civl.abc.ast.node.IF.declaration.FunctionDeclarationNode;
@@ -267,10 +267,27 @@ public class AcslContractWorker {
 		List<TransformNode> translatedTransformNodes = new LinkedList<>();
 		List<BlockItemNode> translatedBlockItems = new LinkedList<>();
 
+		if (contractTree.getTokenStartIndex() < 0 && contractTree.getTokenStopIndex() < 0) {
+			// empty contract. we have no source. fix to include /*@ */ in tree.
+			return new ACSLSpecTranslation(null, translatedContractNodes, translatedTransformNodes,
+					translatedBlockItems);
+		}
 		switch (contractTree.getType()) {
 		case AcslParser.FUNC_CONTRACT:
 			translatedContractNodes
 					.addAll(translateFunctionContractBlock((CommonTree) contractTree.getChild(0), scope));
+			if (contractTree.getChildCount() >= 2) {
+				CommonTree tree1 = (CommonTree) contractTree.getChild(1);
+				int type1 = tree1.getType();
+				if (type1 == AcslParser.PURE) {
+					PureNode pureNode = nodeFactory.newPureNode(newSource(tree1));
+					translatedContractNodes.add(pureNode);
+				} else {
+					throw error("Unknown kind of function contract child", tree1);
+				}
+				if (contractTree.getChildCount() >= 3)
+					throw error("Extra children in function contract tree", contractTree);
+			}
 			break;
 		case AcslParser.LOOP_CONTRACT:
 			for (ContractNode node : translateLoopContractBlock((CommonTree) contractTree.getChild(0), scope)) {
@@ -465,7 +482,7 @@ public class AcslContractWorker {
 		Source source = parseTree.source(assertTree);
 		ExpressionNode assertCall = nodeFactory.newFunctionCallNode(source,
 				nodeFactory.newIdentifierExpressionNode(source, nodeFactory.newIdentifierNode(source, CIVL_ASSERT)),
-				Arrays.asList(translateExpression(predicate, scope)), null);
+				Arrays.asList(translateExpression(predicate, scope)));
 
 		return nodeFactory.newExpressionStatementNode(assertCall);
 	}
@@ -578,8 +595,7 @@ public class AcslContractWorker {
 
 			result = nodeFactory.newFunctionDefinitionNode(source, identifier, funcTypeNode, null, returnExpr);
 		} else
-			result = nodeFactory.newAbstractFunctionDefinitionNode(source, identifier, funcTypeNode, null, 0, null,
-					null);
+			result = nodeFactory.newAbstractFunctionDefinitionNode(source, identifier, funcTypeNode, null, null);
 		return result;
 	}
 
@@ -994,8 +1010,6 @@ public class AcslContractWorker {
 			return this.nodeFactory.newWildcardNode(source);
 		case VALID:
 			return this.translateValidNode(expressionTree, source, scope);
-		case REMOTE_ACCESS:
-			return translateRemoteExpression(expressionTree, source, scope);
 		case QUANTIFIED:
 			return translateQuantifiedExpression(expressionTree, source, scope);
 		case FUNC_CALL:
@@ -1151,25 +1165,13 @@ public class AcslContractWorker {
 			pred = translateExpression(predTree, newScope);
 			restrict = null;
 		} else {
-			throw error("Unexpexted quantifier " + quantifierTree.getType(), quantifierTree);
+			throw error("Unexpected quantifier " + quantifierTree.getType(), quantifierTree);
 		}
 		binders = translateBinders(bindersTree, source, newScope);
 		boundVariableList.add(nodeFactory.newPairNode(source, binders, null));
 		return nodeFactory.newQuantifiedExpressionNode(source, quantifier,
 				nodeFactory.newSequenceNode(source, "bound variable declaration list", boundVariableList), restrict,
-				pred, null);
-	}
-
-	private ExpressionNode translateRemoteExpression(CommonTree tree, Source source, SimpleScope scope)
-			throws SyntaxException {
-		SimpleScope newScope = new SimpleScope(scope);
-		CommonTree procTree = (CommonTree) tree.getChild(1);
-		CommonTree exprTree = (CommonTree) tree.getChild(2);
-		ExpressionNode exprArg, procArg;
-
-		exprArg = translateExpression(exprTree, newScope);
-		procArg = translateExpression(procTree, newScope);
-		return nodeFactory.newRemoteOnExpressionNode(source, procArg, exprArg);
+				pred);
 	}
 
 	private SequenceNode<VariableDeclarationNode> translateBinders(CommonTree tree, Source source, SimpleScope scope)
@@ -1389,7 +1391,7 @@ public class AcslContractWorker {
 			}
 		}
 		case TYPE_ID:
-			return this.nodeFactory.newTypedefNameNode(this.translateIdentifier((CommonTree) tree.getChild(0)), null);
+			return this.nodeFactory.newTypedefNameNode(this.translateIdentifier((CommonTree) tree.getChild(0)));
 		default:
 			throw this.error("unknown kind of logic type", tree);
 		}
@@ -1537,8 +1539,7 @@ public class AcslContractWorker {
 
 			argumentList.add(argumentNode);
 		}
-		return nodeFactory.newFunctionCallNode(source, functionNode, new LinkedList<ExpressionNode>(), argumentList,
-				null);
+		return nodeFactory.newFunctionCallNode(source, functionNode, argumentList);
 	}
 
 	/**

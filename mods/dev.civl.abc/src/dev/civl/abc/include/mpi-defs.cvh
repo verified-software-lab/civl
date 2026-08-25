@@ -162,7 +162,11 @@ $state_f size_t $mpi_extentof(MPI_Datatype);
    to the allocated memory space */
 void * $mpi_malloc($scope scope, int count, MPI_Datatype datatype);
 
-void* $mpi_pointer_add(const void*, int, MPI_Datatype);
+/* Computes the point that is count units after p, where a unit is one
+   element of type datatype.  Special case: if count is 0, this
+   function returns p, even if p is NULL.  This is to handle nicely
+   the special case where a send or receive buffer is NULL. */
+void* $mpi_pointer_add(const void * p, int count, MPI_Datatype datatype);
 
 /* Assert that the basetype of the object pointed by 'buf' is sames as
    the basetype of the 'datatype'. Here a basetype of an MPI_Datatype

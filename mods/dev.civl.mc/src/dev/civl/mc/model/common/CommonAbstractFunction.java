@@ -17,64 +17,42 @@ import dev.civl.mc.model.IF.Scope;
 import dev.civl.mc.model.IF.type.CIVLType;
 import dev.civl.mc.model.IF.variable.Variable;
 
-public class CommonAbstractFunction extends CommonFunction
-		implements
-			AbstractFunction {
-
-	private int continuity;
+public class CommonAbstractFunction extends CommonFunction implements AbstractFunction {
 
 	private SpecialRelationKind attribute = null;
 
 	/**
 	 * An abstract function.
 	 * 
-	 * @param source
-	 *            The CIVL source of the function
-	 * @param name
-	 *            The name of this function.
-	 * @param parameters
-	 *            The list of parameters.
-	 * @param returnType
-	 *            The return type of this function.
-	 * @param containingScope
-	 *            The scope containing this function.
-	 * @param continuity
-	 *            The total number of partial derivatives of this function that
-	 *            may be taken.
-	 * @param attribute
-	 *            The nullable attribute string
+	 * @param source          The CIVL source of the function
+	 * @param name            The name of this function.
+	 * @param parameters      The list of parameters.
+	 * @param returnType      The return type of this function.
+	 * @param containingScope The scope containing this function.
+	 * @param attribute       The nullable attribute string
 	 */
-	public CommonAbstractFunction(CIVLSource source, Identifier name,
-			Scope parameterScope, List<Variable> parameters,
-			CIVLType returnType, Scope containingScope, int fid, int continuity,
-			String attr) {
-		super(source, true, name, parameterScope, parameters, returnType,
-				containingScope, fid, null);
-		this.continuity = continuity;
+	public CommonAbstractFunction(CIVLSource source, Identifier name, Scope parameterScope, List<Variable> parameters,
+			CIVLType returnType, Scope containingScope, int fid, String attr) {
+		super(source, true, name, parameterScope, parameters, returnType, containingScope, fid, null);
 		if (attr != null) {
 			switch (attr) {
-				case "partial-order" :
-					this.attribute = PARTIAL_ORDER;
-					break;
-				case "tree-order" :
-					this.attribute = TREE_ORDER;
-					break;
-				case "linear-order" :
-					this.attribute = LINEAR_ORDER;
-					break;
-				case "piecewise-linear-order" :
-					this.attribute = PIECEWISE_LINEAR_ORDER;
-					break;
-				default :
-					this.attribute = NONE;
+			case "partial-order":
+				this.attribute = PARTIAL_ORDER;
+				break;
+			case "tree-order":
+				this.attribute = TREE_ORDER;
+				break;
+			case "linear-order":
+				this.attribute = LINEAR_ORDER;
+				break;
+			case "piecewise-linear-order":
+				this.attribute = PIECEWISE_LINEAR_ORDER;
+				break;
+			default:
+				this.attribute = NONE;
 			}
 		} else
 			this.attribute = NONE;
-	}
-
-	@Override
-	public int continuity() {
-		return continuity;
 	}
 
 	/* ********************** Methods from CIVLFunction ******************** */
@@ -87,9 +65,7 @@ public class CommonAbstractFunction extends CommonFunction
 		if (attribute == NONE)
 			out.println(prefix + "abstract function " + this.name());
 		else
-			out.println(
-					prefix + "abstract(\"" + attr + "\") function " + name());
-		out.println(prefix + "| continuous " + continuity);
+			out.println(prefix + "abstract(\"" + attr + "\") function " + name());
 		out.println(prefix + "| formal parameters");
 		iter = this.parameters().iterator();
 		while (iter.hasNext()) {
