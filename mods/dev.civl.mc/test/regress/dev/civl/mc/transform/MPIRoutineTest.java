@@ -118,6 +118,13 @@ public class MPIRoutineTest {
 						"ASSERTION_VIOLATION", "mpi_type_size-bad.c:22"});
 	}
 
+	@Test
+	public void sendrecvToSelfNoPotentialDeadlock() {
+		assertTrue(ui.run(
+				"verify -input_mpi_nprocs=1 -checkDeadlock=potential -quiet",
+				filename("sendrecv_to_self_no_potential_deadlock.c")));
+	}
+
 	@AfterClass
 	public static void tearDownAfterClass() throws Exception {
 		ui = null;

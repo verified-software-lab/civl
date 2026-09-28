@@ -483,38 +483,37 @@ public class LibcommEnabler extends BaseLibraryEnabler
 		candidateProc = libevaluator.readProcArray(state, pid, process,
 				procArray, (NumericExpression) dest, enqueue_call.getSource());
 		candidateProcId = modelFactory.getProcessId(candidateProc);
-		if (candidateProcId < 0 || candidateProcId == pid)
+		if (candidateProcId < 0)
 			return falseValue;
-		else {
-			ProcessState procState = state.getProcessState(candidateProcId);
-			Iterable<Statement> procOutgoings;
-			Iterator<Statement> iter;
-			BooleanExpression result = falseValue;
 
-			if (!procState.hasEmptyStack()) {
-				procOutgoings = procState.peekStack().location().outgoing();
-				iter = procOutgoings.iterator();
-				while (iter.hasNext()) {
-					Statement procCall = iter.next();
+		ProcessState procState = state.getProcessState(candidateProcId);
+		Iterable<Statement> procOutgoings;
+		Iterator<Statement> iter;
+		BooleanExpression result = falseValue;
 
-					if (procCall.statementKind()
-							.equals(StatementKind.CALL_OR_SPAWN)) {
-						BooleanExpression hasMatched = this
-								.isMatchedDequeueStatement(state,
-										candidateProcId, procState.getPid(),
-										libevaluator, reasoner,
-										(CallOrSpawnStatement) procCall, place,
-										tag, comm, wildcardCounts);
-						if (hasMatched.isTrue())
-							return hasMatched;
-						else
-							result = universe.or(result, hasMatched);
-					}
+		if (!procState.hasEmptyStack()) {
+			procOutgoings = procState.peekStack().location().outgoing();
+			iter = procOutgoings.iterator();
+			while (iter.hasNext()) {
+				Statement procCall = iter.next();
 
+				if (procCall.statementKind()
+						.equals(StatementKind.CALL_OR_SPAWN)) {
+					BooleanExpression hasMatched = this
+							.isMatchedDequeueStatement(state,
+									candidateProcId, procState.getPid(),
+									libevaluator, reasoner,
+									(CallOrSpawnStatement) procCall, place,
+									tag, comm, wildcardCounts);
+					if (hasMatched.isTrue())
+						return hasMatched;
+					else
+						result = universe.or(result, hasMatched);
 				}
+
 			}
-			return result;
 		}
+		return result;
 	}
 
 	/**
