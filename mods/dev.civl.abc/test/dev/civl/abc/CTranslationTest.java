@@ -153,6 +153,11 @@ public class CTranslationTest {
 	}
 
 	@Test
+	public void nestedDesignator() throws ABCException {
+		check("c/compoundInitializer/nestedDesignator");
+	}
+
+	@Test
 	public void compoundBad() throws ABCException {
 		boolean pass = false;
 
