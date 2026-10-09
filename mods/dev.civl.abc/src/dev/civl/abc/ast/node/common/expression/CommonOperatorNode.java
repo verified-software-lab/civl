@@ -222,12 +222,5 @@ public class CommonOperatorNode extends CommonExpressionNode
 					"Old type of conversion is not last type:\n"
 							+ conversion.getOldType() + "\n" + lastType);
 		conversions.add(conversion);
-		if (operator == Operator.CONDITIONAL) {
-			ExpressionNode truBrh = getArgument(1);
-			ExpressionNode flsBrh = getArgument(2);
-
-			truBrh.addConversion(conversion);
-			flsBrh.addConversion(conversion);
-		}
 	}
 }

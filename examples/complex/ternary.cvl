@@ -1,0 +1,6 @@
+int main(void) {
+  double a = 1.0, b = 2.0;
+  double _Complex w;
+  w = a < b ? b : a;
+  $assert(w == b);
+}

@@ -70,6 +70,10 @@ public class ComplexTest {
 	public void complex_quant() {
 		check("complex_quant.cvl");
 	}
+	
+	@Test public void ternary() {
+		check("ternary.cvl");
+	}
 
 	@Test
 	public void mpi_complex() {
