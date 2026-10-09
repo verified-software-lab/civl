@@ -1,4 +1,8 @@
-
+/*
+  The AST is correct in that `$true` is replaced by the int `1` and `||`
+  returns an int.  However the model checker has `||` return the CIVL
+  bool type, and there is no conversion of it to int.
+*/
 int f(void) {
   return $true || $true;
 }
