@@ -495,6 +495,21 @@ public class SideEffectRemover extends BaseTransformer {
 	}
 
 	/**
+	 * Like above, except errors are considered side-effects.
+	 * 
+	 * @param triple
+	 * @return
+	 */
+	private boolean makesef2(ExprTriple triple) {
+		if (triple.getNode().isSideEffectFree(true)) {
+			return false;
+		} else {
+			shift(triple, false);
+			return true;
+		}
+	}
+
+	/**
 	 * Is the given expression a call to one of the functions "malloc" or "$malloc"?
 	 * 
 	 * @param node any expression node
@@ -1082,8 +1097,8 @@ public class SideEffectRemover extends BaseTransformer {
 		purify(condTriple);
 
 		if (!isVoid) {
-			makesef(triple1);
-			makesef(triple2);
+			makesef2(triple1);
+			makesef2(triple2);
 		}
 
 		List<BlockItemNode> b0 = condTriple.getBefore();

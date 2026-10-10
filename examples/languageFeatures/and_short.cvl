@@ -1,0 +1,8 @@
+int A[2];
+$input int i;
+$assume(i>=0);
+
+int main(void) {
+  int x = i < 2 && A[i] == 0;
+  $print(x, "\n");
+}
