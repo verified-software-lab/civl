@@ -151,6 +151,11 @@ public class MPICollectivePart1Test {
 	public void reduce_minloc() {
 		assertTrue(ui.run("verify -input_mpi_nprocs=4 ", QUIET, NO_PRINTF, filename("reduce_minloc.c")));
 	}
+	
+	@Test
+	public void inplace() {
+		assertTrue(ui.run("verify -input_mpi_nprocs=4 ", QUIET, NO_PRINTF, filename("inplace.c")));
+	}
 
 	@AfterClass
 	public static void tearDownAfterClass() throws Exception {

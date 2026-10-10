@@ -848,19 +848,24 @@ int MPI_Reduce(const void* sendbuf, void* recvbuf, int count,
 }
 
 /* Combines values from all processes and distributes the result back
-   to all processes. default root is 0 */
+   to all processes. default root is 0.
+   TODO: The MPI Standard seems to imply that either all procs use
+   MPI_IN_PLACE or none do.  Check that.
+ */
 int MPI_Allreduce(const void* sendbuf, void* recvbuf, int count,
 		  MPI_Datatype datatype, MPI_Op op, MPI_Comm comm) {
+  _Bool inplace = sendbuf == MPI_IN_PLACE;
+  int rank = $mpi_comm_place(comm), root = 0;
   checkInit();
-  $cmon_check_1($mpi_get_cmon(comm), ALLREDUCE_TAG, $false,
+  $cmon_check_1($mpi_get_cmon(comm), ALLREDUCE_TAG, inplace,
 		($mpi_tsig){.count=count, .type=datatype},
 		op, -1);
-  int root = 0;
   MPI_Status status;
   //  $mpi_check_buffer(sendbuf, count, datatype);
   $assert(0 <= op && op <= 13, "unknown MPI reduce operation");
   // refer to op.h & mpi.h in ABC/src/include for how MPI_Op is defined
-  reduce(sendbuf, recvbuf, count, datatype, op, root, ALLREDUCE_TAG, comm,
+  reduce((rank != root && inplace ? recvbuf : sendbuf),
+	 recvbuf, count, datatype, op, root, ALLREDUCE_TAG, comm,
 	 "MPI_Allreduce()");
   bcast(recvbuf, count, datatype, root, ALLREDUCE_TAG, comm,
 	"MPI_Allreduce()");
