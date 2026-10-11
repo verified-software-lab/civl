@@ -2693,6 +2693,8 @@ public class FunctionTranslator {
 							+ expression.getExpressionType() + " type which cannot be converted to boolean type.",
 							expression.getSource());
 				}
+			} else if (function.returnType().isIntegerType() && expression.getExpressionType().isBoolType()) {
+				expression = modelFactory.numericExpression(expression);
 			}
 		} else
 			expression = null;

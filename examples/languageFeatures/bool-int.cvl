@@ -1,0 +1,30 @@
+/* Checks different conversions between int and bool */
+
+int f1(void) {
+  return $true || $true;
+}
+
+void f2(void) {
+  int x = 1 + (0==0);
+  $print(x, "\n");
+  $assert(x==2);
+}
+
+void f3(void) {
+  int x = 0==0;
+  $print(x, "\n");
+  $assert(x==1);
+}
+
+void f4(int x) {
+  $print(x, "\n");
+  $assert(x==1);
+}
+
+int main(void) {
+  int a = f1();
+  $assert(a == 1);
+  f2();
+  f3();
+  f4(0==0);
+}
