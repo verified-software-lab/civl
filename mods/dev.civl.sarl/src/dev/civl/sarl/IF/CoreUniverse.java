@@ -128,6 +128,35 @@ public interface CoreUniverse {
 	void setShowProverQueries(boolean value);
 
 	/**
+	 * Gets the current "query explanation": a short, human-readable description of
+	 * what the caller (e.g., the CIVL model checker) is trying to accomplish with
+	 * the next theorem-prover query. This is program-level context, such as
+	 * "proving an assertion at foo.cvl:12" or "checking path-condition
+	 * satisfiability". It is printed alongside the prover query when
+	 * {@link #getShowProverQueries()} is <code>true</code>, to help the user
+	 * understand where a query is coming from. Returns <code>null</code> if no
+	 * explanation has been set.
+	 *
+	 * @return the current query explanation, or <code>null</code> if none
+	 * @see #setQueryExplanation(String)
+	 */
+	String getQueryExplanation();
+
+	/**
+	 * Sets the "query explanation" to be associated with subsequent
+	 * theorem-prover queries. Higher layers (such as the CIVL model checker) set
+	 * this immediately before invoking a {@link dev.civl.sarl.IF.Reasoner} so that,
+	 * when {@link #getShowProverQueries()} is <code>true</code>, the printed query
+	 * is annotated with the program-level reason it was generated. Pass
+	 * <code>null</code> to clear it.
+	 *
+	 * @param explanation a short description of the reason for the next query, or
+	 *                    <code>null</code> to clear
+	 * @see #getQueryExplanation()
+	 */
+	void setQueryExplanation(String explanation);
+
+	/**
 	 * Returns the output stream to which information (such as queries) will be
 	 * printed. By default, standard out.
 	 * 

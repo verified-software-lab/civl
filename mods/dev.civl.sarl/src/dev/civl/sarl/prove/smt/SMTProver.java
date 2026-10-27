@@ -271,7 +271,11 @@ public class SMTProver implements TheoremProver {
 		// out of scope.
 		try (PrintStream out1 = new PrintStream(Files.newOutputStream(inputPath))) {
 			FastList<String> assumptionDecls = assumptionTranslator.getDeclarations();
-			FastList<String> assumptionText = assumptionTranslator.getTranslation();
+			// The context (path condition) is emitted as one (assert ...) per
+			// top-level conjunctive clause, rather than a single giant
+			// (assert (and ...)). This makes it easy to reason about, and to attach
+			// per-clause annotations such as :pattern triggers on quantified clauses.
+			List<FastList<String>> assumptionClauses = assumptionTranslator.getConjunctTranslations();
 			predicate = (BooleanExpression) universe.cleanBoundVariables(predicate);
 			SMTTranslator translator = newSMTTranslator(info.getKind(), assumptionTranslator, predicate);
 			FastList<String> predicateDecls = translator.getDeclarations();
@@ -281,9 +285,11 @@ public class SMTProver implements TheoremProver {
 			if (info.getKind() != ProverKind.Z3)
 				println("(set-logic ALL)", out1, out2);
 			print(assumptionDecls, out1, out2);
-			print("(assert ", out1, out2);
-			print(assumptionText, out1, out2);
-			println(")", out1, out2);
+			for (FastList<String> clause : assumptionClauses) {
+				print("(assert ", out1, out2);
+				print(clause, out1, out2);
+				println(")", out1, out2);
+			}
 			print(predicateDecls, out1, out2);
 			if (checkUNSAT) {
 				// p is unsat in context c iff p && c is UNSAT:

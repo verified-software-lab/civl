@@ -1,6 +1,7 @@
 package dev.civl.sarl.prove.smt;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -251,6 +252,16 @@ public class SMTTranslator {
 	private FastList<String> smtTranslation;
 
 	/**
+	 * If the translated expression is a conjunction (a boolean {@link
+	 * SymbolicOperator#AND} with more than one clause), this holds the translation
+	 * of each individual clause, in order. It is <code>null</code> otherwise. This
+	 * allows a caller (e.g., a theorem prover writing an SMT-LIB script) to emit
+	 * one <code>(assert ...)</code> per clause rather than a single giant
+	 * conjunction. Each entry is assertable on its own.
+	 */
+	private List<FastList<String>> conjunctTranslations = null;
+
+	/**
 	 * A map that maps {@link SymbolicExpression}s to temporary binding names so
 	 * that they can be reused. The translation is then processed in a compressed
 	 * way. If this map is instantiated, this translator is working in this
@@ -296,7 +307,7 @@ public class SMTTranslator {
 		// translate logic functions:
 		for (ProverFunctionInterpretation logicFunction : logicFunctions)
 			translateLogicFunction(logicFunction);
-		this.smtTranslation = translate(theExpression);
+		translateTopLevel(theExpression);
 	}
 
 	public SMTTranslator(SMTTranslator startingContext, SymbolicExpression theExpression) {
@@ -312,6 +323,39 @@ public class SMTTranslator {
 		this.bigArrayDefined = startingContext.bigArrayDefined;
 		this.smtDeclarations = new FastList<>();
 		this.smtTranslation = translate(theExpression);
+	}
+
+	/**
+	 * Translates the top-level expression, and, if it is a conjunction (a boolean
+	 * {@link SymbolicOperator#AND} with more than one clause), also records the
+	 * translation of each individual clause in {@link #conjunctTranslations}. Each
+	 * clause is translated exactly once; the combined translation
+	 * (<code>(and c1 c2 ... cn)</code>) is assembled from the clause translations
+	 * so that {@link #getTranslation()} continues to return the whole conjunction.
+	 * Because all clauses are translated by this same translator instance, their
+	 * declarations accumulate correctly.
+	 *
+	 * @param theExpression the expression being translated (typically the context)
+	 */
+	private void translateTopLevel(SymbolicExpression theExpression) {
+		if (theExpression.operator() == SymbolicOperator.AND && theExpression.numArguments() > 1) {
+			int n = theExpression.numArguments();
+			List<FastList<String>> clauses = new ArrayList<>(n);
+			FastList<String> combined = new FastList<>("(", "and");
+
+			for (int i = 0; i < n; i++) {
+				FastList<String> clause = translate((SymbolicExpression) theExpression.argument(i));
+
+				clauses.add(clause);
+				combined.add(" ");
+				combined.append(clause.clone());
+			}
+			combined.add(")");
+			this.conjunctTranslations = clauses;
+			this.smtTranslation = combined;
+		} else {
+			this.smtTranslation = translate(theExpression);
+		}
 	}
 
 	// Private methods...
@@ -1912,6 +1956,33 @@ public class SMTTranslator {
 	 */
 	public FastList<String> getTranslation() {
 		return smtTranslation;
+	}
+
+	/**
+	 * Returns the translation split into its top-level conjunctive clauses: one
+	 * {@link FastList} per clause of the translated expression, each ready to be
+	 * asserted on its own. If the translated expression is not a conjunction, the
+	 * returned list contains a single element equal to {@link #getTranslation()}.
+	 *
+	 * <p>
+	 * This lets a caller emit one <code>(assert clause)</code> per clause of a path
+	 * condition instead of a single <code>(assert (and ...))</code>, which is
+	 * convenient for, e.g., attaching <code>:pattern</code> triggers to quantified
+	 * clauses.
+	 * </p>
+	 *
+	 * @return a non-empty list of assertable clause translations
+	 */
+	public List<FastList<String>> getConjunctTranslations() {
+		List<FastList<String>> result = new ArrayList<>();
+
+		if (conjunctTranslations != null) {
+			for (FastList<String> clause : conjunctTranslations)
+				result.add(clause.clone());
+		} else {
+			result.add(getTranslation());
+		}
+		return result;
 	}
 
 	/**

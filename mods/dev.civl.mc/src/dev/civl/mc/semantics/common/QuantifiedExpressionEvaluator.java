@@ -485,7 +485,7 @@ public class QuantifiedExpressionEvaluator extends ErrorSideEffectFreeEvaluator 
 			Expression singlePointer = modelFactory.binaryExpression(source, BINARY_OPERATOR.PLUS, pointer, offsets);
 
 			eval = evaluate(state, pid, singlePointer);
-			eval.value = symbolicAnalyzer.isDerefablePointer(state, eval.value).left;
+			eval.value = symbolicAnalyzer.isDerefablePointer(state, eval.value, source).left;
 			return eval;
 		} else {
 			// for \valid(p + range), it is evaluated as
@@ -512,7 +512,7 @@ public class QuantifiedExpressionEvaluator extends ErrorSideEffectFreeEvaluator 
 			boundVariableStack.push(new TreeMap<>());
 			boundVariableStack.peek().put(BOUNDED_OFFSET_IDENTIFIER, offset);
 			eval = evaluate(state, pid, eachPointer);
-			eval.value = symbolicAnalyzer.isDerefablePointer(state, eval.value).left;
+			eval.value = symbolicAnalyzer.isDerefablePointer(state, eval.value, source).left;
 			boundVariableStack.pop();
 			eval.state = stateFactory.popAssumption(eval.state, pid);
 			eval.value = universe.forallInt(offset, lowVal, highVal, (BooleanExpression) eval.value);

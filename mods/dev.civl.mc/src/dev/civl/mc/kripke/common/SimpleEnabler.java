@@ -758,6 +758,9 @@ public class SimpleEnabler implements Enabler {
 		// for now you have to check if pc is unsat because the
 		// deadlock predicates do not and will report spurious errors.
 		// fix that and then we can get rid of this:
+		if (universe.getShowProverQueries())
+			universe.setQueryExplanation("checking guard satisfiability for statement at "
+					+ stmt.getSource().getLocation());
 		if (reasoner.unsat(result).getResultType() == ResultType.YES)
 			return falseExpression;
 		return result;

@@ -455,6 +455,8 @@ public class LibbundleExecutor extends BaseLibraryExecutor
 				.lessThanEquals(sizeofBundleData, availableSize);
 
 		if (bundleDataBase_t.equals(wrtArrayBase_t)) {
+			if (universe.getShowProverQueries())
+				universe.setQueryExplanation("checking $bundle_unpack size in bounds at " + source.getLocation());
 			errorCheckingResult = reasoner.valid(inBoundClaim).getResultType();
 			if (errorCheckingResult != ResultType.NO) {
 				wrtArray = unpack(reasoner, bundleData, dataArrayShape,

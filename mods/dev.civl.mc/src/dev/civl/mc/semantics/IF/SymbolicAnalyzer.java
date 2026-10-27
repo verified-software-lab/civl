@@ -296,10 +296,14 @@ public interface SymbolicAnalyzer {
 	 * 
 	 * @param state
 	 * @param pointer
+	 * @param source
+	 *            The source related with the pointer, used to annotate any
+	 *            theorem-prover queries generated while checking; may be
+	 *            <code>null</code>.
 	 * @return
 	 */
 	Pair<BooleanExpression, ResultType> isDerefablePointer(State state,
-			SymbolicExpression pointer);
+			SymbolicExpression pointer, CIVLSource source);
 
 	/**
 	 * Pretty representation of a path condition, which is broken into lines if

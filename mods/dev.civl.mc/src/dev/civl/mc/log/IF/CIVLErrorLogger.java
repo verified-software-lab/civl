@@ -153,6 +153,11 @@ public class CIVLErrorLogger extends ErrorLog {
 			throws UnsatisfiablePathConditionException {
 		BooleanExpression pc = state.getPathCondition(universe), newPc;
 		BooleanExpression npc = universe.not(pc);
+
+		if (universe.getShowProverQueries())
+			universe.setQueryExplanation("checking path-condition feasibility before reporting " + property + " at "
+					+ source.getLocation());
+
 		ValidityResult validityResult = trueReasoner.valid(npc);
 		ResultType nsat = validityResult.getResultType();
 		Certainty certainty;
@@ -173,6 +178,10 @@ public class CIVLErrorLogger extends ErrorLog {
 			if (resultType == ResultType.NO) {
 				// need something satisfying PC and not claim...
 				if (solve) {
+					if (universe.getShowProverQueries())
+						universe.setQueryExplanation("solving for counterexample to " + property + " at "
+								+ source.getLocation());
+
 					ValidityResult claimResult = trueReasoner
 							.validOrModel(universe.or(npc, claim));
 
@@ -250,6 +259,11 @@ public class CIVLErrorLogger extends ErrorLog {
 			String message) throws UnsatisfiablePathConditionException {
 		BooleanExpression pc = state.getPathCondition(universe);
 		BooleanExpression npc = universe.not(pc);
+
+		if (universe.getShowProverQueries())
+			universe.setQueryExplanation("checking path-condition feasibility before reporting " + property + " at "
+					+ source.getLocation());
+
 		ValidityResult validityResult = trueReasoner.valid(npc);
 		ResultType nsat = validityResult.getResultType();
 		Certainty certainty;

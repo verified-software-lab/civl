@@ -874,6 +874,10 @@ public class MemEvaluator extends CommonEvaluator {
 			Reasoner reasoner = universe
 					.reasoner(state.getPathCondition(universe));
 
+			if (universe.getShowProverQueries())
+				universe.setQueryExplanation(
+						"checking value-set reference stays in bounds at " + source.getLocation());
+
 			resultType = reasoner.valid(claim).getResultType();
 			if (resultType == ResultType.YES)
 				return state;

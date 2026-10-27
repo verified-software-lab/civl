@@ -225,6 +225,13 @@ public class CommonPreUniverse implements PreUniverse {
 	 */
 	private boolean showProverQueries = false;
 
+	/**
+	 * A short, human-readable description of what the caller is trying to
+	 * accomplish with the next theorem-prover query. Printed alongside the query
+	 * when {@link #showProverQueries} is true. May be <code>null</code>.
+	 */
+	private String queryExplanation = null;
+
 	private SymbolicExpression[] emptyExprArray = new SymbolicExpression[0];
 
 	private String errFileName = "ProverOutput.txt";
@@ -786,6 +793,16 @@ public class CommonPreUniverse implements PreUniverse {
 	@Override
 	public void setShowProverQueries(boolean value) {
 		this.showProverQueries = value;
+	}
+
+	@Override
+	public String getQueryExplanation() {
+		return queryExplanation;
+	}
+
+	@Override
+	public void setQueryExplanation(String explanation) {
+		this.queryExplanation = explanation;
 	}
 
 	@Override

@@ -1284,6 +1284,8 @@ public class ImmutableStateFactory implements StateFactory {
 	 * @return True iff the given claim is evaluated to be false.
 	 */
 	private boolean nsat(BooleanExpression claim) {
+		if (universe.getShowProverQueries())
+			universe.setQueryExplanation("checking path-condition satisfiability (state feasibility)");
 		return trueContextReasoner.unsat(claim).getResultType() == ResultType.YES;
 	}
 

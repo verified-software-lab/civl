@@ -637,6 +637,9 @@ public abstract class LibraryComponent {
 
 		// If data length > count, report an error:
 		claim = universe.lessThan(dataSeqLength, count);
+		if (universe.getShowProverQueries())
+			universe.setQueryExplanation("checking data length does not exceed count in setDataFrom at "
+					+ source.getLocation());
 		resultType = reasoner.valid(claim).getResultType();
 		if (resultType.equals(ResultType.YES) && civlConfig.isPropertyToggled(CIVLProperty.OUT_OF_BOUNDS))
 			reportOutOfBoundError(state, pid, claim, resultType, pointer, dataSeqLength, count, source);
@@ -651,6 +654,9 @@ public abstract class LibraryComponent {
 		symref = symbolicAnalyzer.getLeafNodeReference(state, pointer, source);
 
 		// If count is one:
+		if (universe.getShowProverQueries())
+			universe.setQueryExplanation("determining whether copy count is one in setDataFrom at "
+					+ source.getLocation());
 		if (reasoner.isValid(universe.equals(count, one))) {
 			SymbolicExpression data = universe.arrayRead(dataArray, zero);
 
