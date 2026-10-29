@@ -3341,7 +3341,7 @@ public class FunctionTranslator {
 							BigDecimal.valueOf(((IntegerValue) constVal).getIntegerValue().doubleValue()));
 				} else if (constVal instanceof RealFloatingValue) {
 					result = modelFactory.realLiteralExpression(source,
-							BigDecimal.valueOf(((RealFloatingValue) constVal).getDoubleValue()));
+							((RealFloatingValue) constVal).getBigDecimalValue());
 				} else {
 					// Original default solution
 					String doubleString = constantNode.getStringRepresentation();

@@ -1,0 +1,11 @@
+int main(void) {
+  double ok = 0.0625;
+  double bad = 0.09375;
+  double hex = 0x1.8p0;
+  double hex2 = 0x1p-1;
+  $assert(ok * 16.0 == 1.0);
+  $assert(bad * 32.0 == 3.0);
+  $assert(hex == 1.5);
+  $assert(hex2 * 2.0 == 1.0);
+  return 0;
+}
