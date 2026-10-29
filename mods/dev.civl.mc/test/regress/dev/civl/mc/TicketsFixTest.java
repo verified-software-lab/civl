@@ -120,8 +120,18 @@ public class TicketsFixTest {
 	}
 
 	/**
+	 * See: https://github.com/verified-software-lab/civl/issues/17 </br>
+	 * Decimal literals were converted to the wrong exact real, because the
+	 * double value of the literal was used to construct the real.
+	 */
+	@Test
+	public void issue_17_imprecise_real_literals() throws ABCException {
+		assertTrue(ui.run(VERIFY, QUIET, filename("issue_17_imprecise_real_literals.cvl")));
+	}
+
+	/**
 	 * See: https://vsl.cis.udel.edu/trac/civl/ticket/943 </br>
-	 * 
+	 *
 	 * @author Alex Wilton (awilton@udel.edu)
 	 * @throws ABCException
 	 */

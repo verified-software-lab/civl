@@ -1,5 +1,6 @@
 package dev.civl.abc.ast.value.common;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import dev.civl.abc.ast.type.IF.FloatingType;
@@ -57,6 +58,29 @@ public class CommonRealFloatingValue extends CommonValue implements RealFloating
 	@Override
 	public int getRadix() {
 		return radix;
+	}
+
+	@Override
+	public BigDecimal getBigDecimalValue() {
+		if (radix == 16) {
+			// The exact value is (wholePart * 16^fractionLength + fractionPart)
+			// times 2^(exponent - 4 * fractionLength). Since 16 == 2^4, both the
+			// scaling of the fraction and the exponentiation are powers of two.
+			BigInteger unscaled = wholePartValue.shiftLeft(4 * fractionLength).add(fractionPartValue);
+			int power = exponentValue.intValueExact() - 4 * fractionLength;
+			if (power >= 0) {
+				return new BigDecimal(unscaled.shiftLeft(power));
+			}
+			return new BigDecimal(unscaled).divide(new BigDecimal(BigInteger.ONE.shiftLeft(-power)));
+		} else if (radix == 10) {
+			// The exact value is (wholePart + fractionPart / 10^fractionLength)
+			// times 10^exponent.
+			BigDecimal unscaled = new BigDecimal(wholePartValue)
+					.movePointRight(fractionLength).add(new BigDecimal(fractionPartValue));
+			return unscaled.movePointLeft(fractionLength - exponentValue.intValueExact());
+		} else {
+			throw new RuntimeException("Only know base 10 and 16");
+		}
 	}
 
 	@Override
